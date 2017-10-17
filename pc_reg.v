@@ -10,7 +10,7 @@ module pc_reg(
     always @(posedge clk) begin
         if (ce == `ChipDisable) begin
             pc <= `ZeroWord;
-        and else begin
+        end else begin
             pc <= pc + 4'h4; //why 4'h4?
         end
     end

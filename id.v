@@ -54,7 +54,7 @@ module id(
                 `EXE_ORI: begin
                     wreg_o <= `WriteEnable;
                     aluop_o <= `EXE_OR_OP;
-                    alusel_o <= `EXE_REG_LOGIC;
+                    alusel_o <= `EXE_RES_LOGIC;
                     reg1_read_o <= `ReadEnable;
                     reg2_read_o <= `ReadDisable;
                     imm <= {16'h0, inst_i[15:0]};
@@ -73,7 +73,7 @@ module id(
             reg1_o <= `ZeroWord; 
         end else if (reg1_read_o == `ReadEnable) begin
             reg1_o <= reg1_data_i;
-        and else if (reg1_read_o == `ReadDisable) begin
+        end else if (reg1_read_o == `ReadDisable) begin
             reg1_o <= imm;  
         end else begin
             reg1_o <= `ZeroWord; 

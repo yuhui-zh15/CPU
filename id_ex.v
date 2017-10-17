@@ -25,7 +25,7 @@ module id_ex(
             ex_alusel <= `EXE_RES_NOP;
             ex_reg1 <= `ZeroWord;
             ex_reg2 <= `ZeroWord;
-            ex_wd <= `NopRegAddr;
+            ex_wd <= `NOPRegAddr;
             ex_wreg <= `WriteDisable;  
         end else begin
             ex_aluop <= id_aluop;

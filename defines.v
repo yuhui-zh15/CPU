@@ -35,8 +35,8 @@
 `define EXE_NOP_OP 8'b00000000
 
 // ALU Selection
-`define EXE_RES_LOGIC 3'b00100101
-`define EXE_RES_NOP 3'b000000
+`define EXE_RES_LOGIC 3'b001
+`define EXE_RES_NOP 3'b000
 
 // Instruction ROM
 `define InstAddrBus 31:0

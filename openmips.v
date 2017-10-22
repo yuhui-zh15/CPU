@@ -24,7 +24,7 @@ module openmips(
     // Connect id_ex to ex
     wire[`AluOpBus] ex_aluop_i;
     wire[`AluSelBus] ex_alusel_i;
-    wire[`RegBus] ex_reg1_o;
+    wire[`RegBus] ex_reg1_i;
     wire[`RegBus] ex_reg2_i;
     wire ex_wreg_i;
     wire[`RegAddrBus] ex_wd_i;

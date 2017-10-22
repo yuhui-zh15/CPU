@@ -8,7 +8,7 @@ module inst_rom(
 
     reg[`InstBus] inst_mem[0:`InstMemNum-1];
 
-    initial $readmemh ("inst_rom.data", inst_mem);
+    initial $readmemh ("C:/Users/gconeice/ComputerTheory/CPU/inst_rom.data", inst_mem);
 
     always @(*) begin
         if (ce == `ChipDisable) begin

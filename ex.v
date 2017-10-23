@@ -25,6 +25,12 @@ module ex(
                 `EXE_OR_OP: begin
                     logicout <= reg1_i | reg2_i;
                 end
+                `EXE_AND_OP: begin
+                    logicout <= reg1_i & reg2_i;
+                end
+                `EXE_XOR_OP: begin
+                    logicout <= reg1_i ^ reg2_i;
+                end
                 default: begin
                     logicout <= `ZeroWord; 
                 end 

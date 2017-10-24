@@ -89,6 +89,14 @@ module id(
                                     reg2_read_o <= `ReadEnable;
                                     instvalid = `InstValid;   
                                 end
+                                `EXE_NOR: begin
+                                    wreg_o <= `WriteEnable;
+                                    aluop_o <= `EXE_NOR_OP;
+                                    alusel_o <= `EXE_RES_LOGIC;
+                                    reg1_read_o <= `ReadEnable;
+                                    reg2_read_o <= `ReadEnable;
+                                    instvalid = `InstValid;                                       
+                                end
                                 default: begin
                                 end
                             endcase
@@ -127,6 +135,16 @@ module id(
                     wd_o <= inst_i[20:16];
                     instvalid = `InstValid;
                 end 
+                `EXE_LUI: begin
+                    wreg_o <= `WriteEnable;
+                    aluop_o <= `EXE_OR_OP;
+                    alusel_o <= `EXE_RES_LOGIC;
+                    reg1_read_o <= `ReadEnable;
+                    reg2_read_o <= `ReadDisable;
+                    imm <= {inst_i[15:0], 16'h0};
+                    wd_o <= inst_i[20:16];
+                    instvalid = `InstValid;                    
+                end
                 default: begin
                   
                 end

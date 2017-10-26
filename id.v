@@ -65,6 +65,62 @@ module id(
                     case (op2)
                         5'b00000: begin
                             case (op3)
+                                `EXE_MFHI: begin
+                                    wreg_o <=  `WriteEnable;
+                                    aluop_o <= `EXE_MFHI_OP;
+                                    alusel_o <= `EXE_RES_MOVE;
+                                    reg1_read_o <= `ReadDisable;
+                                    reg2_read_o <= `ReadDisable;
+                                    instvalid <= `InstValid;
+                                end
+                                `EXE_MFLO: begin
+                                    wreg_o <=  `WriteEnable;
+                                    aluop_o <= `EXE_MFLO_OP;
+                                    alusel_o <= `EXE_RES_MOVE;
+                                    reg1_read_o <= `ReadDisable;
+                                    reg2_read_o <= `ReadDisable;
+                                    instvalid <= `InstValid;
+                                end
+                                `EXE_MTHI: begin
+                                    wreg_o <=  `WriteDisable;
+                                    aluop_o <= `EXE_MTHI_OP;
+                                    // alusel_o <= `EXE_RES_MOVE; ????
+                                    reg1_read_o <= `ReadEnable;
+                                    reg2_read_o <= `ReadDisable;
+                                    instvalid <= `InstValid;  
+                                end
+                                `EXE_MTLO: begin
+                                    wreg_o <=  `WriteDisable;
+                                    aluop_o <= `EXE_MTLO_OP;
+                                    // alusel_o <= `EXE_RES_MOVE;
+                                    reg1_read_o <= `ReadEnable;
+                                    reg2_read_o <= `ReadDisable;
+                                    instvalid <= `InstValid;  
+                                end
+                                `EXE_MOVN: begin
+                                    aluop_o <= `EXE_MOVN_OP;
+                                    alusel_o <= `EXE_RES_MOVE;
+                                    reg1_read_o <= `ReadEnable;
+                                    reg2_read_o <= `ReadEnable;
+                                    instvalid <= `InstValid;
+                                    if (reg2_o != `ZeroWord) begin
+                                        wreg_o <= `WriteEnable;
+                                    end else begin
+                                        wreg_o <= `WriteDisable; 
+                                    end
+                                end
+                                `EXE_MOVZ: begin
+                                    aluop_o <= `EXE_MOVZ_OP;
+                                    alusel_o <= `EXE_RES_MOVE;
+                                    reg1_read_o <= `ReadEnable;
+                                    reg2_read_o <= `ReadEnable;
+                                    instvalid <= `InstValid;
+                                    if (reg2_o == `ZeroWord) begin
+                                        wreg_o <= `WriteEnable;
+                                    end else begin
+                                        wreg_o <= `WriteDisable; 
+                                    end
+                                end
                                 `EXE_OR: begin
                                     wreg_o <= `WriteEnable;
                                     aluop_o <= `EXE_OR_OP;

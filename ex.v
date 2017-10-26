@@ -87,7 +87,7 @@ module ex(
     // Stage 3: Multiply Operation
     assign opdata1_mult = (((aluop_i == `EXE_MUL_OP) || (aluop_i == `EXE_MULT_OP)) && (reg1_i[31]))? (~reg1_i + 1): reg1_i;
     assign opdata2_mult = (((aluop_i == `EXE_MUL_OP) || (aluop_i == `EXE_MULT_OP)) && (reg2_i[31]))? (~reg2_i + 1): reg2_i;
-    assign hilo_tmp = opdata1_mult * opdata2_mult;
+    assign hilo_temp = opdata1_mult * opdata2_mult;
     always @(*) begin
         if (rst == `RstEnable) begin
             mulres <= {`ZeroWord, `ZeroWord}; 

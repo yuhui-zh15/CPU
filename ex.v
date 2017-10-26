@@ -12,7 +12,7 @@ module ex(
     // To wd
     output reg[`RegAddrBus] wd_o,
     output reg wreg_o,
-    output reg[`RegBus] wdata_o
+    output reg[`RegBus] wdata_o,
     // Value from hilo_reg
     input wire[`RegBus] hi_i,
     input wire[`RegBus] lo_i,
@@ -27,7 +27,7 @@ module ex(
     // ex write hilo
     output reg[`RegBus] hi_o,
     output reg[`RegBus] lo_o,
-    output reg whilo_o,
+    output reg whilo_o
 );
 
     reg[`RegBus] logicout;

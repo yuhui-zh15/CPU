@@ -31,9 +31,9 @@ module ex_mem(
             mem_wd <= ex_wd;
             mem_wreg <= ex_wreg;
             mem_wdata <= ex_wdata;
-            mem_hi <= `ex_hi;
-            mem_lo <= `ex_lo;
-            mem_whilo <= `ex_whilo;
+            mem_hi <= ex_hi;
+            mem_lo <= ex_lo;
+            mem_whilo <= ex_whilo;
         end
     end
 

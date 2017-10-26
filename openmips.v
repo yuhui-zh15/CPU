@@ -34,7 +34,7 @@ module openmips(
     wire[`RegAddrBus] ex_wd_o;
     wire[`RegBus] ex_wdata_o;
     wire[`RegBus] ex_hi_o;
-    wire[`RebBus] ex_lo_o;
+    wire[`RegBus] ex_lo_o;
     wire ex_whilo_o;
 
     // Connect ex_mem to mem
@@ -180,7 +180,7 @@ module openmips(
         .wdata_o(ex_wdata_o),
         .hi_o(ex_hi_o),
         .lo_o(ex_lo_o),
-        .while_o(ex_whilo_o)
+        .whilo_o(ex_whilo_o)
     );
 
     // ex_mem

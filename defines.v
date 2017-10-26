@@ -110,7 +110,7 @@
 
 `define EXE_SPECIAL_INST 6'b000000
 `define EXE_REGIMM_INST 6'b000001
-`define EXE_SPECIAL2_INST 6'011100
+`define EXE_SPECIAL2_INST 6'b011100
 
 // Instruction ROM
 `define InstAddrBus 31:0

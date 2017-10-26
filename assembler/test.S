@@ -14,3 +14,4 @@ mtlo $3
 mtlo $2
 mtlo $1
 mflo $4
+mult $1, $2

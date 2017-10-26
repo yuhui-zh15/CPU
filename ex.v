@@ -52,7 +52,7 @@ module ex(
     // Stage 1: Calculate 5 values
     assign reg2_i_mux = ((aluop_i == `EXE_SUB_OP) || (aluop_i == `EXE_SUBU_OP) || (aluop_i == `EXE_SLT_OP))? (~reg2_i) + 1: reg2_i;
     assign result_sum = reg1_i + reg2_i_mux;
-    assign ov_sum = ((!reg1_i[31] && !reg2_i_mux[31]) && result_sum[31]) || ((reg_1[31] && reg2_i_mux[31]) && !result_sum[31]);
+    assign ov_sum = ((!reg1_i[31] && !reg2_i_mux[31]) && result_sum[31]) || ((reg1_i[31] && reg2_i_mux[31]) && !result_sum[31]);
     assign reg1_lt_reg2 = ((aluop_i == `EXE_SLT_OP))? ((reg1_i[31] && !reg2_i[31]) || (!reg1_i[31] && !reg2_i[31] && result_sum[31]) || (reg1_i[31] && reg2_i[31] && result_sum[31])): (reg1_i < reg2_i);
     assign reg1_i_not = ~reg1_i;
 

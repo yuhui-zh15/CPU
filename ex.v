@@ -27,8 +27,11 @@ module ex(
     // ex write hilo
     output reg[`RegBus] hi_o,
     output reg[`RegBus] lo_o,
-    output reg whilo_o
+    output reg whilo_o,
+
+    output wire stallreq
 );
+    assign stallreq = `NoStop; //<TODO> for madd instruction
 
     reg[`RegBus] logicout;
     reg[`RegBus] shiftres;

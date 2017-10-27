@@ -3,6 +3,7 @@ import sys
 
 
 OP_SPECIAL = '000000'
+def zeros(num_zeros):
     return ''.join(['0' for _ in range(num_zeros)])
 
 

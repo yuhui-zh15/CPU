@@ -6,7 +6,14 @@ module openmips(
 
     input wire[`RegBus] rom_data_i,
     output wire[`RegBus] rom_addr_o,
-    output wire rom_ce_o
+    output wire rom_ce_o,
+
+    input wire[`RegBus] ram_data_i,
+    output wire[`RegBus] ram_addr_o,
+    output wire[`RegBus] ram_data_o,
+    output wire ram_we_o,
+    output wire[3:0] ram_sel_o,
+    output wire ram_ce_o
 );
 
     wire[`InstAddrBus] pc;
@@ -260,7 +267,14 @@ module openmips(
         .wdata_o(mem_wdata_o),
         .hi_o(mem_hi_o),
         .lo_o(mem_lo_o),
-        .whilo_o(mem_whilo_o)
+        .whilo_o(mem_whilo_o),
+        // L&S
+        .mem_data_i(ram_data_i),
+        .mem_addr_o(ram_addr_o),
+        .mem_we_o(ram_we_o),
+        .mem_sel_o(ram_sel_o),
+        .mem_data_o(ram_data_o),
+        .mem_ce_o(ram_ce_o)
     );
 
     // mem_wb
@@ -306,3 +320,5 @@ module openmips(
     );
 
 endmodule // openmips
+
+//<TODO>!!

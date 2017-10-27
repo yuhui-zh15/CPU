@@ -6,6 +6,14 @@ module id(
     input wire[`InstBus] inst_i,
     input wire[`RegBus] reg1_data_i,
     input wire[`RegBus] reg2_data_i,
+    // From ex
+    input wire ex_wreg_i,
+    input wire[`RegBus] ex_wdata_i,
+    input wire[`RegAddrBus] ex_wd_i,
+    // From mem
+    input wire mem_wreg_i,
+    input wire[`RegBus] mem_wdata_i,
+    input wire[`RegAddrBus] mem_wd_i,
     // To register
     output reg reg1_read_o,
     output reg reg2_read_o,
@@ -18,14 +26,8 @@ module id(
     output reg[`RegBus] reg2_o,
     output reg[`RegAddrBus] wd_o,
     output reg wreg_o,
-    // From ex
-    input wire ex_wreg_i,
-    input wire[`RegBus] ex_wdata_i,
-    input wire[`RegAddrBus] ex_wd_i,
-    // From mem
-    input wire mem_wreg_i,
-    input wire[`RegBus] mem_wdata_i,
-    input wire[`RegAddrBus] mem_wd_i
+
+    output wire stallreq
 );
 
     wire[5:0] op = inst_i[31:26];
@@ -34,6 +36,8 @@ module id(
     wire[4:0] op4 = inst_i[20:16];
     reg[`RegBus] imm;
     reg instvalid;
+
+    assign stallreq = `NoStop; //<TODO> for load/store instruction
 
     always @(*) begin
         if (rst == `RstEnable) begin

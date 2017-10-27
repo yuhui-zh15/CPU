@@ -130,6 +130,7 @@ if __name__ == '__main__':
     with open(in_filename, 'r') as fin, open(out_filename, 'w') as fout:
         for inst_in in fin.readlines():
             inst_in = inst_in.strip()
+            if inst_in == '': continue
             inst_out = inst2hex(inst_in)
             assert len(inst_out) == 8, inst_in + ' => ' + inst_out
             print(inst_out, file=fout)

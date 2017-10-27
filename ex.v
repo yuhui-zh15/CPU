@@ -27,7 +27,10 @@ module ex(
     // ex write hilo
     output reg[`RegBus] hi_o,
     output reg[`RegBus] lo_o,
-    output reg whilo_o
+    output reg whilo_o,
+    // B&J
+    input wire[`RegBus] link_addr_i,
+    input wire is_in_delay_slot_i
 );
 
     reg[`RegBus] logicout;
@@ -156,6 +159,9 @@ module ex(
             end
             `EXE_RES_MOVE: begin
                 wdata_o <= moveres; 
+            end
+            `EXE_RES_JUMP_BRANCH: begin
+                wdata_o <= link_addr_i;
             end
             default: begin
                 wdata_o <= `ZeroWord;  

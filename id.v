@@ -153,6 +153,7 @@ module id(
                                     reg1_read_o <= `ReadEnable;
                                     reg2_read_o <= `ReadEnable;
                                     instvalid <= `InstValid;  
+                                end
                                 `EXE_JR: begin
                                     wreg_o <= `WriteDisable;
                                     aluop_o <= `EXE_JR_OP;
@@ -366,6 +367,7 @@ module id(
                         
                         end
                     endcase 
+                end
                 `EXE_J: begin
                     wreg_o <= `WriteDisable;
                     aluop_o <= `EXE_JR_OP;

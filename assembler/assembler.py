@@ -57,8 +57,8 @@ B = {
 
 # op(6) | instr_index(26)
 J = {
-    'J':    Inst(in_specs=['imm'],      out_specs=['000010',   'imm']),
-    'JAL':  Inst(in_specs=['imm'],      out_specs=['000011',   'imm']),
+    'J':    Inst(in_specs=['idx'],      out_specs=['000010',   'idx']),
+    'JAL':  Inst(in_specs=['idx'],      out_specs=['000011',   'idx']),
     'JALR': Inst(in_specs=['rd', 'rs'], out_specs=[OP_SPECIAL, 'rs', zeros(5), 'rd',     zeros(5), '001001']), #  rd=31?
     'JR':   Inst(in_specs=['rs'],       out_specs=[OP_SPECIAL, 'rs', zeros(5), zeros(5), zeros(5), '001000'])
 }
@@ -90,9 +90,9 @@ def reg2bin(reg):
     return '{:05b}'.format(int(reg[1:]))
 
 
-def imm2bin(imm, num_bits):
+def imm2bin(imm, num_bits, divisor=1):
     # imm = '0x1100'
-    return ('{:0' + str(num_bits) + 'b}').format(int(imm, 16))
+    return ('{:0' + str(num_bits) + 'b}').format(int(int(imm, 16) / divisor))
 
 
 def arg2bin(arg, spec):
@@ -102,6 +102,8 @@ def arg2bin(arg, spec):
         return imm2bin(arg, 5)
     elif spec == 'imm':
         return imm2bin(arg, 16)
+    elif spec == 'idx':
+        return imm2bin(arg, 26, divisor=4)
     else:
         return spec    
 
@@ -117,7 +119,7 @@ def inst2hex(inst_in):
 
     inst_out = [arg2bin(spec2arg.get(spec, None), spec) for spec in inst.out_specs]
     return str('{:08x}'.format(int(''.join(inst_out), 2)))
-
+    
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -127,12 +129,25 @@ if __name__ == '__main__':
     in_filename = sys.argv[1]
     out_filename = in_filename[:-2] + '.data'
 
+    num_inst = 0
     with open(in_filename, 'r') as fin, open(out_filename, 'w') as fout:
         for inst_in in fin.readlines():
+            
             inst_in = inst_in.strip()
             if inst_in == '': continue
+            if inst_in.upper() == 'NOP': 
+                inst_in = 'sll $0,$0,0'
+            if inst_in.startswith('.org'):
+                org_addr = int(int(inst_in.split()[1], 16) / 4)
+                num_nop_added = org_addr - num_inst
+                for _ in range(num_nop_added):
+                    print(zeros(8), file=fout)
+                    num_inst += 1
+                continue
+
             inst_out = inst2hex(inst_in)
             assert len(inst_out) == 8, inst_in + ' => ' + inst_out
             print(inst_out, file=fout)
+            num_inst += 1
             
         

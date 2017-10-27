@@ -28,7 +28,10 @@ module ex(
     output reg[`RegBus] hi_o,
     output reg[`RegBus] lo_o,
     output reg whilo_o,
-
+    // B&J
+    input wire[`RegBus] link_addr_i,
+    input wire is_in_delay_slot_i,
+    // Pipeline stop/continue
     output wire stallreq
 );
     assign stallreq = `NoStop; //<TODO> for madd instruction
@@ -242,6 +245,9 @@ module ex(
             end
             `EXE_RES_MUL: begin
                 wdata_o <= mulres[31: 0];
+            end
+            `EXE_RES_JUMP_BRANCH: begin
+                wdata_o <= link_addr_i;
             end
             default: begin
                 wdata_o <= `ZeroWord;  

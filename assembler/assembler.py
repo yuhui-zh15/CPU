@@ -119,6 +119,23 @@ def inst2hex(inst_in):
 
     inst_out = [arg2bin(spec2arg.get(spec, None), spec) for spec in inst.out_specs]
     return str('{:08x}'.format(int(''.join(inst_out), 2)))
+
+
+def process_nop(inst_in, num_inst, fout):
+    if inst_in == '': 
+        return num_inst, True
+    elif inst_in.upper() == 'NOP': 
+        print(zeros(8), file=fout)
+        num_inst += 1
+        return num_inst, True
+    elif inst_in.startswith('.org'):
+        org_idx = int(int(inst_in.split()[1], 16) / 4)
+        num_nop_inserted = org_idx - num_inst
+        for _ in range(num_nop_inserted):
+            print(zeros(8), file=fout)
+            num_inst += 1
+        return num_inst, True
+    return num_inst, False
     
 
 if __name__ == '__main__':
@@ -132,18 +149,9 @@ if __name__ == '__main__':
     num_inst = 0
     with open(in_filename, 'r') as fin, open(out_filename, 'w') as fout:
         for inst_in in fin.readlines():
-            
             inst_in = inst_in.strip()
-            if inst_in == '': continue
-            if inst_in.upper() == 'NOP': 
-                inst_in = 'sll $0,$0,0'
-            if inst_in.startswith('.org'):
-                org_addr = int(int(inst_in.split()[1], 16) / 4)
-                num_nop_added = org_addr - num_inst
-                for _ in range(num_nop_added):
-                    print(zeros(8), file=fout)
-                    num_inst += 1
-                continue
+            num_inst, is_nop = process_nop(inst_in, num_inst, fout)
+            if is_nop: continue
 
             inst_out = inst2hex(inst_in)
             assert len(inst_out) == 8, inst_in + ' => ' + inst_out

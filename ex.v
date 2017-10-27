@@ -9,6 +9,7 @@ module ex(
     input wire[`RegBus] reg2_i,
     input wire[`RegAddrBus] wd_i,
     input wire wreg_i,
+    input wire[`RegBus] inst_i,
     // To wd
     output reg[`RegAddrBus] wd_o,
     output reg wreg_o,
@@ -31,10 +32,17 @@ module ex(
     // B&J
     input wire[`RegBus] link_addr_i,
     input wire is_in_delay_slot_i,
+    // L&S
+    output wire[`AluOpBus] aluop_o,
+    output wire[`RegBus] mem_addr_o,
+    output wire[`RegBus] reg2_o,
     // Pipeline stop/continue
     output wire stallreq
 );
     assign stallreq = `NoStop; //<TODO> for madd instruction
+    assign aluop_o = aluop_i;
+    assign mem_addr_o = reg1_i + {{16{inst_i[15]}}, inst_i[15:0]};
+    assign reg2_o = reg2_i;
 
     reg[`RegBus] logicout;
     reg[`RegBus] shiftres;

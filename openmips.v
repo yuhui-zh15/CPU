@@ -72,12 +72,24 @@ module openmips(
     wire[`RegBus] hi;
     wire[`RegBus] lo;
 
+    // B&J
+    wire id_is_in_delay_slot_i;
+    wire id_next_inst_in_delay_slot_o;
+    wire id_branch_flag_o;
+    wire[`RegBus] id_branch_target_addr_o;
+    wire[`RegBus] id_link_addr_o;
+    wire id_is_in_delay_slot_o;
+    wire ex_is_in_delay_slot_i;
+    wire ex_link_addr_i;
+
     // pc_reg
     pc_reg pc_reg0(
         .clk(clk),
         .rst(rst),
         .pc(pc),
-        .ce(rom_ce_o)
+        .ce(rom_ce_o),
+        .branch_flag_i(id_branch_flag_o),
+        .branch_target_addr_i(id_branch_target_addr_o)
     );
 
     assign rom_addr_o = pc;
@@ -118,7 +130,14 @@ module openmips(
         // From mem
         .mem_wdata_i(mem_wdata_o),
         .mem_wd_i(mem_wd_o),
-        .mem_wreg_i(mem_wreg_o)
+        .mem_wreg_i(mem_wreg_o),
+        // B&J
+        .is_in_delay_slot_i(id_is_in_delay_slot_i),
+        .next_inst_in_delay_slot_o(id_next_inst_in_delay_slot_o),
+        .branch_flag_o(id_branch_flag_o),
+        .branch_target_addr_o(id_branch_target_addr_o),
+        .link_addr_o(id_link_addr_o),
+        .is_in_delay_slot_o(id_is_in_delay_slot_o)
     );
 
     // reg
@@ -153,7 +172,14 @@ module openmips(
         .ex_reg1(ex_reg1_i),
         .ex_reg2(ex_reg2_i),
         .ex_wd(ex_wd_i),
-        .ex_wreg(ex_wreg_i)
+        .ex_wreg(ex_wreg_i),
+        // B&J
+        .id_link_addr(id_link_addr_o),
+        .id_is_in_delay_slot(id_is_in_delay_slot_o),
+        .next_inst_in_delay_slot_i(id_next_inst_in_delay_slot_o),
+        .ex_link_addr(ex_link_addr_i),
+        .ex_is_in_delay_slot(ex_is_in_delay_slot_i),
+        .is_in_delay_slot_o(id_is_in_delay_slot_i)
     );
 
     // ex
@@ -180,7 +206,10 @@ module openmips(
         .wdata_o(ex_wdata_o),
         .hi_o(ex_hi_o),
         .lo_o(ex_lo_o),
-        .whilo_o(ex_whilo_o)
+        .whilo_o(ex_whilo_o),
+        // B&J
+        .is_in_delay_slot_i(ex_is_in_delay_slot_i),
+        .link_addr_i(ex_link_addr_i)
     );
 
     // ex_mem

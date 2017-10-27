@@ -2,6 +2,9 @@ import re
 import sys
 
 
+labels = {}
+num_inst = 0
+
 OP_SPECIAL = '000000'
 def zeros(num_zeros):
     return ''.join(['0' for _ in range(num_zeros)])
@@ -114,31 +117,58 @@ def inst2hex(inst_in):
     op = args[0].upper()
     inst = find_inst(op)
 
-    assert len(inst.in_specs) == len(args) - 1
+    assert len(inst.in_specs) == len(args) - 1, inst_in
     spec2arg = dict(zip(inst.in_specs, args[1:]))
 
     inst_out = [arg2bin(spec2arg.get(spec, None), spec) for spec in inst.out_specs]
     return str('{:08x}'.format(int(''.join(inst_out), 2)))
 
 
-def process_nop(inst_in, num_inst, fout):
-    if inst_in == '': 
-        return num_inst, True
-    elif inst_in.upper() == 'NOP': 
-        print(zeros(8), file=fout)
-        num_inst += 1
-        return num_inst, True
-    elif inst_in.startswith('.org'):
+def print_nop(fout):
+    global num_inst
+    print(zeros(8), file=fout)
+    num_inst += 1
+
+
+def process_nop(inst_in, fout):
+    global num_inst
+    if inst_in.upper() == 'NOP': 
+        print_nop(fout)
+        return True
+    if inst_in.startswith('.org'):
         org_idx = int(int(inst_in.split()[1], 16) / 4)
         num_nop_inserted = org_idx - num_inst
         for _ in range(num_nop_inserted):
-            print(zeros(8), file=fout)
-            num_inst += 1
-        return num_inst, True
-    return num_inst, False
+            print_nop(fout)
+        return True
+    return False
+
+
+def process_label(inst_in):
+    global num_inst, labels
+    if inst_in.endswith(':'):
+        labels[inst_in[:-1].strip()] = num_inst
+        return True
+    return False
+
+
+def process_branch(inst_in):
+    global num_inst, labels
+    if inst_in.upper().startswith('B'):
+        target = inst_in.split(',')[-1]
+        try:
+            offset = int(target, 16)
+            return inst_in
+        except:
+            target_idx = labels[target]
+            offset = target_idx - num_inst - 1
+            return inst_in.replace(target, str(hex(offset)))
+    return inst_in
     
 
 if __name__ == '__main__':
+    global num_inst, labels
+
     if len(sys.argv) < 2:
         print('Usage: python3 assembler.py [mips32.S]')
         sys.exit(1)
@@ -148,10 +178,21 @@ if __name__ == '__main__':
 
     num_inst = 0
     with open(in_filename, 'r') as fin, open(out_filename, 'w') as fout:
-        for inst_in in fin.readlines():
-            inst_in = inst_in.strip()
-            num_inst, is_nop = process_nop(inst_in, num_inst, fout)
-            if is_nop: continue
+        for line in fin.readlines():
+            inst_in = line.strip()
+            if inst_in == '': continue
+            if process_label(inst_in): continue
+            if process_nop(inst_in, fout): continue
+            num_inst += 1
+
+    num_inst = 0
+    with open(in_filename, 'r') as fin, open(out_filename, 'w') as fout:
+        for line in fin.readlines():
+            inst_in = line.strip()
+            if inst_in == '': continue
+            if inst_in.endswith(':'): continue
+            if process_nop(inst_in, fout): continue
+            inst_in = process_branch(inst_in)
 
             inst_out = inst2hex(inst_in)
             assert len(inst_out) == 8, inst_in + ' => ' + inst_out

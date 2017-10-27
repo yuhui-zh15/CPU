@@ -80,7 +80,7 @@ module openmips(
     wire[`RegBus] id_link_addr_o;
     wire id_is_in_delay_slot_o;
     wire ex_is_in_delay_slot_i;
-    wire ex_link_addr_i;
+    wire[`RegBus] ex_link_addr_i;
 
     // pc_reg
     pc_reg pc_reg0(

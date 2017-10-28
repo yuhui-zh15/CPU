@@ -59,8 +59,8 @@ module openmips(
     wire mem_whilo_i;
     wire[`AluOpBus] mem_aluop_i;
     wire[`RegBus] mem_mem_addr_i;
-    wire[`RegBus] mem_reg1_i,
-    wire[`RegBus] mem_reg2_i,
+    wire[`RegBus] mem_reg1_i;
+    wire[`RegBus] mem_reg2_i;
 
     // Connect mem to mem_wb
     wire mem_wreg_o;

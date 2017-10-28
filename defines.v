@@ -163,6 +163,13 @@
 `define InstMemNum 131071
 `define InstMemNumLog2 17
 
+// Instruction RAM
+`define DataAddrBus 31:0
+`define DataBus 31:0
+`define DataMemNum 131071
+`define DataMemNumLog2 17
+`define ByteWidth 7:0
+
 // Register
 `define RegAddrBus 4:0
 `define RegBus 31:0

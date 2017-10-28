@@ -23,5 +23,3 @@ module openmips_min_sopc_tb();
     );
 
 endmodule // openmips_min_sopc_tb()
-
-//<TODO>

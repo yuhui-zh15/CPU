@@ -27,6 +27,7 @@ module openmips(
     wire[`RegBus] id_reg2_o;
     wire id_wreg_o;
     wire[`RegAddrBus] id_wd_o;
+    wire[`RegAddrBus] id_inst_o;
 
     // Connect id_ex to ex
     wire[`AluOpBus] ex_aluop_i;
@@ -35,6 +36,7 @@ module openmips(
     wire[`RegBus] ex_reg2_i;
     wire ex_wreg_i;
     wire[`RegAddrBus] ex_wd_i;
+    wire[`RegBus] ex_inst_i;
 
     // Connect ex to ex_mem
     wire ex_wreg_o;
@@ -43,6 +45,10 @@ module openmips(
     wire[`RegBus] ex_hi_o;
     wire[`RegBus] ex_lo_o;
     wire ex_whilo_o;
+    wire[`AluOpBus] ex_aluop_o;
+	wire[`RegBus] ex_mem_addr_o;
+	wire[`RegBus] ex_reg1_o;
+	wire[`RegBus] ex_reg2_o;	
 
     // Connect ex_mem to mem
     wire mem_wreg_i;
@@ -51,6 +57,10 @@ module openmips(
     wire[`RegBus] mem_hi_i;
     wire[`RegBus] mem_lo_i;
     wire mem_whilo_i;
+    wire[`AluOpBus] mem_aluop_i;
+    wire[`RegBus] mem_mem_addr_i;
+    wire[`RegBus] mem_reg1_i,
+    wire[`RegBus] mem_reg2_i,
 
     // Connect mem to mem_wb
     wire mem_wreg_o;
@@ -136,6 +146,7 @@ module openmips(
         .reg2_o(id_reg2_o),
         .wd_o(id_wd_o),
         .wreg_o(id_wreg_o),
+        .inst_o(id_inst_o),
         // From ex
         .ex_wdata_i(ex_wdata_o),
         .ex_wd_i(ex_wd_o),
@@ -182,6 +193,7 @@ module openmips(
         .id_reg2(id_reg2_o),
         .id_wd(id_wd_o),
         .id_wreg(id_wreg_o),
+        .id_inst(id_inst_o),
         // To ex
         .ex_aluop(ex_aluop_i),
         .ex_alusel(ex_alusel_i),
@@ -189,6 +201,7 @@ module openmips(
         .ex_reg2(ex_reg2_i),
         .ex_wd(ex_wd_i),
         .ex_wreg(ex_wreg_i),
+        .ex_inst(ex_inst_i),
         // B&J
         .id_link_addr(id_link_addr_o),
         .id_is_in_delay_slot(id_is_in_delay_slot_o),
@@ -210,6 +223,7 @@ module openmips(
         .wreg_i(ex_wreg_i),
         .hi_i(hi),
         .lo_i(lo),
+        .inst_i(ex_inst_i),
         .wb_hi_i(wb_hi_i), // Caution!
         .wb_lo_i(wb_lo_i), 
         .wb_whilo_i(wb_whilo_i),
@@ -223,6 +237,9 @@ module openmips(
         .hi_o(ex_hi_o),
         .lo_o(ex_lo_o),
         .whilo_o(ex_whilo_o),
+        .aluop_o(ex_aluop_o),
+        .mem_addr_o(ex_mem_addr_o),
+        .reg2_o(ex_reg2_o),
 
         .stallreq(stallreq_from_ex),
         // B&J
@@ -242,13 +259,19 @@ module openmips(
         .ex_hi(ex_hi_o),
         .ex_lo(ex_lo_o),
         .ex_whilo(ex_whilo_o),
+        .ex_aluop(ex_aluop_o),
+        .ex_mem_addr(ex_mem_addr_o),
+        .ex_reg2(ex_reg2_o),
         // To mem
         .mem_wd(mem_wd_i),
         .mem_wreg(mem_wreg_i),
         .mem_wdata(mem_wdata_i),
         .mem_hi(mem_hi_i),
         .mem_lo(mem_lo_i),
-        .mem_whilo(mem_whilo_i)
+        .mem_whilo(mem_whilo_i),
+        .mem_aluop(mem_aluop_i),
+        .mem_mem_addr(mem_mem_addr_i),
+        .mem_reg2(mem_reg2_i)
     );
 
     // mem
@@ -261,6 +284,9 @@ module openmips(
         .hi_i(mem_hi_i),
         .lo_i(mem_lo_i),
         .whilo_i(mem_whilo_i),
+        .aluop_i(mem_aluop_i),
+        .mem_addr_i(mem_mem_addr_i),
+        .reg2_i(mem_reg2_i),
         // To mem_wb
         .wd_o(mem_wd_o),
         .wreg_o(mem_wreg_o),
@@ -320,5 +346,3 @@ module openmips(
     );
 
 endmodule // openmips
-
-//<TODO>!!

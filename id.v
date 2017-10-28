@@ -10,6 +10,7 @@ module id(
     input wire ex_wreg_i,
     input wire[`RegBus] ex_wdata_i,
     input wire[`RegAddrBus] ex_wd_i,
+    input wire[`AluOpBus] ex_aluop_i,
     // From mem
     input wire mem_wreg_i,
     input wire[`RegBus] mem_wdata_i,
@@ -55,7 +56,29 @@ module id(
     reg[`RegBus] imm;
     reg instvalid;
 
-    assign stallreq = `NoStop; //<TODO> for load/store instruction
+    reg stallreq_for_reg1_loadrelate;
+    reg stallreq_for_reg2_loadrelate;
+    wire pre_inst_is_load;
+    assign stallreq = stallreq_for_reg1_loadrelate | stallreq_for_reg2_loadrelate;
+    assign pre_inst_is_load = ((ex_aluop_i == `EXE_LB_OP) || (ex_aluop_i == `EXE_LBU_OP) || (ex_aluop_i == `EXE_LH_OP) || (ex_aluop_i == `EXE_LHU_OP) || (ex_aluop_i == `EXE_LW_OP))? 1'b1: 1'b0;
+
+    always @(*) begin
+        stallreq_for_reg1_loadrelate <= `NoStop;
+        if (rst == `RstEnable) begin
+            reg1_o <= `ZeroWord; 
+        end else if (pre_inst_is_load == 1'b1 && ex_wd_i == reg1_addr_o && reg1_read_o == `ReadEnable) begin
+            stallreq_for_reg1_loadrelate <= `Stop; 
+        end
+    end
+
+    always @(*) begin
+        stallreq_for_reg2_loadrelate <= `NoStop;
+        if (rst == `RstEnable) begin
+            reg2_o <= `ZeroWord; 
+        end else if (pre_inst_is_load == 1'b1 && ex_wd_i == reg2_addr_o && reg2_read_o == `ReadEnable) begin
+            stallreq_for_reg2_loadrelate <= `Stop; 
+        end
+    end
 
     always @(*) begin
         if (rst == `RstEnable) begin

@@ -83,6 +83,16 @@
 `define EXE_BLTZ  5'b00000
 `define EXE_BNE   6'b000101
 
+// Instruction Load/Store
+`define EXE_LB 6'b100000
+`define EXE_LBU 6'b100100
+`define EXE_LH 6'b100001
+`define EXE_LHU 6'b100101
+`define EXE_LW 6'b100011
+`define EXE_SB 6'b101000
+`define EXE_SH 6'b101001
+`define EXE_SW 6'b101011
+
 // ALU Operation
 `define EXE_AND_OP 8'b00100100
 `define EXE_OR_OP 8'b00100101
@@ -113,17 +123,25 @@
 `define EXE_MULT_OP 8'b00011000
 `define EXE_MULTU_OP 8'b00011001
 `define EXE_MUL_OP 8'b10101001
-`define EXE_J_OP  8'b01001111
-`define EXE_JAL_OP  8'b01010000
-`define EXE_JALR_OP  8'b00001001
-`define EXE_JR_OP  8'b00001000
-`define EXE_BEQ_OP  8'b01010001
-`define EXE_BGEZ_OP  8'b01000001
-`define EXE_BGTZ_OP  8'b01010100
-`define EXE_BLEZ_OP  8'b01010011
-`define EXE_BLTZ_OP  8'b01000000
-`define EXE_BNE_OP  8'b01010010
-`define EXE_BGEZAL_OP  8'b01001011
+`define EXE_J_OP 8'b01001111
+`define EXE_JAL_OP 8'b01010000
+`define EXE_JALR_OP 8'b00001001
+`define EXE_JR_OP 8'b00001000
+`define EXE_BEQ_OP 8'b01010001
+`define EXE_BGEZ_OP 8'b01000001
+`define EXE_BGTZ_OP 8'b01010100
+`define EXE_BLEZ_OP 8'b01010011
+`define EXE_BLTZ_OP 8'b01000000
+`define EXE_BNE_OP 8'b01010010
+`define EXE_BGEZAL_OP 8'b01001011
+`define EXE_LB_OP 8'b11100000
+`define EXE_LBU_OP 8'b11100100
+`define EXE_LH_OP 8'b11100001
+`define EXE_LHU_OP 8'b11100101
+`define EXE_LW_OP 8'b11100011
+`define EXE_SB_OP  8'b11101000
+`define EXE_SH_OP  8'b11101001
+`define EXE_SW_OP  8'b11101011
 
 // ALU Selection
 `define EXE_RES_SHIFT 3'b010
@@ -133,6 +151,7 @@
 `define EXE_RES_MUL 3'b101
 `define EXE_RES_NOP 3'b000
 `define EXE_RES_JUMP_BRANCH 3'b110
+`define EXE_RES_LOAD_STORE 3'b111
 
 `define EXE_SPECIAL_INST 6'b000000
 `define EXE_REGIMM_INST 6'b000001
@@ -143,6 +162,13 @@
 `define InstBus 31:0
 `define InstMemNum 131071
 `define InstMemNumLog2 17
+
+// Instruction RAM
+`define DataAddrBus 31:0
+`define DataBus 31:0
+`define DataMemNum 131071
+`define DataMemNumLog2 17
+`define ByteWidth 7:0
 
 // Register
 `define RegAddrBus 4:0

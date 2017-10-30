@@ -1,9 +1,7 @@
 import re
 import sys
+from preprocessor import Preprocessor
 
-
-labels = {}
-num_inst = 0
 
 OP_SPECIAL = '000000'
 def zeros(num_zeros):
@@ -50,18 +48,18 @@ I = {
 
 # op(6) | rs(5) | rt(5) | offset(16)
 B = {
-    'BEQ':  Inst(in_specs=['rs', 'rt', 'imm'], out_specs=['000100', 'rs', 'rt',     'imm']),
-    'BGEZ': Inst(in_specs=['rs', 'imm'],       out_specs=['000001', 'rs', '00001',  'imm']),
-    'BGTZ': Inst(in_specs=['rs', 'imm'],       out_specs=['000111', 'rs', zeros(5), 'imm']),
-    'BLEZ': Inst(in_specs=['rs', 'imm'],       out_specs=['000110', 'rs', zeros(5), 'imm']),
-    'BLTZ': Inst(in_specs=['rs', 'imm'],       out_specs=['000001', 'rs', zeros(5), 'imm']),
-    'BNE':  Inst(in_specs=['rs', 'rt', 'imm'], out_specs=['000101', 'rs', 'rt',     'imm'])
+    'BEQ':  Inst(in_specs=['rs', 'rt', 'addr_b'], out_specs=['000100', 'rs', 'rt',     'addr_b']),
+    'BGEZ': Inst(in_specs=['rs', 'addr_b'],       out_specs=['000001', 'rs', '00001',  'addr_b']),
+    'BGTZ': Inst(in_specs=['rs', 'addr_b'],       out_specs=['000111', 'rs', zeros(5), 'addr_b']),
+    'BLEZ': Inst(in_specs=['rs', 'addr_b'],       out_specs=['000110', 'rs', zeros(5), 'addr_b']),
+    'BLTZ': Inst(in_specs=['rs', 'addr_b'],       out_specs=['000001', 'rs', zeros(5), 'addr_b']),
+    'BNE':  Inst(in_specs=['rs', 'rt', 'addr_b'], out_specs=['000101', 'rs', 'rt',     'addr_b'])
 }
 
 # op(6) | instr_index(26)
 J = {
-    'J':    Inst(in_specs=['idx'],      out_specs=['000010',   'idx']),
-    'JAL':  Inst(in_specs=['idx'],      out_specs=['000011',   'idx']),
+    'J':    Inst(in_specs=['addr_j'],      out_specs=['000010',   'addr_j']),
+    'JAL':  Inst(in_specs=['addr_j'],      out_specs=['000011',   'addr_j']),
     'JALR': Inst(in_specs=['rd', 'rs'], out_specs=[OP_SPECIAL, 'rs', zeros(5), 'rd',     zeros(5), '001001']), #  rd=31?
     'JR':   Inst(in_specs=['rs'],       out_specs=[OP_SPECIAL, 'rs', zeros(5), zeros(5), zeros(5), '001000'])
 }
@@ -83,8 +81,12 @@ M = {
     'MTLO': Inst(in_specs=['rs'], out_specs=[OP_SPECIAL, 'rs',     zeros(5), zeros(5), zeros(5), '010011'])
 }
 
+NOP = {
+    'NOP': Inst(in_specs=[], out_specs=[zeros(32)])
+}
+
 def find_inst(op):
-    for dic in (R, I, B, J, LS, M):
+    for dic in (R, I, B, J, LS, M, NOP):
         if op in dic.keys(): return dic[op]   
 
 
@@ -93,9 +95,13 @@ def reg2bin(reg):
     return '{:05b}'.format(int(reg[1:]))
 
 
-def imm2bin(imm, num_bits, divisor=1):
+def imm2bin(imm, num_bits, arith_right_shift=0):
     # imm = '0x1100'
-    return ('{:0' + str(num_bits) + 'b}').format(int(int(imm, 16) / divisor))
+    assert len(imm) >= 2, imm
+    num = int(imm, 16) >> arith_right_shift
+    if len(imm) == 6 and imm[2] in ['8', '9', 'A', 'B', 'C', 'D', 'E', 'F']:
+        num |= (1 << 16) - (1 << (16 - arith_right_shift))
+    return ('{:0' + str(num_bits) + 'b}').format(num)
 
 
 def arg2bin(arg, spec):
@@ -105,8 +111,10 @@ def arg2bin(arg, spec):
         return imm2bin(arg, 5)
     elif spec == 'imm':
         return imm2bin(arg, 16)
-    elif spec == 'idx':
-        return imm2bin(arg, 26, divisor=4)
+    elif spec == 'addr_b':
+        return imm2bin(arg, 16, arith_right_shift=2)
+    elif spec == 'addr_j':
+        return imm2bin(arg, 26, arith_right_shift=2)
     else:
         return spec    
 
@@ -117,6 +125,7 @@ def inst2hex(inst_in):
     op = args[0].upper()
     inst = find_inst(op)
 
+    assert inst != None, inst_in
     assert len(inst.in_specs) == len(args) - 1, inst_in
     spec2arg = dict(zip(inst.in_specs, args[1:]))
 
@@ -124,51 +133,7 @@ def inst2hex(inst_in):
     return str('{:08x}'.format(int(''.join(inst_out), 2)))
 
 
-def print_nop(fout):
-    global num_inst
-    print(zeros(8), file=fout)
-    num_inst += 1
-
-
-def process_nop(inst_in, fout):
-    global num_inst
-    if inst_in.upper() == 'NOP': 
-        print_nop(fout)
-        return True
-    if inst_in.startswith('.org'):
-        org_idx = int(int(inst_in.split()[1], 16) / 4)
-        num_nop_inserted = org_idx - num_inst
-        for _ in range(num_nop_inserted):
-            print_nop(fout)
-        return True
-    return False
-
-
-def process_label(inst_in):
-    global num_inst, labels
-    if inst_in.endswith(':'):
-        labels[inst_in[:-1].strip()] = num_inst
-        return True
-    return False
-
-
-def process_branch(inst_in):
-    global num_inst, labels
-    if inst_in.upper().startswith('B'):
-        target = inst_in.split(',')[-1]
-        try:
-            offset = int(target, 16)
-            return inst_in
-        except:
-            target_idx = labels[target]
-            offset = target_idx - num_inst - 1
-            return inst_in.replace(target, str(hex(offset)))
-    return inst_in
-    
-
 if __name__ == '__main__':
-    global num_inst, labels
-
     if len(sys.argv) < 2:
         print('Usage: python3 assembler.py [mips32.S]')
         sys.exit(1)
@@ -176,27 +141,11 @@ if __name__ == '__main__':
     in_filename = sys.argv[1]
     out_filename = in_filename[:-2] + '.data'
 
-    num_inst = 0
     with open(in_filename, 'r') as fin, open(out_filename, 'w') as fout:
-        for line in fin.readlines():
-            inst_in = line.strip()
-            if inst_in == '': continue
-            if process_label(inst_in): continue
-            if process_nop(inst_in, fout): continue
-            num_inst += 1
-
-    num_inst = 0
-    with open(in_filename, 'r') as fin, open(out_filename, 'w') as fout:
-        for line in fin.readlines():
-            inst_in = line.strip()
-            if inst_in == '': continue
-            if inst_in.endswith(':'): continue
-            if process_nop(inst_in, fout): continue
-            inst_in = process_branch(inst_in)
-
+        in_lines = Preprocessor().process(fin.readlines())
+        for inst_in in in_lines:
             inst_out = inst2hex(inst_in)
             assert len(inst_out) == 8, inst_in + ' => ' + inst_out
             print(inst_out, file=fout)
-            num_inst += 1
-            
+
         

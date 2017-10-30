@@ -18,6 +18,7 @@ class Preprocessor:
                 # The following inst's INDEX is 0x10, for each inst consumes 4 bytes.
 
     LABEL:      # Stands for the following inst's ADDRESS.
+                # NOTE that label must NOT be any valid hex/integer.
 
     j 0x40      # The next-next inst executed would be at ADDRESS 0x40.
     b 0x40      # The next-next inst executed would be at ADDRESS (current_PC + 4 + signext(0x40))

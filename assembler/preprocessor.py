@@ -36,7 +36,7 @@ class Preprocessor:
 
     def _2s_complement(self, x):
         if x >= 0: return '0x{:04x}'.format(x)
-        return str(hex(((abs(x) ^ 0xffff) + 1) & 0xffff))
+        return str(hex(((abs(x) ^ 0xffff) + 1) & 0xffff)).upper()
 
 
     def _process_format(self, in_lines):
@@ -96,7 +96,6 @@ class Preprocessor:
                         line = line.replace(target, self._2s_complement(addr))
                     else:
                         line = line.replace(target, self._2s_complement(addr - pc - 4))
-                    print (line)
             out_lines.append(line)
             pc += 4
         return out_lines

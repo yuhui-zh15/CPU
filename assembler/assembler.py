@@ -97,7 +97,11 @@ def reg2bin(reg):
 
 def imm2bin(imm, num_bits, arith_right_shift=0):
     # imm = '0x1100'
-    return ('{:0' + str(num_bits) + 'b}').format(int(imm, 16) >> arith_right_shift)
+    assert len(imm) >= 2, imm
+    num = int(imm, 16) >> arith_right_shift
+    if len(imm) == 6 and imm[2] in ['8', '9', 'A', 'B', 'C', 'D', 'E', 'F']:
+        num |= (1 << 16) - (1 << (16 - arith_right_shift))
+    return ('{:0' + str(num_bits) + 'b}').format(num)
 
 
 def arg2bin(arg, spec):
@@ -121,6 +125,7 @@ def inst2hex(inst_in):
     op = args[0].upper()
     inst = find_inst(op)
 
+    assert inst != None, inst_in
     assert len(inst.in_specs) == len(args) - 1, inst_in
     spec2arg = dict(zip(inst.in_specs, args[1:]))
 

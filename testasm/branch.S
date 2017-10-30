@@ -1,15 +1,19 @@
-   ori  $3,$0,0x8000 
-   sll  $3,$3,16               
+_start:
+   ori  $3,$0,0x8000
+   sll  $3,$3,0x10               
    ori  $1,$0,0x0001        
-   beq  $0,$0,s1    
+   beq  $0,$0,s1
    ori  $1,$0,0x0002        
+L1:
    ori  $1,$0,0x1111
    ori  $1,$0,0x1100
 
    .org 0x20
 s1:
-   ori  $1,$0,0x0003 
-
+   ori  $1,$0,0x0003        
+   nop
+   nop        
+                            
    ori  $1,$0,0x1100
    ori  $1,$0,0x1111
    bne  $1,$0,s3
@@ -69,4 +73,10 @@ s5:
    .org 0x160
 s6:
    ori $1,$0,0x0014       
+   nop
+   
+   
+    
+_loop:
+   j _loop
    nop

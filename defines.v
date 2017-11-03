@@ -143,6 +143,9 @@
 `define EXE_SH_OP  8'b11101001
 `define EXE_SW_OP  8'b11101011
 
+`define EXE_MFC0_OP 8'b01011101
+`define EXE_MTC0_OP 8'b01100000
+
 // ALU Selection
 `define EXE_RES_SHIFT 3'b010
 `define EXE_RES_LOGIC 3'b001

@@ -112,7 +112,7 @@ module id(
             link_addr_o <= `ZeroWord;
             branch_target_addr_o <= `ZeroWord;
             branch_flag_o <= `NotBranch;
-            next_inst_in_delay_slot_o <= `NotInDelaySlot;
+            next_inst_in_delay_slot_o <= `NotInDelaySlot;           
             case (op)
                 `EXE_LB: begin
                     wreg_o <= `WriteEnable;
@@ -646,6 +646,30 @@ module id(
                     instvalid <= `InstValid;
                 end                        
             end
+
+            // CP0 mfc0 & mtc0
+            if (inst_i[31:21] == 11'b01000000000 &&
+                inst_i[10:0] == 11'b00000000000)
+            begin
+                aluop_o <= `EXE_MFC0_OP;
+                alusel_o <= `EXE_RES_MOVE;
+                wd_o <= inst_i[20:16]; // rt
+                wreg_o <= `WriteEnable;
+                instvalid <= `InstValid;
+                reg1_read_o <= `ReadDisable;
+                reg2_read_o <= `ReadDisable;
+            end else if (inst_i[31:21] == 11'b01000000100 &&
+                         inst_i[10:0] == 11'b00000000000)
+            begin
+                aluop_o <= `EXE_MTC0_OP;
+                alusel_o <= `EXE_RES_NOP;
+                wreg_o <= `WriteDisable;
+                instvalid <= `InstValid;
+                reg1_read_o <= `ReadEnable;
+                reg1_addr_o <= inst_i[20:16]; // rt
+                reg2_read_o <= `ReadDisable;
+            end
+
         end
     end
 

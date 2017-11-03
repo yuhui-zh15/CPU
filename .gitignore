@@ -4,3 +4,4 @@ CPU.ip_user_files/
 CPU.sim/
 CPU.runs/
 CPU.xpr
+*.pyc

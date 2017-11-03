@@ -4,6 +4,8 @@ module openmips(
     input wire clk,
     input wire rst,
 
+    input wire[5:0] int_i,
+
     input wire[`RegBus] rom_data_i,
     output wire[`RegBus] rom_addr_o,
     output wire rom_ce_o,
@@ -13,7 +15,9 @@ module openmips(
     output wire[`RegBus] ram_data_o,
     output wire ram_we_o,
     output wire[3:0] ram_sel_o,
-    output wire ram_ce_o
+    output wire ram_ce_o,
+
+    output wire timer_int_o
 );
 
     wire[`InstAddrBus] pc;
@@ -49,6 +53,10 @@ module openmips(
 	wire[`RegBus] ex_mem_addr_o;
 	wire[`RegBus] ex_reg1_o;
 	wire[`RegBus] ex_reg2_o;	
+    wire ex_cp0_reg_we_o;
+    wire[4:0] ex_cp0_reg_write_addr_o;
+    wire[`RegBus] ex_cp0_reg_data_o;
+
 
     // Connect ex_mem to mem
     wire mem_wreg_i;
@@ -61,6 +69,9 @@ module openmips(
     wire[`RegBus] mem_mem_addr_i;
     wire[`RegBus] mem_reg1_i;
     wire[`RegBus] mem_reg2_i;
+    wire mem_cp0_reg_we_i;
+    wire[4:0] mem_cp0_reg_write_addr_i;
+    wire[`RegBus] mem_cp0_reg_data_i;
 
     // Connect mem to mem_wb
     wire mem_wreg_o;
@@ -69,6 +80,9 @@ module openmips(
     wire[`RegBus] mem_hi_o;
     wire[`RegBus] mem_lo_o;
     wire mem_whilo_o;
+    wire mem_cp0_reg_we_o;
+    wire[4:0] mem_cp0_reg_write_addr_o;
+    wire[`RegBus] mem_cp0_reg_data_o;
 
     // Connect mem_wb to rewrite
     wire wb_wreg_i;
@@ -77,6 +91,9 @@ module openmips(
     wire[`RegBus] wb_hi_i;
     wire[`RegBus] wb_lo_i;
     wire wb_whilo_i;
+    wire wb_cp0_reg_we_i;
+    wire[4:0] wb_cp0_reg_write_addr_i;
+    wire[`RegBus] wb_cp0_reg_data_i;
 
     // Connect id to regfile
     wire reg1_read;
@@ -102,6 +119,10 @@ module openmips(
     wire id_is_in_delay_slot_o;
     wire ex_is_in_delay_slot_i;
     wire[`RegBus] ex_link_addr_i;
+
+    // CP0
+    wire[`RegBus] cp0_data_o;
+    wire[4:0] cp0_raddr_i;
 
     // pc_reg
     pc_reg pc_reg0(
@@ -245,7 +266,19 @@ module openmips(
         .stallreq(stallreq_from_ex),
         // B&J
         .is_in_delay_slot_i(ex_is_in_delay_slot_i),
-        .link_addr_i(ex_link_addr_i)
+        .link_addr_i(ex_link_addr_i),
+        // CP0
+        .cp0_reg_data_o(ex_cp0_reg_data_o),
+        .cp0_reg_write_addr_o(ex_cp0_reg_write_addr_o),
+        .cp0_reg_we_o(ex_cp0_reg_we_o),
+        .cp0_reg_data_i(cp0_data_o),
+        .cp0_reg_read_addr_o(cp0_raddr_i),
+        .wb_cp0_reg_data(wb_cp0_reg_data_i),
+        .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
+        .wb_cp0_reg_we(wb_cp0_reg_we_i),
+        .mem_cp0_reg_data(mem_cp0_reg_data_o),
+        .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_o),
+        .mem_cp0_reg_we(mem_cp0_reg_we_o)
     );
 
     // ex_mem
@@ -272,7 +305,14 @@ module openmips(
         .mem_whilo(mem_whilo_i),
         .mem_aluop(mem_aluop_i),
         .mem_mem_addr(mem_mem_addr_i),
-        .mem_reg2(mem_reg2_i)
+        .mem_reg2(mem_reg2_i),
+        // CP0
+        .ex_cp0_reg_data(ex_cp0_reg_data_o),
+        .ex_cp0_reg_write_addr(ex_cp0_reg_write_addr_o),
+        .ex_cp0_reg_we(ex_cp0_reg_we_o),
+        .mem_cp0_reg_data(mem_cp0_reg_data_i),
+        .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_i),
+        .mem_cp0_reg_we(mem_cp0_reg_we_i)
     );
 
     // mem
@@ -301,7 +341,14 @@ module openmips(
         .mem_we_o(ram_we_o),
         .mem_sel_o(ram_sel_o),
         .mem_data_o(ram_data_o),
-        .mem_ce_o(ram_ce_o)
+        .mem_ce_o(ram_ce_o),
+        // CP0
+        .cp0_reg_data_i(mem_cp0_reg_data_i),
+        .cp0_reg_write_addr_i(mem_cp0_reg_write_addr_i),
+        .cp0_reg_we_i(mem_cp0_reg_we_i),
+        .cp0_reg_data_o(mem_cp0_reg_data_o),
+        .cp0_reg_write_addr_o(mem_cp0_reg_write_addr_o),
+        .cp0_reg_we_o(mem_cp0_reg_we_o)
     );
 
     // mem_wb
@@ -322,7 +369,14 @@ module openmips(
         .wb_wdata(wb_wdata_i),
         .wb_hi(wb_hi_i),
         .wb_lo(wb_lo_i),
-        .wb_whilo(wb_whilo_i)
+        .wb_whilo(wb_whilo_i),
+        // CP0
+        .mem_cp0_reg_data(mem_cp0_reg_data_o),
+        .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_o),
+        .mem_cp0_reg_we(mem_cp0_reg_we_o),
+        .wb_cp0_reg_data(wb_cp0_reg_data_i),
+        .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
+        .wb_cp0_reg_we(wb_cp0_reg_we_i)
     );
 
     // hilo_reg
@@ -344,6 +398,21 @@ module openmips(
         .stallreq_from_id(stallreq_from_id),
         .stallreq_from_ex(stallreq_from_ex),
         .stall(stall)
+    );
+
+    // cp0
+    cp0_reg cp0_reg0(
+        .rst(rst),
+        .clk(clk),
+
+        .int_i(int_i),
+        .timer_int_o(timer_int_o),
+
+        .data_i(wb_cp0_reg_data_i),
+        .waddr_i(wb_cp0_reg_write_addr_i),
+        .raddr_i(cp0_raddr_i),
+        .we_i(wb_cp0_reg_we_i),
+        .data_o(cp0_data_o),
     );
 
 endmodule // openmips

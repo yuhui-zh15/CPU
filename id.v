@@ -102,8 +102,8 @@ module id(
             reg2_addr_o <= `NOPRegAddr;
             imm <= `ZeroWord;
             // Exception
-            excepttype_is_syscall <= `Flase_v;
-            excepttype_is_eret <= `Flase_v;
+            excepttype_is_syscall <= `False_v;
+            excepttype_is_eret <= `False_v;
             // B&J
             link_addr_o <= `ZeroWord;
             branch_target_addr_o <= `ZeroWord;
@@ -121,8 +121,8 @@ module id(
             reg2_addr_o <= inst_i[20:16];
             imm <= `ZeroWord;
             // Exception
-            excepttype_is_syscall <= `Flase_v;
-            excepttype_is_eret <= `Flase_v;
+            excepttype_is_syscall <= `False_v;
+            excepttype_is_eret <= `False_v;
             // B&J
             link_addr_o <= `ZeroWord;
             branch_target_addr_o <= `ZeroWord;
@@ -203,7 +203,7 @@ module id(
                     case (op3)
                         `EXE_TEQ: begin
                             wreg_o <= `WriteDisable;
-                            aluop <= `EXE_TEQ_OP;
+                            aluop_o <= `EXE_TEQ_OP;
                             alusel_o <= `EXE_RES_NOP;
                             reg1_read_o <= `ReadEnable;
                             reg2_read_o <= `ReadEnable;
@@ -211,7 +211,7 @@ module id(
                         end
                         `EXE_TGE: begin
                             wreg_o <= `WriteDisable;
-                            aluop <= `EXE_TGE_OP;
+                            aluop_o <= `EXE_TGE_OP;
                             alusel_o <= `EXE_RES_NOP;
                             reg1_read_o <= `ReadEnable;
                             reg2_read_o <= `ReadEnable;
@@ -219,7 +219,7 @@ module id(
                         end
                         `EXE_TGEU: begin
                             wreg_o <= `WriteDisable;
-                            aluop <= `EXE_TGEU_OP;
+                            aluop_o <= `EXE_TGEU_OP;
                             alusel_o <= `EXE_RES_NOP;
                             reg1_read_o <= `ReadEnable;
                             reg2_read_o <= `ReadEnable;
@@ -227,7 +227,7 @@ module id(
                         end
                         `EXE_TLT: begin
                             wreg_o <= `WriteDisable;
-                            aluop <= `EXE_TLT_OP;
+                            aluop_o <= `EXE_TLT_OP;
                             alusel_o <= `EXE_RES_NOP;
                             reg1_read_o <= `ReadEnable;
                             reg2_read_o <= `ReadEnable;
@@ -235,7 +235,7 @@ module id(
                         end
                         `EXE_TLTU: begin
                             wreg_o <= `WriteDisable;
-                            aluop <= `EXE_TLTU_OP;
+                            aluop_o <= `EXE_TLTU_OP;
                             alusel_o <= `EXE_RES_NOP;
                             reg1_read_o <= `ReadEnable;
                             reg2_read_o <= `ReadEnable;
@@ -243,7 +243,7 @@ module id(
                         end
                         `EXE_TNE: begin
                             wreg_o <= `WriteDisable;
-                            aluop <= `EXE_TNE_OP;
+                            aluop_o <= `EXE_TNE_OP;
                             alusel_o <= `EXE_RES_NOP;
                             reg1_read_o <= `ReadEnable;
                             reg2_read_o <= `ReadEnable;

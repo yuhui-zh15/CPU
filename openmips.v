@@ -412,7 +412,7 @@ module openmips(
         .waddr_i(wb_cp0_reg_write_addr_i),
         .raddr_i(cp0_raddr_i),
         .we_i(wb_cp0_reg_we_i),
-        .data_o(cp0_data_o),
+        .data_o(cp0_data_o)
     );
 
 endmodule // openmips

@@ -21,8 +21,12 @@ module cp0_reg(
 	output reg[`RegBus] config_o,
 	output reg[`RegBus] prid_o,
 
-	output reg timer_int_o // whether exception happening
+	output reg timer_int_o, // whether exception happening
 
+	// Exception
+	input wire[31:0] excepttype_i,
+	input wire[`RegBus] current_inst_addr_i,
+	input wire is_in_delay_slot_i
 ); 
 
 // Operation for read
@@ -68,6 +72,84 @@ module cp0_reg(
 					end
 				endcase // waddr_i
 			end // if (we_i == `WriteEnable)
+
+			case (excepttype_i)
+				32'h00000001: begin
+					if (is_in_delay_slot_i == `InDelaySlot) begin
+						epc_o <= current_inst_addr_i - 4;
+						cause_o[31] <= 1'b1;
+					end else begin
+						epc_o <= current_inst_addr_i;
+						cause_o[31] <= 1'b0;
+					end
+					status_o[1] <= 1'b1;
+					cause_o[6:2] <= 5'b00000;
+				end
+
+				32'h00000008: begin
+					if (status_o[1] == 1'b0) begin
+						if (is_in_delay_slot_i == `InDelaySlot) begin
+							epc_o <= current_inst_addr_i - 4;
+							cause_o[31] <= 1'b1;
+						end else begin
+							epc_o <= current_inst_addr_i;
+							cause_o[31] <= 1'b0;
+						end
+					end
+					status_o[1] <= 1'b1;
+					cause_o[6:2] <= 5'b01000;					
+				end
+
+				32'h0000000a: begin
+					if (status_o[1] == 1'b0) begin
+						if (is_in_delay_slot_i == `InDelaySlot) begin
+							epc_o <= current_inst_addr_i - 4;
+							cause_o[31] <= 1'b1;
+						end else begin
+							epc_o <= current_inst_addr_i;
+							cause_o[31] <= 1'b0;
+						end
+					end
+					status_o[1] <= 1'b1;
+					cause_o[6:2] <= 5'b01010;					
+				end
+
+				32'h0000000d: begin
+					if (status_o[1] == 1'b0) begin
+						if (is_in_delay_slot_i == `InDelaySlot) begin
+							epc_o <= current_inst_addr_i - 4;
+							cause_o[31] <= 1'b1;
+						end else begin
+							epc_o <= current_inst_addr_i;
+							cause_o[31] <= 1'b0;
+						end
+					end
+					status_o[1] <= 1'b1;
+					cause_o[6:2] <= 5'b01101;					
+				end
+
+				32'h0000000c: begin
+					if (status_o[1] == 1'b0) begin
+						if (is_in_delay_slot_i == `InDelaySlot) begin
+							epc_o <= current_inst_addr_i - 4;
+							cause_o[31] <= 1'b1;
+						end else begin
+							epc_o <= current_inst_addr_i;
+							cause_o[31] <= 1'b0;
+						end
+					end
+					status_o[1] <= 1'b1;
+					cause_o[6:2] <= 5'b01100;					
+				end
+
+				32'h0000000e: begin
+					status_o[1] <= 1'b0;
+				end
+
+				default: begin
+				end
+
+			endcase // excepttype_i
 
 		end // if (rst == `RstEnable)
 	end // always @ (posedge clk)

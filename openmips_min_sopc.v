@@ -15,6 +15,12 @@ module openmips_min_sopc(
     wire[3:0] mem_sel_i;
     wire mem_ce_i;
 
+    // Exception
+    wire[5:0] int;
+    wire timer_int;
+
+    assign int = {5'b00000, timer_int};
+
     openmips openmips0(
         .clk(clk),
         .rst(rst),
@@ -26,7 +32,9 @@ module openmips_min_sopc(
         .ram_sel_o(mem_sel_i),
         .ram_data_o(mem_data_i),
         .ram_data_i(mem_data_o),
-        .ram_ce_o(mem_ce_i)
+        .ram_ce_o(mem_ce_i),
+        .int_i      (int),
+        .timer_int_o(timer_int)
     );
 
     inst_rom inst_rom0(

@@ -21,6 +21,14 @@ module cp0_reg(
 	output reg[`RegBus] config_o,
 	output reg[`RegBus] prid_o,
 
+	// tlb/mmu
+	output reg[`RegBus] index_o, // 0
+	output reg[`RegBus] entrylo0_o, // 2
+	output reg[`RegBus] entrylo1_o, // 3
+	output reg[`RegBus] pagemask_o, // 5
+	output reg[`RegBus] badvaddr_o, // 8
+	output reg[`RegBus] entryhi_o, // 10
+
 	output reg timer_int_o, // whether exception happening
 
 	// Exception
@@ -41,6 +49,12 @@ module cp0_reg(
 			config_o <= 32'b00000000000000001000000000000000;
 			prid_o <= 32'b00000000010011000000000000000000;
 			timer_int_o <= `InterruptNotAssert;
+			index_o <= `ZeroWord;
+			entrylo0_o <= `ZeroWord;
+			entrylo1_o <= `ZeroWord;
+			pagemask_o <= `ZeroWord;
+			badvaddr_o <= `ZeroWord;
+			entryhi_o <= `ZeroWord;
 		end else begin
 
 			count_o <= count_o + 1;
@@ -53,6 +67,29 @@ module cp0_reg(
 
 			if (we_i == `WriteEnable) begin
 				case (waddr_i)
+					`CP0_REG_INDEX: begin
+						index_o[31] <= data_i[31];
+						index_o[30:6] <= 25'b0000000000000000000000000;
+						index_o[5:0] <= data_i[5:0];
+					end
+					`CP0_REG_ENTRYLO0: begin
+						entrylo0_o[29:26] <= 4'b0000;
+						entrylo0_o[25:0] <= data_i[25:0];
+					end
+					`CP0_REG_ENTRYLO1: begin
+						entrylo1_o[29:26] <= 4'b0000;
+						entrylo1_o[25:0] <= data_i[25:0];
+					end
+					`CP0_REG_PAGEMASK: begin
+						pagemask_o[31:29] <= 3'b000;
+						pagemask_o[28:13] <= data_i[28:13];
+						pagemask_o[12:0] <= 13'b0000000000000;
+					end
+					`CP0_REG_ENTRYHI: begin
+						entryhi_o[31:13] <= data_i[31:13];
+						entryhi_o[12:8] <= 5'b00000;
+						entryhi_o[7:0] <= data_i[7:0];
+					end
 					`CP0_REG_COUNT: begin
 						count_o <= data_i;
 					end
@@ -161,6 +198,32 @@ module cp0_reg(
 			data_o <= `ZeroWord;
 		end else begin
 			case (raddr_i)
+				`CP0_REG_INDEX: begin
+					data_o[31] <= index_o[31];
+					data_o[30:6] <= 25'b0000000000000000000000000;
+					data_o[5:0] <= index_o[5:0];
+				end
+				`CP0_REG_ENTRYLO0: begin
+					data_o[31:26] <= 6'b000000;
+					data_o[25:0] <= entrylo0_o[25:0];
+				end
+				`CP0_REG_ENTRYLO1: begin
+					data_o[31:26] <= 6'b000000;
+					data_o[25:0] <= entrylo1_o[25:0];
+				end
+				`CP0_REG_PAGEMASK: begin
+					data_o[31:29] <= 3'b000;
+					data_o[28:13] <= pagemask_o[28:13];
+					data_o[12:0] <= 13'b0000000000000;
+				end
+				`CP0_REG_BADVADDR: begin
+					data_o <= badvaddr_o;
+				end
+				`CP0_REG_ENTRYHI: begin
+					data_o[31:13] <= entryhi_o[31:13];
+					data_o[12:8] <= 5'b00000;
+					data_o[7:0] <= entryhi_o[7:0];
+				end				
 				`CP0_REG_COUNT: begin
 					data_o <= count_o;
 				end

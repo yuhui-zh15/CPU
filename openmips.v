@@ -144,6 +144,12 @@ module openmips(
     wire[`RegBus]   cp0_epc;
     wire[`RegBus]   cp0_config;
     wire[`RegBus]   cp0_prid; 
+    wire[`RegBus]   cp0_index; 
+    wire[`RegBus]   cp0_entrylo0; 
+    wire[`RegBus]   cp0_entrylo1; 
+    wire[`RegBus]   cp0_badvaddr;
+    wire[`RegBus]   cp0_entryhi;
+    wire[`RegBus]   cp0_pagemask;
 
     wire[`RegBus] latest_epc;
 
@@ -495,6 +501,14 @@ module openmips(
         .epc_o(cp0_epc),
         .config_o(cp0_config),
         .prid_o(cp0_prid),
+
+        // MMU/TLB
+        .index_o            (cp0_index),
+        .entrylo0_o         (cp0_entrylo0),
+        .entrylo1_o         (cp0_entrylo1),
+        .pagemask_o         (cp0_pagemask),
+        .badvaddr_o         (cp0_badvaddr),
+        .entryhi_o          (cp0_entryhir),
 
         //Exception
         .excepttype_i       (mem_excepttype_o),

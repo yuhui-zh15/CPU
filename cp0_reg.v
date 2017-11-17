@@ -23,6 +23,7 @@ module cp0_reg(
 
 	// tlb/mmu
 	output reg[`RegBus] index_o, // 0
+	output reg[`RegBus] random_o, // 1
 	output reg[`RegBus] entrylo0_o, // 2
 	output reg[`RegBus] entrylo1_o, // 3
 	output reg[`RegBus] pagemask_o, // 5
@@ -50,6 +51,7 @@ module cp0_reg(
 			prid_o <= 32'b00000000010011000000000000000000;
 			timer_int_o <= `InterruptNotAssert;
 			index_o <= `ZeroWord;
+			random_o <= `ZeroWord;
 			entrylo0_o <= `ZeroWord;
 			entrylo1_o <= `ZeroWord;
 			pagemask_o <= `ZeroWord;
@@ -58,6 +60,7 @@ module cp0_reg(
 		end else begin
 
 			count_o <= count_o + 1;
+			random_o <= random_o + 1;
 			cause_o[15:10] <= int_i;
 
 			// clock interrupt
@@ -226,6 +229,9 @@ module cp0_reg(
 				end				
 				`CP0_REG_COUNT: begin
 					data_o <= count_o;
+				end
+				`CP0_REG_RANDOM: begin
+					data_o <= random_o;
 				end
 				`CP0_REG_COMPARE: begin
 					data_o <= compare_o;

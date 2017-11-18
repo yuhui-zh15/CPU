@@ -13,23 +13,73 @@ module tlb_reg(
     input wire[`RegBus] entrylo1_i,
     input wire[`RegBus] entryhi_i,
 
+    // mem->write CP0
+    input wire mem_cp0_reg_we,
+    input wire[4:0] mem_cp0_reg_write_addr,
+    input wire[`RegBus] mem_cp0_reg_data,
+    // wb->write C0
+    input wire wb_cp0_reg_we,
+    input wire[4:0] wb_cp0_reg_write_addr,
+    input wire[`RegBus] wb_cp0_reg_data,   
+
     output reg tlb_hit, // whether tlb success
     output reg[`RegBus] addr_o
     
 );
 
 	reg[`TlbBus] regs[0:15];
+	reg[3:0] tlbwi_i;
+	reg[3:0] tlbwr_i;
+	reg[`TlbBus] new_tlb;
+
+	always @ (*) begin
+		if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_INDEX) begin
+			tlbwi_i <= mem_cp0_reg_data[3:0];
+		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_INDEX) begin
+			tlbwi_i <= wb_cp0_reg_data[3:0];
+		end else begin
+			tlbwi_i <= index_i[3:0];
+		end
+	end
+
+	always @ (*) begin
+		if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_RANDOM) begin
+			tlbwr_i <= mem_cp0_reg_data[3:0];
+		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_RANDOM) begin
+			tlbwr_i <= wb_cp0_reg_data[3:0];
+		end else begin
+			tlbwr_i <= random_i[3:0];
+		end
+	end	
+
+	always @ (*) begin
+		if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYHI) begin
+			new_tlb = {mem_cp0_reg_data, entrylo0_i, entrylo1_i};
+		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYHI) begin
+			new_tlb = {wb_cp0_reg_data, entrylo0_i, entrylo1_i};
+		end if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYLO0) begin
+			new_tlb = {mem_cp0_reg_data, entrylo0_i, entrylo1_i};
+		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYLO0) begin
+			new_tlb = {wb_cp0_reg_data, entrylo0_i, entrylo1_i};
+		end if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYLO1) begin
+			new_tlb = {mem_cp0_reg_data, entrylo0_i, entrylo1_i};
+		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYLO1) begin
+			new_tlb = {wb_cp0_reg_data, entrylo0_i, entrylo1_i};
+		end else begin
+			new_tlb = {entryhi_i, entrylo0_i, entrylo1_i};
+		end
+	end
 	
 	always @(posedge clk) begin
 		if (rst == `RstDisable) begin
 		end else begin
 			// TLBWI
 			if (inst_i == 32'b01000010000000000000000000000010) begin
-				regs[index_i[3:0]] = {entryhi_i, entrylo0_i, entrylo1_i};
+				regs[tlbwi_i] = new_tlb;
 			end
 			// TLBWR
 			if (inst_i == 32'b01000010000000000000000000000110) begin
-				regs[random_i[3:0]] = {entryhi_i, entrylo0_i, entrylo1_i};
+				regs[tlbwr_i] = new_tlb;
 			end
 		end
 	end

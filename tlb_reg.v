@@ -92,12 +92,12 @@ module tlb_reg(
         	tlb_hit <= 1'b0;
         	addr_o <= `ZeroWord;
 
-        	if (addr_i >= 8'h80000000 && addr_i <= 8'h9fffffff) begin
+        	if (addr_i >= 32'h80000000 && addr_i <= 32'h9fffffff) begin
 
         		tlb_hit <= 1'b1;
         		addr_o <= {1'b0, addr_i[30:0]};
 
-        	end else if (addr_i >= 8'ha0000000 && addr_i <= 8'hbfffffff) begin
+        	end else if (addr_i >= 32'ha0000000 && addr_i <= 32'hbfffffff) begin
 
         		tlb_hit <= 1'b1;
         		addr_o <= {3'b0, addr_i[28:0]};

@@ -27,6 +27,10 @@ module mem(
     output reg[3:0] mem_sel_o,
     output reg[`RegBus] mem_data_o,
     output reg mem_ce_o,
+    // TLB/MMU
+    output wire[`InstAddrBus] virtual_addr,
+    input wire tlb_hit,
+    input wire[`InstAddrBus] physical_addr,
     // CP0
     input wire cp0_reg_we_i,
     input wire[4:0] cp0_reg_write_addr_i,
@@ -58,6 +62,8 @@ module mem(
     reg[`RegBus] cp0_epc;
 
     assign zero32 = `ZeroWord;
+
+    assign virtual_addr = mem_addr_i;
 
     assign is_in_delay_slot_o = is_in_delay_slot_i;
     assign current_inst_address_o =  current_inst_address_i;
@@ -114,6 +120,8 @@ module mem(
                     excepttype_o <= 32'h0000000c;
                 end else if (excepttype_i[12] == 1'b1) begin
                     excepttype_o <= 32'h0000000e;
+                end else if (excepttype_i[13] == 1'b1 || tlb_hit == 1'b0) begin
+                    excepttype_o <= 32'h0000000f;
                 end
             end
         end
@@ -153,11 +161,11 @@ module mem(
             cp0_reg_data_o <= cp0_reg_data_i;
             case (aluop_i)
                 `EXE_LB_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteDisable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien
-                    case (mem_addr_i[1:0])
+                    case (physical_addr[1:0])
                         2'b00: begin
                             wdata_o <= {{24{mem_data_i[31]}}, mem_data_i[31:24]};
                             mem_sel_o <= 4'b1000;
@@ -180,11 +188,11 @@ module mem(
                     endcase
                 end
                 `EXE_LBU_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteDisable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien
-                    case (mem_addr_i[1:0])
+                    case (physical_addr[1:0])
                         2'b00: begin
                             wdata_o <= {{24{1'b0}}, mem_data_i[31:24]};
                             mem_sel_o <= 4'b1000;
@@ -207,11 +215,11 @@ module mem(
                     endcase
                 end
                 `EXE_LH_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteDisable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien
-                    case (mem_addr_i[1:0])
+                    case (physical_addr[1:0])
                         2'b00: begin
                             wdata_o <= {{16{mem_data_i[31]}}, mem_data_i[31:16]};
                             mem_sel_o <= 4'b1100;
@@ -226,11 +234,11 @@ module mem(
                     endcase
                 end 
                 `EXE_LHU_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteDisable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien
-                    case (mem_addr_i[1:0])
+                    case (physical_addr[1:0])
                         2'b00: begin
                             wdata_o <= {{16{1'b0}}, mem_data_i[31:16]};
                             mem_sel_o <= 4'b1100;
@@ -245,7 +253,7 @@ module mem(
                     endcase
                 end
                 `EXE_LW_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteDisable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien
@@ -253,12 +261,12 @@ module mem(
                     mem_sel_o <= 4'b1111;
                 end
                 `EXE_SB_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteEnable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien
                     mem_data_o <= {reg2_i[7:0], reg2_i[7:0], reg2_i[7:0], reg2_i[7:0]};
-                    case (mem_addr_i[1:0])
+                    case (physical_addr[1:0])
                         2'b00: begin
                             mem_sel_o <= 4'b1000;
                         end
@@ -277,12 +285,12 @@ module mem(
                     endcase
                 end
                 `EXE_SH_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteEnable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien
                     mem_data_o <= {reg2_i[15:0], reg2_i[15:0]};
-                    case (mem_addr_i[1:0])
+                    case (physical_addr[1:0])
                         2'b00: begin
                             mem_sel_o <= 4'b1100;
                         end
@@ -295,7 +303,7 @@ module mem(
                     endcase
                 end
                 `EXE_SW_OP: begin
-                    mem_addr_o <= mem_addr_i;
+                    mem_addr_o <= physical_addr;
                     mem_we <= `WriteEnable;
                     mem_ce_o <= `ChipEnable;
                     //<TODO> Little endien

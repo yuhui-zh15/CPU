@@ -23,11 +23,14 @@ module openmips(
     wire[`InstAddrBus] pc;
     wire[`InstAddrBus] virtual_pc;
     wire[`InstAddrBus] physical_pc;
+    wire[`InstAddrBus] virtual_addr;
+    wire[`InstAddrBus] physical_addr;
     wire[`InstAddrBus] id_pc_i;
     wire[`InstBus] id_inst_i;
     wire[31:0] if_excepttype_o;
     wire[31:0] id_excepttype_i;
     wire tlb_hit;
+    wire mem_tlb_hit;
 
     // Connect id to id_ex
     wire[`AluOpBus] id_aluop_o;
@@ -458,7 +461,35 @@ module openmips(
         .cp0_epc_o             (latest_epc),
         .excepttype_o          (mem_excepttype_o),
         .current_inst_address_o(mem_current_inst_address_o),
-        .is_in_delay_slot_o    (mem_is_in_delay_slot_o)
+        .is_in_delay_slot_o    (mem_is_in_delay_slot_o),
+        // MMU/TLB
+        .virtual_addr          (virtual_addr),
+        .physical_addr         (physical_addr),
+        .tlb_hit               (mem_tlb_hit)
+    );
+
+    // mem_tlb
+    tlb_reg tlb_reg1(
+        .clk                   (clk),
+        .rst                   (rst),
+        .addr_i                (virtual_addr),
+        .inst_i                (ex_inst_i),
+
+        .index_i               (cp0_index),
+        .random_i              (cp0_random),
+        .entrylo0_i            (cp0_entrylo0),
+        .entrylo1_i            (cp0_entrylo1),
+        .entryhi_i             (cp0_entryhi),
+
+        .wb_cp0_reg_data(wb_cp0_reg_data_i),
+        .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
+        .wb_cp0_reg_we(wb_cp0_reg_we_i),
+        .mem_cp0_reg_data(mem_cp0_reg_data_o),
+        .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_o),
+        .mem_cp0_reg_we(mem_cp0_reg_we_o),
+
+        .tlb_hit               (mem_tlb_hit),
+        .addr_o                (physical_addr)     
     );
 
     // mem_wb

@@ -40,6 +40,9 @@ module ctrl(
                 32'h0000000e: begin
                     new_pc <= cp0_epc_i;
                 end
+                32'h0000000f: begin
+                    new_pc <= 32'h00000040; // need to be change to uCore
+                end
                 default: begin
                 end
             endcase // excepttype_i

@@ -159,6 +159,7 @@ module openmips(
     wire[`RegBus]   cp0_entryhi;
     wire[`RegBus]   cp0_random;
     wire[`RegBus]   cp0_pagemask;
+    wire[`RegBus]   bad_address;
 
     wire[`RegBus] latest_epc;
 
@@ -465,7 +466,8 @@ module openmips(
         // MMU/TLB
         .virtual_addr          (virtual_addr),
         .physical_addr         (physical_addr),
-        .tlb_hit               (mem_tlb_hit)
+        .tlb_hit               (mem_tlb_hit),
+        .bad_address           (bad_address)
     );
 
     // mem_tlb
@@ -582,7 +584,9 @@ module openmips(
         //Exception
         .excepttype_i       (mem_excepttype_o),
         .current_inst_addr_i(mem_current_inst_address_o),
-        .is_in_delay_slot_i (mem_is_in_delay_slot_o)
+        .is_in_delay_slot_i (mem_is_in_delay_slot_o),
+
+        .bad_address_i      (bad_address)
 
     );
 

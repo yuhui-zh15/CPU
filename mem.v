@@ -51,7 +51,8 @@ module mem(
     output reg[31:0] excepttype_o,
     output wire[`RegBus] cp0_epc_o,
     output wire is_in_delay_slot_o,
-    output wire[`RegBus] current_inst_address_o
+    output wire[`RegBus] current_inst_address_o,
+    output reg[`InstAddrBus] bad_address
 );
 
     wire[`RegBus] zero32;
@@ -105,8 +106,10 @@ module mem(
     always @ (*) begin
         if (rst == `RstEnable) begin
             excepttype_o <= `ZeroWord;
+            bad_address <= `ZeroWord;
         end else begin
             excepttype_o <= `ZeroWord;
+            bad_address <= `ZeroWord;
             if (current_inst_address_i != `ZeroWord) begin
                 if (((cp0_cause[15:8] & cp0_status[15:8]) != 8'h00) && (cp0_status[1] == 1'b0) && (cp0_status[0] == 1'b1)) begin
                     excepttype_o <= 32'h00000001;
@@ -120,8 +123,12 @@ module mem(
                     excepttype_o <= 32'h0000000c;
                 end else if (excepttype_i[12] == 1'b1) begin
                     excepttype_o <= 32'h0000000e;
-                end else if (excepttype_i[13] == 1'b1 || tlb_hit == 1'b0) begin
+                end else if (excepttype_i[13] == 1'b1) begin
                     excepttype_o <= 32'h0000000f;
+                    bad_address <= current_inst_address_i;
+                end else if (tlb_hit == 1'b0) begin
+                    excepttype_o <= 32'h0000000f;
+                    bad_address <= mem_addr_i;
                 end
             end
         end

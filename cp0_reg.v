@@ -188,7 +188,7 @@ module cp0_reg(
 				end
 
 				32'h0000000f: begin
-					if (status_o[1] == 1'b0) begin
+					if (status_o[1] == 1'b0) begin						
 						if (is_in_delay_slot_i == `InDelaySlot) begin
 							epc_o <= current_inst_addr_i - 4;
 							cause_o[31] <= 1'b1;

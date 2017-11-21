@@ -29,7 +29,7 @@ module if_id(
             id_excepttype <= `ZeroWord;
         end else if (stall[1] == `NoStop) begin
             id_pc <= if_pc;
-            if (if_excepttype[13] == 1'b1) begin
+            if (id_excepttype[13] == 1'b1) begin
                 id_inst <= `ZeroWord;
             end else begin
                 id_inst <= if_inst; 

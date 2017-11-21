@@ -20,20 +20,15 @@ module pc_reg(
     input wire [`RegBus] branch_target_addr_i
 );
 
-    always @(posedge clk) begin
-        if (ce == `ChipDisable) begin
-            pc <= `ZeroWord;
+    always @ (*) begin
+        if (tlb_hit == 1'b1) begin
+            pc <= physical_pc;
             excepttype_o <= `ZeroWord;
-        end else begin 
-            if (tlb_hit == 1'b1) begin
-                pc <= physical_pc;
-                excepttype_o <= `ZeroWord;
-            end else begin
-                pc <= `ZeroWord;
-                excepttype_o <= {18'b0, 1'b1, 13'b0};
-            end
+        end else begin
+            pc <= `ZeroWord;
+            excepttype_o <= {18'b0, 1'b1, 13'b0};
         end
-    end
+    end // always @ (*)
 
     always @(posedge clk) begin
         if (ce == `ChipDisable) begin

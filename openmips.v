@@ -21,8 +21,16 @@ module openmips(
 );
 
     wire[`InstAddrBus] pc;
+    wire[`InstAddrBus] virtual_pc;
+    wire[`InstAddrBus] physical_pc;
+    wire[`InstAddrBus] virtual_addr;
+    wire[`InstAddrBus] physical_addr;
     wire[`InstAddrBus] id_pc_i;
     wire[`InstBus] id_inst_i;
+    wire[31:0] if_excepttype_o;
+    wire[31:0] id_excepttype_i;
+    wire tlb_hit;
+    wire mem_tlb_hit;
 
     // Connect id to id_ex
     wire[`AluOpBus] id_aluop_o;
@@ -121,7 +129,8 @@ module openmips(
     wire[5:0] stall;
     wire stallreq_from_id;
     wire stallreq_from_ex;
-    
+    wire stallreq_from_mem;
+
     // B&J
     wire id_is_in_delay_slot_i;
     wire id_next_inst_in_delay_slot_o;
@@ -151,6 +160,7 @@ module openmips(
     wire[`RegBus]   cp0_entryhi;
     wire[`RegBus]   cp0_random;
     wire[`RegBus]   cp0_pagemask;
+    wire[`RegBus]   bad_address;
 
     wire[`RegBus] latest_epc;
 
@@ -168,7 +178,35 @@ module openmips(
         .branch_flag_i(id_branch_flag_o),
         .branch_target_addr_i(id_branch_target_addr_o),
         .flush(flush),
-        .new_pc(new_pc)
+        .new_pc(new_pc),
+        .excepttype_o        (if_excepttype_o),
+        .virtual_pc          (virtual_pc),
+        .tlb_hit             (tlb_hit),
+        .physical_pc         (physical_pc)
+    );
+
+    // if_tlb
+    tlb_reg tlb_reg0(
+        .clk                   (clk),
+        .rst                   (rst),
+        .addr_i                (virtual_pc),
+        .inst_i                (ex_inst_i),
+
+        .index_i               (cp0_index),
+        .random_i              (cp0_random),
+        .entrylo0_i            (cp0_entrylo0),
+        .entrylo1_i            (cp0_entrylo1),
+        .entryhi_i             (cp0_entryhi),
+
+        .wb_cp0_reg_data(wb_cp0_reg_data_i),
+        .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
+        .wb_cp0_reg_we(wb_cp0_reg_we_i),
+        .mem_cp0_reg_data(mem_cp0_reg_data_o),
+        .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_o),
+        .mem_cp0_reg_we(mem_cp0_reg_we_o),
+
+        .tlb_hit               (tlb_hit),
+        .addr_o                (physical_pc)     
     );
 
     assign rom_addr_o = pc;
@@ -178,11 +216,13 @@ module openmips(
         .clk(clk),
         .rst(rst),
         .stall(stall),
-        .if_pc(pc),
+        .if_pc(virtual_pc),
         .if_inst(rom_data_i),
         .id_pc(id_pc_i),
         .id_inst(id_inst_i),
-        .flush(flush)
+        .flush(flush),
+        .if_excepttype(if_excepttype_o),
+        .id_excepttype(id_excepttype_i)
     );
 
     // id
@@ -224,6 +264,7 @@ module openmips(
         .link_addr_o(id_link_addr_o),
         .is_in_delay_slot_o(id_is_in_delay_slot_o),
         // Exception
+        .excepttype_i             (id_excepttype_i),
         .excepttype_o(id_excepttype_o),
         .current_inst_address_o   (id_current_inst_address_o)
     );
@@ -422,7 +463,36 @@ module openmips(
         .cp0_epc_o             (latest_epc),
         .excepttype_o          (mem_excepttype_o),
         .current_inst_address_o(mem_current_inst_address_o),
-        .is_in_delay_slot_o    (mem_is_in_delay_slot_o)
+        .is_in_delay_slot_o    (mem_is_in_delay_slot_o),
+        // MMU/TLB
+        .virtual_addr          (virtual_addr),
+        .physical_addr         (physical_addr),
+        .tlb_hit               (mem_tlb_hit),
+        .bad_address           (bad_address)
+    );
+
+    // mem_tlb
+    tlb_reg tlb_reg1(
+        .clk                   (clk),
+        .rst                   (rst),
+        .addr_i                (virtual_addr),
+        .inst_i                (ex_inst_i),
+
+        .index_i               (cp0_index),
+        .random_i              (cp0_random),
+        .entrylo0_i            (cp0_entrylo0),
+        .entrylo1_i            (cp0_entrylo1),
+        .entryhi_i             (cp0_entryhi),
+
+        .wb_cp0_reg_data(wb_cp0_reg_data_i),
+        .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
+        .wb_cp0_reg_we(wb_cp0_reg_we_i),
+        .mem_cp0_reg_data(mem_cp0_reg_data_o),
+        .mem_cp0_reg_write_addr(mem_cp0_reg_write_addr_o),
+        .mem_cp0_reg_we(mem_cp0_reg_we_o),
+
+        .tlb_hit               (mem_tlb_hit),
+        .addr_o                (physical_addr)     
     );
 
     // mem_wb
@@ -473,6 +543,7 @@ module openmips(
         .rst(rst),
         .stallreq_from_id(stallreq_from_id),
         .stallreq_from_ex(stallreq_from_ex),
+        .stallreq_from_mem(ram_ce_o),
         .stall(stall),
         // Exception
         .flush           (flush),
@@ -515,7 +586,9 @@ module openmips(
         //Exception
         .excepttype_i       (mem_excepttype_o),
         .current_inst_addr_i(mem_current_inst_address_o),
-        .is_in_delay_slot_i (mem_is_in_delay_slot_o)
+        .is_in_delay_slot_i (mem_is_in_delay_slot_o),
+
+        .bad_address_i      (bad_address)
 
     );
 

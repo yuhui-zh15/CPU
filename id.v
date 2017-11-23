@@ -38,6 +38,7 @@ module id(
     // Pipeline stop/continue
     output wire stallreq,
     // Exception
+    input wire[31:0] excepttype_i,
     output wire[31:0] excepttype_o,
     output wire[`RegBus] current_inst_address_o
 );
@@ -45,7 +46,7 @@ module id(
     reg excepttype_is_syscall;
     reg excepttype_is_eret;
 
-    assign excepttype_o = {19'b0, excepttype_is_eret, 2'b0, instvalid, excepttype_is_syscall, 8'b0};
+    assign excepttype_o = {excepttype_i[31:13], excepttype_is_eret, excepttype_i[11:10], instvalid, excepttype_is_syscall, 8'b0};
     assign current_inst_address_o = pc_i;
 
     assign inst_o = inst_i;

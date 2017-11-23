@@ -33,6 +33,7 @@ module cp0_reg(
 	output reg timer_int_o, // whether exception happening
 
 	// Exception
+	input wire[31:0] bad_address_i,
 	input wire[31:0] excepttype_i,
 	input wire[`RegBus] current_inst_addr_i,
 	input wire is_in_delay_slot_i
@@ -184,6 +185,21 @@ module cp0_reg(
 
 				32'h0000000e: begin
 					status_o[1] <= 1'b0;
+				end
+
+				32'h0000000f: begin
+					if (status_o[1] == 1'b0) begin						
+						if (is_in_delay_slot_i == `InDelaySlot) begin
+							epc_o <= current_inst_addr_i - 4;
+							cause_o[31] <= 1'b1;
+						end else begin
+							epc_o <= current_inst_addr_i;
+							cause_o[31] <= 1'b0;
+						end
+					end
+					status_o[1] <= 1'b1;
+					cause_o[6:2] <= 5'b00010;
+					badvaddr_o <= bad_address_i;
 				end
 
 				default: begin

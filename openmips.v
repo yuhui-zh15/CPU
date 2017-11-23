@@ -129,7 +129,8 @@ module openmips(
     wire[5:0] stall;
     wire stallreq_from_id;
     wire stallreq_from_ex;
-    
+    wire stallreq_from_mem;
+
     // B&J
     wire id_is_in_delay_slot_i;
     wire id_next_inst_in_delay_slot_o;
@@ -542,6 +543,7 @@ module openmips(
         .rst(rst),
         .stallreq_from_id(stallreq_from_id),
         .stallreq_from_ex(stallreq_from_ex),
+        .stallreq_from_mem(ram_ce_o),
         .stall(stall),
         // Exception
         .flush           (flush),

@@ -4,6 +4,7 @@ module ctrl(
     input wire rst,
     input wire stallreq_from_id,
     input wire stallreq_from_ex,
+    input wire stallreq_from_mem,
     output reg[5:0] stall,
 
     // Exception
@@ -52,6 +53,9 @@ module ctrl(
         end else if (stallreq_from_id == `Stop) begin
             stall <= 6'b000111;
             flush <= 1'b0; 
+        end else if (stallreq_from_mem == `Stop) begin
+            stall <= 6'b000011;
+            flush <= 1'b0;
         end else begin
             stall <= 6'b000000; 
             flush <= 1'b0; 

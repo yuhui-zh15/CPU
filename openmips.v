@@ -6,16 +6,24 @@ module openmips(
 
     input wire[5:0] int_i,
 
-    input wire[`RegBus] rom_data_i,
-    output wire[`RegBus] rom_addr_o,
-    output wire rom_ce_o,
+    input wire[`RegBus] if_data_i,
+    output wire[`RegBus] if_addr_o,
+    output wire if_sram_ce_o,
+    output wire if_flash_ce_o,
+    output wire if_rom_ce_o,
+    output wire if_serial_ce_o,
+    output wire if_ce_o,
 
-    input wire[`RegBus] ram_data_i,
-    output wire[`RegBus] ram_addr_o,
-    output wire[`RegBus] ram_data_o,
-    output wire ram_we_o,
-    output wire[3:0] ram_sel_o,
-    output wire ram_ce_o,
+    input wire[`RegBus] mem_data_i,
+    output wire[`RegBus] mem_addr_o,
+    output wire[`RegBus] mem_data_o,
+    output wire mem_we_o,
+    output wire[3:0] mem_sel_o,
+    output wire mem_sram_ce_o,
+    output wire mem_flash_ce_o,
+    output wire mem_rom_ce_o,
+    output wire mem_serial_ce_o,
+    output wire mem_ce_o,
 
     output wire timer_int_o
 );
@@ -174,7 +182,7 @@ module openmips(
         .rst(rst),
         .stall(stall),
         .pc(pc),
-        .ce(rom_ce_o),
+        .ce(if_ce_o),
         .branch_flag_i(id_branch_flag_o),
         .branch_target_addr_i(id_branch_target_addr_o),
         .flush(flush),
@@ -206,10 +214,15 @@ module openmips(
         .mem_cp0_reg_we(mem_cp0_reg_we_o),
 
         .tlb_hit               (tlb_hit),
-        .addr_o                (physical_pc)     
+        .addr_o                (physical_pc),
+
+        .sram_ce               (if_sram_ce_o),
+        .flash_ce              (if_flash_ce_o),
+        .rom_ce                (if_rom_ce_o),
+        .serial_ce             (if_serial_ce_o)   
     );
 
-    assign rom_addr_o = pc;
+    assign if_addr_o = pc;
 
     // if_id
     if_id if_id0(
@@ -217,7 +230,7 @@ module openmips(
         .rst(rst),
         .stall(stall),
         .if_pc(virtual_pc),
-        .if_inst(rom_data_i),
+        .if_inst(if_data_i),
         .id_pc(id_pc_i),
         .id_inst(id_inst_i),
         .flush(flush),
@@ -437,12 +450,12 @@ module openmips(
         .lo_o(mem_lo_o),
         .whilo_o(mem_whilo_o),
         // L&S
-        .mem_data_i(ram_data_i),
-        .mem_addr_o(ram_addr_o),
-        .mem_we_o(ram_we_o),
-        .mem_sel_o(ram_sel_o),
-        .mem_data_o(ram_data_o),
-        .mem_ce_o(ram_ce_o),
+        .mem_data_i(mem_data_i),
+        .mem_addr_o(mem_addr_o),
+        .mem_we_o(mem_we_o),
+        .mem_sel_o(mem_sel_o),
+        .mem_data_o(mem_data_o),
+        .mem_ce_o(mem_ce_o),
         // CP0
         .cp0_reg_data_i(mem_cp0_reg_data_i),
         .cp0_reg_write_addr_i(mem_cp0_reg_write_addr_i),
@@ -492,7 +505,12 @@ module openmips(
         .mem_cp0_reg_we(mem_cp0_reg_we_o),
 
         .tlb_hit               (mem_tlb_hit),
-        .addr_o                (physical_addr)     
+        .addr_o                (physical_addr),
+
+        .sram_ce               (mem_sram_ce_o),
+        .flash_ce              (mem_flash_ce_o),
+        .rom_ce                (mem_rom_ce_o),
+        .serial_ce             (mem_serial_ce_o)
     );
 
     // mem_wb
@@ -543,7 +561,7 @@ module openmips(
         .rst(rst),
         .stallreq_from_id(stallreq_from_id),
         .stallreq_from_ex(stallreq_from_ex),
-        .stallreq_from_mem(ram_ce_o),
+        .stallreq_from_mem(mem_ce_o),
         .stall(stall),
         // Exception
         .flush           (flush),

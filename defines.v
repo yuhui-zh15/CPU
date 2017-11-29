@@ -163,8 +163,8 @@
 // Instruction ROM
 `define InstAddrBus 31:0
 `define InstBus 31:0
-`define InstMemNum 131071
-`define InstMemNumLog2 17
+`define InstMemNum 262143
+`define InstMemNumLog2 18
 
 // Instruction RAM
 `define DataAddrBus 31:0

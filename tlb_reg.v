@@ -75,7 +75,7 @@ module tlb_reg(
 	end
 	
 	always @(posedge clk) begin
-		if (rst == `RstDisable) begin
+		if (rst == `RstEnable) begin
 		end else begin
 			// TLBWI
 			if (inst_i == 32'b01000010000000000000000000000010) begin
@@ -89,7 +89,7 @@ module tlb_reg(
 	end
 
     always @ (*) begin
-        if (rst == `RstDisable) begin
+        if (rst == `RstEnable) begin
             tlb_hit <= 1'b0;
             addr_o <= `ZeroWord;
             sram_ce <= 1'b0;

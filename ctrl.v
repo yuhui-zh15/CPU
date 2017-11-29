@@ -24,25 +24,25 @@ module ctrl(
             stall <= 6'b000000;
             case (excepttype_i)
                 32'h00000001: begin
-                    new_pc <= 32'h00000020;
+                    new_pc <= 32'h80000380;
                 end
                 32'h00000008: begin
-                    new_pc <= 32'h00000040;
+                    new_pc <= 32'h80000380;
                 end
                 32'h0000000a: begin
-                    new_pc <= 32'h00000040;
+                    new_pc <= 32'h80000380;
                 end
                 32'h0000000d: begin
-                    new_pc <= 32'h00000040;
+                    new_pc <= 32'h80000380;
                 end
                 32'h0000000c: begin
-                    new_pc <= 32'h00000040;
+                    new_pc <= 32'h80000380;
                 end
                 32'h0000000e: begin
                     new_pc <= cp0_epc_i;
                 end
                 32'h0000000f: begin
-                    new_pc <= 32'h00000040; // need to be change to uCore
+                    new_pc <= 32'h80000380; // need to be change to uCore
                 end
                 default: begin
                 end

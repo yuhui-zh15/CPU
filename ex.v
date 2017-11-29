@@ -244,10 +244,10 @@ module ex(
                     moveres <= cp0_reg_data_i;
                     if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == inst_i[15:11])
                     begin
-                        moveres = mem_cp0_reg_data;
+                        moveres <= mem_cp0_reg_data;
                     end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == inst_i[15:11])
                     begin
-                        moveres = wb_cp0_reg_data;
+                        moveres <= wb_cp0_reg_data;
                     end
                 end
                 default: begin 

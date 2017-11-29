@@ -16,9 +16,8 @@ module data_ram(
 
     always @(posedge clk) begin
         if (ce == `ChipDisable) begin
-            // data_o <= `ZeroWord; //<TODO>? 
+            data_o <= `ZeroWord;
         end else if (we == `WriteEnable) begin
-            // <TODO>: Little endien
             if (sel[3] == 1'b1) begin
                 data_mem3[addr[`DataMemNumLog2+1:2]] <= data_i[31:24]; 
             end

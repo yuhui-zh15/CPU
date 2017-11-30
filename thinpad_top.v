@@ -75,7 +75,6 @@ output wire[3:0] base_ram_be_n;
 output wire base_ram_ce_n;
 output wire base_ram_oe_n;
 output wire base_ram_we_n;
-assign base_ram_be_n = 4'b0; // keep ByteEnable zero if you don't know what it is
 
 //Extension memory signals
 inout wire[31:0] ext_ram_data;
@@ -84,7 +83,6 @@ output wire[3:0] ext_ram_be_n;
 output wire ext_ram_ce_n;
 output wire ext_ram_oe_n;
 output wire ext_ram_we_n;
-assign ext_ram_be_n = 4'b0; // keep ByteEnable zero if you don't know what it is
 
 //Ext serial port signals
 output wire txd;
@@ -181,32 +179,54 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
 );
 /* =========== Demo code end =========== */
 
-    // output wire flash_vpen; // <TODO>: meaning?
     wire[5:0] int;
     wire timer_int;
     assign int = {5'b00000, timer_int};
-    assign flash_rp_n = 1'b1;
-    assign flash_we_n = 1'b1;
-    assign flash_byte_n = 1'b1;
-    assign flash_oe_n = 1'b0;
-    assign base_ram_oe_n = 1'b0;
     
     openmips openmips0(
-        .clk(clk_in), // <TODO>: clk_in 50MHz too high
+        .clk(clk_uart_in), // 11.592MHz ok?
         .rst(touch_btn[5]),
-        .rom_addr_o(flash_a), // rom_addr_o[31:0], flash_a[22:0], seems no problem
-        .rom_data_i(flash_data), // <TODO>: rom_data_i[31:0], flash_data[15:0]
-        .rom_ce_o(~flash_ce_n),
-        
-        .ram_we_o(~base_ram_we_n),
-        .ram_addr_o(base_ram_addr), // ram_addr_o[31:0], base_ram_addr[19:0], seems no problem
-        .ram_sel_o(~base_ram_be_n),
-        .ram_data_o(base_ram_data), // <TODO>: output ram_data_o, inout base_ram_data
-        .ram_data_i(base_ram_data), // <TODO>: input ram_data_i, inout base_ram_data
-        .ram_ce_o(~base_ram_ce_n),
+    
+        .if_addr_o(ext_ram_addr),
+        .if_data_i(ext_ram_data),
+        .if_ce_o(~ext_ram_ce_n),
+        .mem_we_o(~base_ram_we_n),
+        .mem_addr_o(base_ram_addr),
+        .mem_sel_o(~base_ram_be_n),
+        .mem_data_o(openmips_mem_data_o),
+        .mem_data_i(openmips_mem_data_i),
+        .mem_ce_o(~base_ram_ce_n),
 
-        .int_i(int), // <TODO>: function?
-        .timer_int_o(timer_int) // <TODO>: function?
+        .int_i(int),
+        .timer_int_o(timer_int)
     );
+
+    reg[31:0] openmips_mem_data_o;
+    wire[31:0] openmips_mem_data_i;
+    
+    assign base_ram_data = ~base_ram_we_n ? openmips_mem_data_o : 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
+    assign openmips_mem_data_i = base_ram_data; // To read from inout net
+
+    assign base_ram_oe_n = 1'b0;
+    assign ext_ram_oe_n = 1'b0;
+    assign ext_raw_we_n = 1'b1;
+    assign ext_ram_be_n = 4'b0; 
+
+// Base memory signals, a.k.a. RAM1
+// inout wire[31:0] base_ram_data; ok
+// output wire[19:0] base_ram_addr; ok
+// output wire[3:0] base_ram_be_n; ok
+// output wire base_ram_ce_n; ok
+// output wire base_ram_oe_n; ok
+// output wire base_ram_we_n; ok
+// assign base_ram_be_n = 4'b0; ok
+
+// Extension memory signals
+// inout wire[31:0] ext_ram_data; ok
+// output wire[19:0] ext_ram_addr; ok
+// output wire[3:0] ext_ram_be_n; ok
+// output wire ext_ram_ce_n; ok
+// output wire ext_ram_oe_n; ok
+// output wire ext_ram_we_n; ok            
 
 endmodule

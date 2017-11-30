@@ -188,13 +188,13 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
-        .if_data_i(openmips_if_data_i),
+        .if_data_i(base_ram_data),
         .if_ce_o(openmips_if_ce_o),
         .mem_we_o(openmips_mem_we_o),
         .mem_addr_o(openmips_mem_addr_o),
         .mem_sel_o(openmips_mem_sel_o),
         .mem_data_o(openmips_mem_data_o),
-        .mem_data_i(openmips_mem_data_i),
+        .mem_data_i(base_ram_data),
         .mem_ce_o(openmips_mem_ce_o),
 
         .int_i(int),
@@ -202,13 +202,13 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     );
 
     wire[31:0] openmips_if_addr_o; //ok
-    reg[31:0] openmips_if_data_i; //ok
+    wire[31:0] openmips_if_data_i; //ok
     wire openmips_if_ce_o; // ok
     wire openmips_mem_we_o; //ok
     wire[31:0] openmips_mem_addr_o; //ok
     wire[3:0] openmips_mem_sel_o; //ok
     wire[31:0] openmips_mem_data_o; //ok
-    reg[31:0] openmips_mem_data_i; //ok
+    wire[31:0] openmips_mem_data_i; //ok
     wire openmips_mem_ce_o; //ok
 
     assign base_ram_data = openmips_mem_we_o ? openmips_mem_data_o : 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
@@ -217,6 +217,8 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     assign base_ram_ce_n = ~(openmips_if_ce_o || openmips_mem_ce_o);
     assign base_ram_oe_n = 1'b0;
     assign base_ram_we_n = ~openmips_mem_we_o;
+    // assign openmips_if_data_i = base_ram_data;
+    // assign openmips_mem_data_i = base_ram_data;
 
     reg[31:0] base_ram_addr_reg;
     always @(posedge clk_uart_in) begin
@@ -228,17 +230,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             base_ram_addr_reg <= 32'b0; 
         end
     end
-
     
-    always @(posedge clk_uart_in) begin
-        if (openmips_mem_ce_o) begin
-            openmips_mem_data_i <= base_ram_data; 
-        end else if (openmips_if_ce_o) begin
-            openmips_if_data_i <= base_ram_data; 
-        end
-    end
-    
-
 // Base memory signals
 // inout wire[31:0] base_ram_data; ok
 // output wire[19:0] base_ram_addr; ok

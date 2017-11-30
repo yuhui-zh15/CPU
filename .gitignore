@@ -5,3 +5,4 @@ CPU.sim/
 CPU.runs/
 CPU.xpr
 *.pyc
+inst_ram.coe

@@ -187,46 +187,64 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .clk(clk_uart_in), // 11.592MHz ok?
         .rst(touch_btn[5]),
     
-        .if_addr_o(ext_ram_addr),
-        .if_data_i(ext_ram_data),
-        .if_ce_o(~ext_ram_ce_n),
-        .mem_we_o(~base_ram_we_n),
-        .mem_addr_o(base_ram_addr),
-        .mem_sel_o(~base_ram_be_n),
+        .if_addr_o(openmips_if_addr_o),
+        .if_data_i(openmips_if_data_i),
+        .if_ce_o(openmips_if_ce_o),
+        .mem_we_o(openmips_mem_we_o),
+        .mem_addr_o(openmips_mem_addr_o),
+        .mem_sel_o(openmips_mem_sel_o),
         .mem_data_o(openmips_mem_data_o),
         .mem_data_i(openmips_mem_data_i),
-        .mem_ce_o(~base_ram_ce_n),
+        .mem_ce_o(openmips_mem_ce_o),
 
         .int_i(int),
         .timer_int_o(timer_int)
     );
 
-    reg[31:0] openmips_mem_data_o;
-    wire[31:0] openmips_mem_data_i;
-    
-    assign base_ram_data = ~base_ram_we_n ? openmips_mem_data_o : 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
-    assign openmips_mem_data_i = base_ram_data; // To read from inout net
+    wire[31:0] openmips_if_addr_o; //ok
+    reg[31:0] openmips_if_data_i; //ok
+    wire openmips_if_ce_o; // ok
+    wire openmips_mem_we_o; //ok
+    wire[31:0] openmips_mem_addr_o; //ok
+    wire[3:0] openmips_mem_sel_o; //ok
+    wire[31:0] openmips_mem_data_o; //ok
+    reg[31:0] openmips_mem_data_i; //ok
+    wire openmips_mem_ce_o; //ok
 
+    assign base_ram_data = openmips_mem_we_o ? openmips_mem_data_o : 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
+    assign base_ram_addr = base_ram_addr_reg;
+    assign base_ram_be_n = ~openmips_mem_sel_o;
+    assign base_ram_ce_n = ~(openmips_if_ce_o || openmips_mem_ce_o);
     assign base_ram_oe_n = 1'b0;
-    assign ext_ram_oe_n = 1'b0;
-    assign ext_raw_we_n = 1'b1;
-    assign ext_ram_be_n = 4'b0; 
+    assign base_ram_we_n = ~openmips_mem_we_o;
 
-// Base memory signals, a.k.a. RAM1
+    reg[31:0] base_ram_addr_reg;
+    always @(posedge clk_uart_in) begin
+        if (openmips_mem_ce_o) begin
+            base_ram_addr_reg <= openmips_mem_addr_o; 
+        end else if (openmips_if_ce_o) begin
+            base_ram_addr_reg <= openmips_if_addr_o; 
+        end else begin
+            base_ram_addr_reg <= 32'b0; 
+        end
+    end
+
+    
+    always @(posedge clk_uart_in) begin
+        if (openmips_mem_ce_o) begin
+            openmips_mem_data_i <= base_ram_data; 
+        end else if (openmips_if_ce_o) begin
+            openmips_if_data_i <= base_ram_data; 
+        end
+    end
+    
+
+// Base memory signals
 // inout wire[31:0] base_ram_data; ok
 // output wire[19:0] base_ram_addr; ok
 // output wire[3:0] base_ram_be_n; ok
 // output wire base_ram_ce_n; ok
 // output wire base_ram_oe_n; ok
 // output wire base_ram_we_n; ok
-// assign base_ram_be_n = 4'b0; ok
-
-// Extension memory signals
-// inout wire[31:0] ext_ram_data; ok
-// output wire[19:0] ext_ram_addr; ok
-// output wire[3:0] ext_ram_be_n; ok
-// output wire ext_ram_ce_n; ok
-// output wire ext_ram_oe_n; ok
-// output wire ext_ram_we_n; ok            
-
+        
 endmodule

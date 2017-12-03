@@ -75,7 +75,6 @@ module id(
     always @(*) begin
         stallreq_for_reg1_loadrelate <= `NoStop;
         if (rst == `RstEnable) begin
-            reg1_o <= `ZeroWord; 
         end else if (pre_inst_is_load == 1'b1 && ex_wd_i == reg1_addr_o && reg1_read_o == `ReadEnable) begin
             stallreq_for_reg1_loadrelate <= `Stop; 
         end
@@ -84,7 +83,6 @@ module id(
     always @(*) begin
         stallreq_for_reg2_loadrelate <= `NoStop;
         if (rst == `RstEnable) begin
-            reg2_o <= `ZeroWord; 
         end else if (pre_inst_is_load == 1'b1 && ex_wd_i == reg2_addr_o && reg2_read_o == `ReadEnable) begin
             stallreq_for_reg2_loadrelate <= `Stop; 
         end

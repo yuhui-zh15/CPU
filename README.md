@@ -1,6 +1,6 @@
 # CPU
 
-Our first version of CPU
+Our second version of CPU
 
 # Group
 

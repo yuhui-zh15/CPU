@@ -141,20 +141,20 @@ SEG7_LUT segH(.oSEG1({leds[31:30],leds[27:25],leds[28],leds[29],leds[24]}), .iDI
 reg[23:0] counter;
 reg[15:0] led_bits;
 // always @(posedge clk_in) begin
-//     if (touch_btn[5]) begin //reset
-//         counter <= 0;
-//         led_bits[15:0] <= dip_sw[15:0] ^ dip_sw[31:16];
-//         // number <= 0;
-//     end
-//     else begin
-//         counter <= counter+1;
-//         if (&counter) begin
-//             led_bits[15:0] <= {led_bits[14:0],led_bits[15]};
-//             // number <= number + 1;
-//         end
-//     end
+//      if (touch_btn[5]) begin //reset
+//          //counter <= 0;
+// //         led_bits[15:0] <= dip_sw[15:0] ^ dip_sw[31:16];
+//          number <= 0;
+//      end
+// //     else begin
+// //         counter <= counter+1;
+// //         if (&counter) begin
+// //             led_bits[15:0] <= {led_bits[14:0],led_bits[15]};
+// //             // number <= number + 1;
+// //         end
+// //     end
 // end
-// assign leds[15:0] = led_bits;
+assign leds[15:0] = led_bits;
 
 //Ext serial port receive and transmit, 115200 baudrate, no parity
 wire [7:0] RxD_data;
@@ -182,9 +182,9 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire[5:0] int;
     wire timer_int;
     assign int = {5'b00000, timer_int};
-    
+
     openmips openmips0(
-        .clk(clk_uart_in), // 11.592MHz ok?
+        .clk(touch_btn[4]), // 11.592MHz ok?
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
@@ -216,20 +216,25 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire openmips_mem_serial_ce_o;
 
     assign base_ram_data = openmips_mem_we_o ? openmips_mem_data_o : 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
-    assign base_ram_addr = base_ram_addr_reg;
+    assign base_ram_addr = base_ram_addr_reg[21:2];
     assign base_ram_be_n = ~openmips_mem_sel_o;
     assign base_ram_ce_n = ~(openmips_if_ce_o || openmips_mem_ce_o);
     assign base_ram_oe_n = 1'b0;
     assign base_ram_we_n = ~openmips_mem_we_o;
-    assign openmips_if_data_i = base_ram_data;
-    assign openmips_mem_data_i = base_ram_data;
+    assign openmips_if_data_i = base_ram_ce_n ? 32'b0 : base_ram_data;
+    assign openmips_mem_data_i = base_ram_ce_n ? 32'b0 : base_ram_data;
 
     reg[31:0] base_ram_addr_reg;
-    always @(posedge clk_in) begin
-        if (openmips_mem_ce_o) begin
+    always @(*) begin
+        // number <= openmips_if_addr_o[7:0];
+        // led_bits <= openmips_if_data_i[15:0];
+        led_bits <= {openmips_mem_serial_ce_o, 14'b0, openmips_mem_ce_o};
+        if (touch_btn[5]) begin
+            number <= 8'b0; 
+        end else if (openmips_mem_ce_o) begin
             if (openmips_mem_serial_ce_o) begin
-                number <= openmips_mem_data_o[7:0];
-                led_bits <= openmips_mem_data_o[15:0];
+                number <= 8'b11110001;
+                led_bits <= ~openmips_mem_data_o[15:0];
             end else begin
                 base_ram_addr_reg <= openmips_mem_addr_o; 
             end

@@ -108,6 +108,15 @@ module tlb_reg(
 
         		tlb_hit <= 1'b1;
         		addr_o <= {1'b0, addr_i[30:0]};
+        	//ZYH
+        		sram_ce <= 1'b1;
+        	end else if (addr_i == 32'hbfd0f000) begin
+        		tlb_hit <= 1'b1;
+        		serial_ce <= 1'b1;
+        	end else if (addr_i == 32'hbfd0f010) begin
+        		tlb_hit <= 1'b1;
+        		serial_ce <= 1'b0;
+        	//ZYH
 
         	end else if (addr_i >= 32'ha0000000 && addr_i <= 32'hbfffffff) begin
 

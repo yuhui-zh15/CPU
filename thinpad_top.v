@@ -141,18 +141,18 @@ SEG7_LUT segH(.oSEG1({leds[31:30],leds[27:25],leds[28],leds[29],leds[24]}), .iDI
 reg[23:0] counter;
 reg[15:0] led_bits;
 // always @(posedge clk_in) begin
-//      if (touch_btn[5]) begin //reset
-//          //counter <= 0;
-// //         led_bits[15:0] <= dip_sw[15:0] ^ dip_sw[31:16];
-//          number <= 0;
-//      end
-// //     else begin
-// //         counter <= counter+1;
-// //         if (&counter) begin
-// //             led_bits[15:0] <= {led_bits[14:0],led_bits[15]};
-// //             // number <= number + 1;
-// //         end
-// //     end
+//     if (touch_btn[5]) begin //reset
+//         counter <= 0;
+//         led_bits[15:0] <= dip_sw[15:0] ^ dip_sw[31:16];
+//         // number <= 0;
+//     end
+//     else begin
+//         counter <= counter+1;
+//         if (&counter) begin
+//             led_bits[15:0] <= {led_bits[14:0],led_bits[15]};
+//             // number <= number + 1;
+//         end
+//     end
 // end
 assign leds[15:0] = led_bits;
 

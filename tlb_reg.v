@@ -112,10 +112,10 @@ module tlb_reg(
         		sram_ce <= 1'b1;
         	end else if (addr_i == 32'hbfd0f000) begin
         		tlb_hit <= 1'b1;
-        		serial_ce <= 1'b1;
+        		serial_ce <= 1'b0;
         	end else if (addr_i == 32'hbfd0f010) begin
         		tlb_hit <= 1'b1;
-        		serial_ce <= 1'b0;
+        		serial_ce <= 1'b1;
         	//ZYH
 
         	end else if (addr_i >= 32'ha0000000 && addr_i <= 32'hbfffffff) begin

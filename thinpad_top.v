@@ -184,7 +184,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     assign int = {5'b00000, timer_int};
 
     openmips openmips0(
-        .clk(touch_btn[4]), // 11.592MHz ok?
+        .clk(clk_uart_in), // 11.592MHz ok?
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
@@ -233,7 +233,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             number <= 8'b0; 
         end else if (openmips_mem_ce_o) begin
             if (openmips_mem_serial_ce_o) begin
-                number <= 8'b11110001;
+                number <= openmips_mem_data_o[7:0];
                 led_bits <= ~openmips_mem_data_o[15:0];
             end else begin
                 base_ram_addr_reg <= openmips_mem_addr_o; 

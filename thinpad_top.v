@@ -232,12 +232,11 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         if (touch_btn[5]) begin
             number <= 8'b0; 
         end else if (openmips_mem_ce_o) begin
-            if (openmips_mem_serial_ce_o) begin
-                number <= openmips_mem_data_o[7:0];
-                led_bits <= ~openmips_mem_data_o[15:0];
-            end else begin
-                base_ram_addr_reg <= openmips_mem_addr_o; 
-            end
+            // if (openmips_mem_serial_ce_o) begin
+            //     number <= openmips_mem_data_o[7:0];
+            //     led_bits <= ~openmips_mem_data_o[15:0];
+            // end
+            base_ram_addr_reg <= openmips_mem_addr_o; 
         end else if (openmips_if_ce_o) begin
             base_ram_addr_reg <= openmips_if_addr_o; 
         end else begin

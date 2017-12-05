@@ -113,7 +113,6 @@ module tlb_reg(
         	end else if (addr_i == 32'hbfd0f000) begin
         		tlb_hit <= 1'b1;
         		serial_ce <= 1'b0;
-				
         	end else if (addr_i == 32'hbfd0f010) begin
         		tlb_hit <= 1'b1;
         		serial_ce <= 1'b1;

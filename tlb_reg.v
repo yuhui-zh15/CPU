@@ -108,17 +108,7 @@ module tlb_reg(
 
         		tlb_hit <= 1'b1;
         		addr_o <= {1'b0, addr_i[30:0]};
-        	//ZYH
         		sram_ce <= 1'b1;
-        	end else if (addr_i == 32'hbfd0f000) begin
-        		tlb_hit <= 1'b1;
-        		serial_ce <= 1'b0;
-        	end else if (addr_i == 32'hbfd0f010) begin
-        		tlb_hit <= 1'b1;
-        		serial_ce <= 1'b1;
-				sram_ce <= 1'b1;
-				addr_o <= 32'h00200001;
-        	//ZYH
 
         	end else if (addr_i >= 32'ha0000000 && addr_i <= 32'hbfffffff) begin
 
@@ -129,8 +119,8 @@ module tlb_reg(
         			flash_ce <= 1'b1;
         		end else if (addr_i >= 32'hbfc00000 && addr_i <= 32'hbfc00fff) begin
         			rom_ce <= 1'b1;
-        		end else if (addr_i >= 32'hbfd003f8 && addr_i <= 32'hbfd003fc) begin
-        			serial_ce <= 1'b1;
+				end else if (addr_i == 32'hbfd0f010) begin
+					serial_ce <= 1'b1;
         		end
 
         	end else begin

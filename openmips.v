@@ -176,6 +176,9 @@ module openmips(
     wire flush;
     wire[`RegBus] new_pc;
 
+    // others
+    wire we_from_mem;
+
     // pc_reg
     pc_reg pc_reg0(
         .clk(clk),
@@ -452,7 +455,7 @@ module openmips(
         // L&S
         .mem_data_i(mem_data_i),
         .mem_addr_o(mem_addr_o),
-        .mem_we_o(mem_we_o),
+        .mem_we_o(we_from_mem),
         .mem_sel_o(mem_sel_o),
         .mem_data_o(mem_data_o),
         .mem_ce_o(mem_ce_o),
@@ -558,6 +561,7 @@ module openmips(
 
     // ctrl0
     ctrl ctrl0(
+        .clk              (clk),
         .rst(rst),
         .stallreq_from_id(stallreq_from_id),
         .stallreq_from_ex(stallreq_from_ex),
@@ -567,7 +571,9 @@ module openmips(
         .flush           (flush),
         .new_pc          (new_pc),
         .cp0_epc_i       (latest_epc),
-        .excepttype_i    (mem_excepttype_o)
+        .excepttype_i    (mem_excepttype_o),
+        .mem_we_o         (mem_we_o),
+        .mem_we_i         (we_from_mem)
     );
 
     // cp0

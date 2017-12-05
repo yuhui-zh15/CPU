@@ -571,10 +571,10 @@ module id(
                     reg1_read_o <= 1'b1;
                     reg2_read_o <= 1'b1;
                     instvalid <= `InstValid;
+                    next_inst_in_delay_slot_o <= `InDelaySlot;
                     if (reg1_o == reg2_o) begin
                         branch_target_addr_o <= pc_plus_4 + imm_sll2_signedext;
                         branch_flag_o <= `Branch;
-                        next_inst_in_delay_slot_o <= `InDelaySlot;
                     end 
                 end
                 `EXE_BGTZ: begin
@@ -584,10 +584,10 @@ module id(
                     reg1_read_o <= 1'b1;
                     reg2_read_o <= 1'b0;
                     instvalid <= `InstValid;
+                    next_inst_in_delay_slot_o <= `InDelaySlot;
                     if ((reg1_o[31] == 1'b0 && (reg1_o != `ZeroWord))) begin
                         branch_target_addr_o <= pc_plus_4 + imm_sll2_signedext;
-                        branch_flag_o <= `Branch;
-                        next_inst_in_delay_slot_o <= `InDelaySlot;
+                        branch_flag_o <= `Branch;                        
                     end
                 end
                 `EXE_BLEZ: begin
@@ -597,10 +597,10 @@ module id(
                     reg1_read_o <= 1'b1;
                     reg2_read_o <= 1'b0;
                     instvalid <= `InstValid;
+                    next_inst_in_delay_slot_o <= `InDelaySlot;
                     if ((reg1_o[31] == 1'b1) || (reg1_o == `ZeroWord)) begin
                         branch_target_addr_o <= pc_plus_4 + imm_sll2_signedext;
-                        branch_flag_o <= `Branch;
-                        next_inst_in_delay_slot_o <= `InDelaySlot;
+                        branch_flag_o <= `Branch;                        
                     end
                 end
                 `EXE_BNE: begin
@@ -610,10 +610,10 @@ module id(
                     reg1_read_o <= 1'b1;
                     reg2_read_o <= 1'b1;
                     instvalid <= `InstValid;
+                    next_inst_in_delay_slot_o <= `InDelaySlot;
                     if (reg1_o != reg2_o) begin
                         branch_target_addr_o <= pc_plus_4 + imm_sll2_signedext;
-                        branch_flag_o <= `Branch;
-                        next_inst_in_delay_slot_o <= `InDelaySlot;
+                        branch_flag_o <= `Branch;                        
                     end
                 end
                 `EXE_REGIMM_INST: begin
@@ -679,10 +679,10 @@ module id(
                             reg1_read_o <= 1'b1;
                             reg2_read_o <= 1'b0;
                             instvalid <= `InstValid;
+                            next_inst_in_delay_slot_o <= `InDelaySlot;
                             if (reg1_o[31] == 1'b0) begin
                                 branch_target_addr_o <= pc_plus_4 + imm_sll2_signedext;
-                                branch_flag_o <= `Branch;
-                                next_inst_in_delay_slot_o <= `InDelaySlot;
+                                branch_flag_o <= `Branch;                                
                             end
                         end
                         `EXE_BLTZ: begin
@@ -692,10 +692,10 @@ module id(
                             reg1_read_o <= 1'b1;
                             reg2_read_o <= 1'b0;
                             instvalid <= `InstValid;
+                            next_inst_in_delay_slot_o <= `InDelaySlot;
                             if (reg1_o[31] == 1'b1) begin
                                 branch_target_addr_o <= pc_plus_4 + imm_sll2_signedext;
-                                branch_flag_o <= `Branch;
-                                next_inst_in_delay_slot_o <= `InDelaySlot;
+                                branch_flag_o <= `Branch;                                
                             end
                         end
                     endcase

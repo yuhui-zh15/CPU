@@ -215,35 +215,19 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire openmips_mem_sram_ce_o;
     wire openmips_mem_serial_ce_o;
 
-    assign base_ram_data = base_ram_data_reg; // To drive the inout net
+    assign base_ram_data = openmips_mem_we_o? openmips_mem_data_o: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
     assign base_ram_addr = base_ram_addr_reg[21:2];
     assign base_ram_be_n = ~openmips_mem_sel_o;
-    assign base_ram_ce_n = ~(openmips_if_ce_o || openmips_mem_ce_o);
+    assign base_ram_ce_n = base_ram_ce_reg;
     assign base_ram_oe_n = 1'b0;
     assign base_ram_we_n = ~openmips_mem_we_o;
     assign openmips_if_data_i = base_ram_ce_n ? 32'b0 : base_ram_data;
     assign openmips_mem_data_i = base_ram_ce_n ? 32'b0 : base_ram_data;
 
-    reg[31:0] base_ram_data_reg;
-    always @(*) begin
-        base_ram_data_reg <= 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;
-        if (openmips_mem_we_o) begin
-            if (openmips_mem_sel_o[0]) begin
-                base_ram_data_reg[7:0] <= openmips_mem_data_o[7:0]; 
-            end
-            if (openmips_mem_sel_o[1]) begin
-                base_ram_data_reg[15:8] <= openmips_mem_data_o[15:8]; 
-            end
-            if (openmips_mem_sel_o[2]) begin
-                base_ram_data_reg[23:16] <= openmips_mem_data_o[23:16]; 
-            end
-            if (openmips_mem_sel_o[3]) begin
-                base_ram_data_reg[31:24] <= openmips_mem_data_o[31:24]; 
-            end
-        end      
+    reg base_ram_ce_reg;
+    always @(posedge clk_in) begin
+        base_ram_ce_reg <= ~(openmips_if_ce_o || openmips_mem_ce_o);
     end
-
-    
 
     always @(posedge clk_in) begin
         if (touch_btn[5]) begin

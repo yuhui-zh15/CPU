@@ -221,7 +221,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     assign openmips_mem_data_i = base_ram_data;
 
     reg[31:0] base_ram_addr_reg;
-    always @(posedge clk_uart_in) begin
+    always @(*) begin
         if (openmips_mem_ce_o) begin
             base_ram_addr_reg <= openmips_mem_addr_o; 
         end else if (openmips_if_ce_o) begin

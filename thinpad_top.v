@@ -156,6 +156,14 @@ reg[15:0] led_bits;
 // end
 assign leds[15:0] = led_bits;
 
+reg clk_25;
+initial begin
+    clk_25 <= 1'b0;
+end
+always @(posedge clk_in) begin
+    clk_25 <= ~clk_25;
+end
+
 //Ext serial port receive and transmit, 115200 baudrate, no parity
 wire [7:0] RxD_data;
 wire RxD_data_ready;
@@ -184,7 +192,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     assign int = {5'b00000, timer_int};
 
     openmips openmips0(
-        .clk(clk_uart_in), // 11.592MHz ok?
+        .clk(clk_25), // 25MHz
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),

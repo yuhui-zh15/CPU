@@ -1,33 +1,39 @@
 `include "defines.v"
+`timescale 1ns/1ps
 
 module thinpad_min_sopc();
 
     wire [31:0] ram_data;
-    wire [31:0] ram_addr;
+    wire [19:0] ram_addr;
     wire ram_be_n;
     wire ram_ce_n;
     wire ram_we_n;
     wire [5:0] touch_btn;
 
     reg clk;
+    reg clk_25;
     reg rst;
 
     initial begin
-        clk = 1'b0;
+        clk = 1'b0; 
         forever #10 clk = ~clk; 
+    end
+    initial begin
+        clk_25 = 1'b0;
+        forever #20 clk_25 = ~clk_25;
     end
 
     initial begin
         rst = 1'b1;
         #195 rst = 1'b0;
-        #5000000 $stop; 
+        #50000000 $stop; 
     end
 
     assign touch_btn = {rst, 5'b00000};
 
     thinpad_top thinpad_top0(
         .clk_in(clk),
-        .clk_uart_in(clk),
+        .clk_uart_in(clk_25),
         .touch_btn(touch_btn),
         .base_ram_data(ram_data),
         .base_ram_addr(ram_addr),

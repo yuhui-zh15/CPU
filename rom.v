@@ -12,7 +12,7 @@ module rom(
         if (ce == `ChipDisable) begin
             inst <= `ZeroWord; 
         end else begin
-            inst <= inst_mem[addr[`RomNumLog2+1:2]]; // <TODO> last 2 bit?
+            inst <= inst_mem[addr]; // <TODO> last 2 bit?
         end
     end
 

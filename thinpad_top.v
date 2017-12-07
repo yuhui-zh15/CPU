@@ -70,33 +70,33 @@ input wire uart_tsre;
 
 //Base memory signals, a.k.a. RAM1
 inout wire[31:0] base_ram_data; // [7:0] also connected to CPLD
-output wire[19:0] base_ram_addr;
-output wire[3:0] base_ram_be_n;
-output wire base_ram_ce_n;
-output wire base_ram_oe_n;
-output wire base_ram_we_n;
+output reg[19:0] base_ram_addr;
+output reg[3:0] base_ram_be_n;
+output reg base_ram_ce_n;
+output reg base_ram_oe_n;
+output reg base_ram_we_n;
 
 //Extension memory signals
 inout wire[31:0] ext_ram_data;
-output wire[19:0] ext_ram_addr;
-output wire[3:0] ext_ram_be_n;
-output wire ext_ram_ce_n;
-output wire ext_ram_oe_n;
-output wire ext_ram_we_n;
+output reg[19:0] ext_ram_addr;
+output reg[3:0] ext_ram_be_n;
+output reg ext_ram_ce_n;
+output reg ext_ram_oe_n;
+output reg ext_ram_we_n;
 
 //Ext serial port signals
 output wire txd;
 input wire rxd;
 
 //Flash memory, JS28F640
-output wire[22:0] flash_a;
-output wire flash_rp_n;
-output wire flash_vpen;
-output wire flash_oe_n;
+output reg[22:0] flash_a;
+output reg flash_rp_n;
+output wire flash_vpen; // ???
+output reg flash_oe_n;
 inout wire[15:0] flash_data;
-output wire flash_ce_n;
-output wire flash_byte_n;
-output wire flash_we_n;
+output reg flash_ce_n;
+output reg flash_byte_n;
+output reg flash_we_n;
 
 //SL811 USB controller signals
 output wire sl811_a0;
@@ -167,10 +167,12 @@ end
 //Ext serial port receive and transmit, 115200 baudrate, no parity
 wire [7:0] RxD_data;
 wire RxD_data_ready;
+reg [7:0] TxD_data;
+reg TxD_start;
 async_receiver #(.ClkFrequency(11059200),.Baud(115200)) 
     uart_r(.clk(clk_uart_in),.RxD(rxd),.RxD_data_ready(RxD_data_ready),.RxD_data(RxD_data));
 async_transmitter #(.ClkFrequency(11059200),.Baud(115200)) 
-    uart_t(.clk(clk_uart_in),.TxD(txd),.TxD_start(RxD_data_ready),.TxD_data(RxD_data)); //transmit data back
+    uart_t(.clk(clk_uart_in),.TxD(txd),.TxD_start(TxD_start),.TxD_data(TxD_data)); //transmit data back
 
 //VGA display pattern generation
 wire[2:0] red,green;
@@ -198,6 +200,10 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .if_addr_o(openmips_if_addr_o),
         .if_data_i(openmips_if_data_i),
         .if_ce_o(openmips_if_ce_o),
+        .if_sram_ce_o(openmips_if_sram_ce_o),
+        .if_flash_ce_o(openmips_if_flash_ce_o),
+        .if_serial_ce_o(openmips_if_serial_ce_o),
+        .if_rom_ce_o(openmips_if_rom_ce_o),
         .mem_we_o(openmips_mem_we_o),
         .mem_addr_o(openmips_mem_addr_o),
         .mem_sel_o(openmips_mem_sel_o),
@@ -205,32 +211,148 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .mem_data_i(openmips_mem_data_i),
         .mem_ce_o(openmips_mem_ce_o),
         .mem_sram_ce_o(openmips_mem_sram_ce_o),
+        .mem_flash_ce_o(openmips_mem_flash_ce_o),
         .mem_serial_ce_o(openmips_mem_serial_ce_o),
+        .mem_rom_ce_o(openmips_mem_rom_ce_o),
 
         .int_i(int),
         .timer_int_o(timer_int)
     );
 
-    wire[31:0] openmips_if_addr_o; //ok
-    wire[31:0] openmips_if_data_i; //ok
-    wire openmips_if_ce_o; // ok
-    wire openmips_mem_we_o; //ok
-    wire[31:0] openmips_mem_addr_o; //ok
-    wire[3:0] openmips_mem_sel_o; //ok
-    wire[31:0] openmips_mem_data_o; //ok
-    wire[31:0] openmips_mem_data_i; //ok
-    wire openmips_mem_ce_o; //ok
+    wire[31:0] openmips_if_addr_o;
+    reg[31:0] openmips_if_data_i;
+    wire openmips_if_ce_o;
+    wire openmips_if_sram_ce_o;
+    wire openmips_if_flash_ce_o;
+    wire openmips_if_serial_ce_o;
+    wire openmips_if_rom_ce_o;
+    wire openmips_mem_we_o;
+    wire[31:0] openmips_mem_addr_o;
+    wire[3:0] openmips_mem_sel_o;
+    wire[31:0] openmips_mem_data_o;
+    reg[31:0] openmips_mem_data_i;
+    wire openmips_mem_ce_o;
     wire openmips_mem_sram_ce_o;
+    wire openmips_mem_flash_ce_o;
     wire openmips_mem_serial_ce_o;
+    wire openmips_mem_rom_ce_o;
 
-    assign base_ram_data = openmips_mem_we_o? openmips_mem_data_o: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
-    assign base_ram_addr = base_ram_addr_reg[21:2];
-    assign base_ram_be_n = ~openmips_mem_sel_o;
-    assign base_ram_ce_n = ~(openmips_if_ce_o || openmips_mem_ce_o);
-    assign base_ram_oe_n = 1'b0;
-    assign base_ram_we_n = ~openmips_mem_we_o;
-    assign openmips_if_data_i = base_ram_ce_n ? 32'b0 : base_ram_data;
-    assign openmips_mem_data_i = base_ram_ce_n ? 32'b0 : base_ram_data;
+    rom rom0(
+        .ce(rom_ce),
+        .addr(rom_addr),
+        .inst(rom_data)
+    );
+
+    reg rom_ce;
+    reg[31:0] rom_addr; // <TODO>
+    wire[31:0] rom_data;
+
+    assign base_ram_data = (openmips_mem_ce_o && openmips_mem_sram_ce_o && openmips_mem_we_o)? openmips_mem_data_o: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
+
+    always @(*) begin
+        if (touch_btn[5]) begin
+            base_ram_addr <= 20'b0;
+            base_ram_be_n <= 4'b1111;
+            base_ram_ce_n <= 1'b1;
+            base_ram_oe_n <= 1'b1;
+            base_ram_we_n <= 1'b1;
+            flash_a <= 23'b0;
+            flash_rp_n <= 1'b1;
+            flash_oe_n <= 1'b1;
+            flash_ce_n <= 1'b1;
+            flash_byte_n <= 1'b1;
+            flash_we_n <= 1'b1;
+            TxD_data <= 8'b0;
+            TxD_start <= 1'b0;
+            rom_ce <= 1'b0;
+            rom_addr <= 32'b0; // <TODO>
+            openmips_if_data_i <= 32'b0;
+            openmips_mem_data_i <= 32'b0;
+        end else begin
+            base_ram_addr <= 20'b0;
+            base_ram_be_n <= 4'b1111;
+            base_ram_ce_n <= 1'b1;
+            base_ram_oe_n <= 1'b1;
+            base_ram_we_n <= 1'b1;
+            flash_a <= 23'b0;
+            flash_rp_n <= 1'b1;
+            flash_oe_n <= 1'b1;
+            flash_ce_n <= 1'b1;
+            flash_byte_n <= 1'b1;
+            flash_we_n <= 1'b1;
+            TxD_data <= 8'b0;
+            TxD_start <= 1'b0;
+            rom_ce <= 1'b0;
+            rom_addr <= 32'b0; // <TODO>
+            openmips_if_data_i <= 32'b0;
+            openmips_mem_data_i <= 32'b0;
+            if (openmips_mem_ce_o) begin
+                if (openmips_mem_sram_ce_o) begin
+                    base_ram_addr <= openmips_mem_addr_o[21:2];
+                    base_ram_be_n <= ~openmips_mem_sel_o;
+                    base_ram_ce_n <= 1'b0;
+                    if (openmips_mem_we_o) begin
+                        base_ram_oe_n <= 1'b1;
+                        base_ram_we_n <= 1'b0;
+                    end else begin
+                        base_ram_oe_n <= 1'b0;
+                        base_ram_we_n <= 1'b1;
+                        openmips_mem_data_i <= base_ram_data;
+                    end
+                end else if (openmips_mem_flash_ce_o) begin
+                    flash_a <= openmips_mem_addr_o[22:0];
+                    flash_rp_n <= 1'b1;
+                    flash_oe_n <= 1'b0;
+                    flash_ce_n <= 1'b0;
+                    flash_byte_n <= 1'b1;
+                    flash_we_n <= 1'b1;
+                    openmips_mem_data_i <= { 16'b0, flash_data }; // <TODO> flash_data is 16bit
+                end else if (openmips_mem_serial_ce_o) begin
+                    if (openmips_mem_we_o) begin
+                        TxD_data <= openmips_mem_data_o[7:0];
+                        TxD_start <= 1'b0;
+                    end else begin
+                        if (RxD_data_ready) begin
+                            openmips_mem_data_i <= { 24'b0, RxD_data }; // <TODO> 8bit
+                        end else begin
+                            // <TODO> 
+                        end
+                    end
+                end else if (openmips_mem_rom_ce_o) begin
+                    rom_addr <= openmips_mem_addr_o;
+                    rom_ce <= 1'b1;
+                    openmips_mem_data_i <= rom_data; 
+                end
+            end else if (openmips_if_ce_o) begin
+                if (openmips_if_sram_ce_o) begin
+                    base_ram_addr <= openmips_if_addr_o[21:2];
+                    base_ram_be_n <= 4'b0000;
+                    base_ram_ce_n <= 1'b0;
+                    base_ram_oe_n <= 1'b0;
+                    base_ram_we_n <= 1'b1;
+                    openmips_if_data_i <= base_ram_data;       
+                end else if (openmips_if_flash_ce_o) begin
+                    flash_a <= openmips_if_addr_o[22:0];
+                    flash_rp_n <= 1'b1;
+                    flash_oe_n <= 1'b0;
+                    flash_ce_n <= 1'b0;
+                    flash_byte_n <= 1'b1;
+                    flash_we_n <= 1'b1;
+                    openmips_if_data_i <= { 16'b0, flash_data };
+                end else if (openmips_if_serial_ce_o) begin
+                    if (RxD_data_ready) begin
+                        openmips_if_data_i <= { 24'b0, RxD_data }; // <TODO> 8bit
+                    end else begin
+                        // <TODO> if it is not ready?
+                    end
+                end else if (openmips_if_rom_ce_o) begin
+                    rom_addr <= openmips_if_addr_o;
+                    rom_ce <= 1'b1;
+                    openmips_if_data_i <= rom_data;
+                end
+            end
+        end
+    end
 
     always @(posedge clk_in) begin
         if (touch_btn[5]) begin
@@ -243,23 +365,4 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         end
     end
 
-    reg[31:0] base_ram_addr_reg;
-    always @(*) begin
-        if (openmips_mem_ce_o) begin
-            base_ram_addr_reg <= openmips_mem_addr_o;
-        end else if (openmips_if_ce_o) begin
-            base_ram_addr_reg <= openmips_if_addr_o; 
-        end else begin
-            base_ram_addr_reg <= 32'b0; 
-        end
-    end
-    
-// Base memory signals
-// inout wire[31:0] base_ram_data; ok
-// output wire[19:0] base_ram_addr; ok
-// output wire[3:0] base_ram_be_n; ok
-// output wire base_ram_ce_n; ok
-// output wire base_ram_oe_n; ok
-// output wire base_ram_we_n; ok
-        
 endmodule

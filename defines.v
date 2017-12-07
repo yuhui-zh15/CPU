@@ -165,6 +165,9 @@
 `define InstBus 31:0
 `define InstMemNum 262143
 `define InstMemNumLog2 18
+`define RomBus 9:0
+`define RomNum 1023
+`define RomNumLog2 10
 
 // Instruction RAM
 `define DataAddrBus 31:0

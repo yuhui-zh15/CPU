@@ -244,7 +244,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     );
 
     reg rom_ce;
-    reg[31:0] rom_addr; // <TODO>
+    reg[11:0] rom_addr;
     wire[31:0] rom_data;
 
     assign base_ram_data = (openmips_mem_ce_o && openmips_mem_sram_ce_o && openmips_mem_we_o)? openmips_mem_data_o: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
@@ -265,7 +265,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             TxD_data <= 8'b0;
             TxD_start <= 1'b0;
             rom_ce <= 1'b0;
-            rom_addr <= 32'b0; // <TODO>
+            rom_addr <= 12'b0;
             openmips_if_data_i <= 32'b0;
             openmips_mem_data_i <= 32'b0;
         end else begin
@@ -283,7 +283,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             TxD_data <= 8'b0;
             TxD_start <= 1'b0;
             rom_ce <= 1'b0;
-            rom_addr <= 32'b0; // <TODO>
+            rom_addr <= 12'b0;
             openmips_if_data_i <= 32'b0;
             openmips_mem_data_i <= 32'b0;
             if (openmips_mem_ce_o) begin
@@ -319,7 +319,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                         end
                     end
                 end else if (openmips_mem_rom_ce_o) begin
-                    rom_addr <= openmips_mem_addr_o;
+                    rom_addr <= openmips_mem_addr_o[11:0];
                     rom_ce <= 1'b1;
                     openmips_mem_data_i <= rom_data; 
                 end
@@ -346,7 +346,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                         // <TODO> if it is not ready?
                     end
                 end else if (openmips_if_rom_ce_o) begin
-                    rom_addr <= openmips_if_addr_o;
+                    rom_addr <= openmips_if_addr_o[11:0];
                     rom_ce <= 1'b1;
                     openmips_if_data_i <= rom_data;
                 end

@@ -2,17 +2,17 @@
 
 module rom(
     input wire ce,
-    input wire[`RomBus] addr,
-    output reg[`InstBus] inst
+    input wire[11:0] addr,
+    output reg[31:0] inst
 );
 
-    reg[`InstBus] inst_mem[0:`RomNum-1];
+    reg[31:0] inst_mem[0:1023];
 
     always @(*) begin
-        if (ce == `ChipDisable) begin
+        if (ce == 1'b0) begin
             inst <= `ZeroWord; 
         end else begin
-            inst <= inst_mem[addr]; // <TODO> last 2 bit?
+            inst <= inst_mem[addr[11:2]]; 
         end
     end
 

@@ -138,8 +138,7 @@ SEG7_LUT segL(.oSEG1({leds[23:22],leds[19:17],leds[20],leds[21],leds[16]}), .iDI
 SEG7_LUT segH(.oSEG1({leds[31:30],leds[27:25],leds[28],leds[29],leds[24]}), .iDIG(number[7:4]));
 
 //LED & DIP switches test
-reg[23:0] counter;
-reg[15:0] led_bits;
+// reg[23:0] counter;
 // always @(posedge clk_in) begin
 //     if (touch_btn[5]) begin //reset
 //         counter <= 0;
@@ -154,6 +153,7 @@ reg[15:0] led_bits;
 //         end
 //     end
 // end
+reg[15:0] led_bits;
 assign leds[15:0] = led_bits;
 
 reg clk_25;
@@ -169,10 +169,34 @@ wire [7:0] RxD_data;
 wire RxD_data_ready;
 reg [7:0] TxD_data;
 reg TxD_start;
+reg [7:0] TxD_data_reg;
+reg TxD_start_reg;
+reg [1:0] counter;
+
+always @(posedge clk_in) begin
+    if (touch_btn[5]) begin
+        TxD_data_reg <= 8'b0;
+        TxD_start_reg <= 1'b0; 
+        counter <= 2'b0;
+    end else begin
+        if (TxD_start) begin
+            counter <= 2'b0;
+            TxD_data_reg <= TxD_data;
+            TxD_start_reg <= 1'b1;
+        end else begin
+            counter <= counter + 1;
+            if (&counter) begin
+                TxD_data_reg <= 8'b0;
+                TxD_start_reg <= 1'b0;
+            end 
+        end
+    end
+end
+
 async_receiver #(.ClkFrequency(11059200),.Baud(115200)) 
     uart_r(.clk(clk_uart_in),.RxD(rxd),.RxD_data_ready(RxD_data_ready),.RxD_data(RxD_data));
 async_transmitter #(.ClkFrequency(11059200),.Baud(115200)) 
-    uart_t(.clk(clk_uart_in),.TxD(txd),.TxD_start(TxD_start),.TxD_data(TxD_data)); //transmit data back
+    uart_t(.clk(clk_uart_in),.TxD(txd),.TxD_start(TxD_start_reg),.TxD_data(TxD_data_reg)); //transmit data back
 
 //VGA display pattern generation
 wire[2:0] red,green;
@@ -310,7 +334,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                 end else if (openmips_mem_serial_ce_o) begin
                     if (openmips_mem_we_o) begin
                         TxD_data <= openmips_mem_data_o[7:0];
-                        TxD_start <= 1'b0;
+                        TxD_start <= 1'b1;
                     end else begin
                         if (RxD_data_ready) begin
                             openmips_mem_data_i <= { 24'b0, RxD_data }; // <TODO> 8bit

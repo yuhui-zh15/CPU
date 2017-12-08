@@ -12,6 +12,7 @@ module thinpad_min_sopc();
 
     reg clk;
     reg clk_25;
+    reg CLOCK_11059200;
     reg rst;
 
     initial begin
@@ -21,6 +22,10 @@ module thinpad_min_sopc();
     initial begin
         clk_25 = 1'b0;
         forever #20 clk_25 = ~clk_25;
+    end
+    initial begin
+        CLOCK_11059200 = 1'b0;
+        forever #45.211227 CLOCK_11059200 = ~CLOCK_11059200;
     end
 
     initial begin
@@ -33,7 +38,7 @@ module thinpad_min_sopc();
 
     thinpad_top thinpad_top0(
         .clk_in(clk),
-        .clk_uart_in(clk_25),
+        .clk_uart_in(CLOCK_11059200),
         .touch_btn(touch_btn),
         .base_ram_data(ram_data),
         .base_ram_addr(ram_addr),

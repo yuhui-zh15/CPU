@@ -218,7 +218,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     assign int = {5'b00000, timer_int};
 
     openmips openmips0(
-        .clk(clk_25), // 25MHz
+        .clk(clk_uart_in), // 25MHz
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
@@ -353,13 +353,14 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                         end
                     end
                 end else if (openmips_mem_flash_ce_o) begin
-                    flash_a <= openmips_mem_addr_o[24:2];
+                    flash_a <= openmips_mem_addr_o[23:1];
                     flash_rp_n <= 1'b1;
                     flash_oe_n <= 1'b0;
                     flash_ce_n <= 1'b0;
                     flash_byte_n <= 1'b1;
                     flash_we_n <= 1'b1;
                     openmips_mem_data_i <= { 16'b0, flash_data }; // <TODO> flash_data is 16bit
+                    //led_bits <= flash_data;
                 end else if (openmips_mem_serial_ce_o) begin
                     if (openmips_mem_we_o) begin
                         TxD_data <= openmips_mem_data_o[7:0];
@@ -394,7 +395,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                         openmips_if_data_i <= ext_ram_data;
                     end       
                 end else if (openmips_if_flash_ce_o) begin
-                    flash_a <= openmips_if_addr_o[24:2];
+                    flash_a <= openmips_if_addr_o[23:1];
                     flash_rp_n <= 1'b1;
                     flash_oe_n <= 1'b0;
                     flash_ce_n <= 1'b0;

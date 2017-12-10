@@ -261,10 +261,15 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire openmips_mem_serial_ce_o;
     wire openmips_mem_rom_ce_o;
 
-    rom rom0(
-        .ce(rom_ce),
-        .addr(rom_addr),
-        .inst(rom_data)
+//    rom rom0(
+//        .ce(rom_ce),
+//        .addr(rom_addr),
+//        .inst(rom_data)
+//    );
+    
+    rom_mem rom_mem0(
+        .a(rom_addr),
+        .spo(rom_data)
     );
 
     reg rom_ce;
@@ -280,6 +285,11 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             base_ram_ce_n <= 1'b1;
             base_ram_oe_n <= 1'b1;
             base_ram_we_n <= 1'b1;
+            ext_ram_addr <= 20'b0;
+            ext_ram_be_n <= 4'b1111;
+            ext_ram_ce_n <= 1'b1;
+            ext_ram_oe_n <= 1'b1;
+            ext_ram_we_n <= 1'b1;
             flash_a <= 23'b0;
             flash_rp_n <= 1'b1;
             flash_oe_n <= 1'b1;
@@ -298,6 +308,11 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             base_ram_ce_n <= 1'b1;
             base_ram_oe_n <= 1'b1;
             base_ram_we_n <= 1'b1;
+            ext_ram_addr <= 20'b0;
+            ext_ram_be_n <= 4'b1111;
+            ext_ram_ce_n <= 1'b1;
+            ext_ram_oe_n <= 1'b1;
+            ext_ram_we_n <= 1'b1;            
             flash_a <= 23'b0;
             flash_rp_n <= 1'b1;
             flash_oe_n <= 1'b1;
@@ -312,19 +327,33 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             openmips_mem_data_i <= 32'b0;
             if (openmips_mem_ce_o) begin
                 if (openmips_mem_sram_ce_o) begin
-                    base_ram_addr <= openmips_mem_addr_o[21:2];
-                    base_ram_be_n <= ~openmips_mem_sel_o;
-                    base_ram_ce_n <= 1'b0;
-                    if (openmips_mem_we_o) begin
-                        base_ram_oe_n <= 1'b1;
-                        base_ram_we_n <= 1'b0;
-                    end else begin
-                        base_ram_oe_n <= 1'b0;
-                        base_ram_we_n <= 1'b1;
-                        openmips_mem_data_i <= base_ram_data;
+                    if (openmips_mem_addr_o[22] == 1'b0) begin
+                        base_ram_addr <= openmips_mem_addr_o[21:2];
+                        base_ram_be_n <= ~openmips_mem_sel_o;
+                        base_ram_ce_n <= 1'b0;
+                        if (openmips_mem_we_o) begin
+                            base_ram_oe_n <= 1'b1;
+                            base_ram_we_n <= 1'b0;
+                        end else begin
+                            base_ram_oe_n <= 1'b0;
+                            base_ram_we_n <= 1'b1;
+                            openmips_mem_data_i <= base_ram_data;
+                        end
+                    end else if (openmips_mem_addr_o[22] == 1'b1) begin
+                        ext_ram_addr <= openmips_mem_addr_o[21:2];
+                        ext_ram_be_n <= ~openmips_mem_sel_o;
+                        ext_ram_ce_n <= 1'b0;
+                        if (openmips_mem_we_o) begin
+                            ext_ram_oe_n <= 1'b1;
+                            ext_ram_we_n <= 1'b0;
+                        end else begin
+                            ext_ram_oe_n <= 1'b0;
+                            ext_ram_we_n <= 1'b1;
+                            openmips_mem_data_i <= ext_ram_data;
+                        end
                     end
                 end else if (openmips_mem_flash_ce_o) begin
-                    flash_a <= openmips_mem_addr_o[22:0];
+                    flash_a <= openmips_mem_addr_o[24:2];
                     flash_rp_n <= 1'b1;
                     flash_oe_n <= 1'b0;
                     flash_ce_n <= 1'b0;
@@ -343,20 +372,29 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                         end
                     end
                 end else if (openmips_mem_rom_ce_o) begin
-                    rom_addr <= openmips_mem_addr_o[11:0];
+                    rom_addr <= openmips_mem_addr_o[13:2];
                     rom_ce <= 1'b1;
                     openmips_mem_data_i <= rom_data; 
                 end
             end else if (openmips_if_ce_o) begin
                 if (openmips_if_sram_ce_o) begin
-                    base_ram_addr <= openmips_if_addr_o[21:2];
-                    base_ram_be_n <= 4'b0000;
-                    base_ram_ce_n <= 1'b0;
-                    base_ram_oe_n <= 1'b0;
-                    base_ram_we_n <= 1'b1;
-                    openmips_if_data_i <= base_ram_data;       
+                    if (openmips_if_addr_o[22] == 1'b0) begin
+                        base_ram_addr <= openmips_if_addr_o[21:2];
+                        base_ram_be_n <= 4'b0000;
+                        base_ram_ce_n <= 1'b0;
+                        base_ram_oe_n <= 1'b0;
+                        base_ram_we_n <= 1'b1;
+                        openmips_if_data_i <= base_ram_data;
+                    end else if (openmips_if_addr_o[22] == 1'b1) begin
+                        ext_ram_addr <= openmips_if_addr_o[21:2];
+                        ext_ram_be_n <= 4'b0000;
+                        ext_ram_ce_n <= 1'b0;
+                        ext_ram_oe_n <= 1'b0;
+                        ext_ram_we_n <= 1'b1;
+                        openmips_if_data_i <= ext_ram_data;
+                    end       
                 end else if (openmips_if_flash_ce_o) begin
-                    flash_a <= openmips_if_addr_o[22:0];
+                    flash_a <= openmips_if_addr_o[24:2];
                     flash_rp_n <= 1'b1;
                     flash_oe_n <= 1'b0;
                     flash_ce_n <= 1'b0;
@@ -370,7 +408,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                         // <TODO> if it is not ready?
                     end
                 end else if (openmips_if_rom_ce_o) begin
-                    rom_addr <= openmips_if_addr_o[11:0];
+                    rom_addr <= openmips_if_addr_o[13:2];
                     rom_ce <= 1'b1;
                     openmips_if_data_i <= rom_data;
                 end

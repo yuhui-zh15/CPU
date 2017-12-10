@@ -9,6 +9,8 @@ module thinpad_min_sopc();
     wire ram_ce_n;
     wire ram_we_n;
     wire [5:0] touch_btn;
+    wire [8:0] flash_addr;
+    wire [15:0] flash_data;
 
     reg clk;
     reg clk_25;
@@ -44,8 +46,15 @@ module thinpad_min_sopc();
         .base_ram_addr(ram_addr),
         .base_ram_be_n(ram_be_n),
         .base_ram_we_n(ram_we_n),
-        .base_ram_ce_n(ram_ce_n)
+        .base_ram_ce_n(ram_ce_n),
+        .flash_data(flash_data),
+        .flash_a(flash_addr)
 
+    );
+    
+    flash_mem flash_mem0(
+        .a(flash_addr[8:1]),
+        .spo(flash_data)
     );
 
     ram ram0(

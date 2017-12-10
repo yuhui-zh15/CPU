@@ -127,213 +127,218 @@ module tlb_reg(
 
         	end else begin
 
-	        	if (regs[0][95:77] == addr_i[31:13] && regs[0][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[0][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[0][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[0][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[0][25:6], addr_i[11:0]};
-	        		end
-	        	end
+        		tlb_hit <= 1'b1;
+        		addr_o <= addr_i;
+        		sram_ce <= 1'b1;
 
-	        	if (regs[1][95:77] == addr_i[31:13] && regs[1][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[1][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[1][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[1][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[1][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[0][95:77] == addr_i[31:13] && regs[0][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[0][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[0][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[0][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[0][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[2][95:77] == addr_i[31:13] && regs[2][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[2][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[2][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[2][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[2][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[1][95:77] == addr_i[31:13] && regs[1][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[1][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[1][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[1][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[1][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[3][95:77] == addr_i[31:13] && regs[3][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[3][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[3][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[3][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[3][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[2][95:77] == addr_i[31:13] && regs[2][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[2][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[2][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[2][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[2][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[4][95:77] == addr_i[31:13] && regs[4][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[4][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[4][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[4][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[4][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[3][95:77] == addr_i[31:13] && regs[3][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[3][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[3][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[3][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[3][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[5][95:77] == addr_i[31:13] && regs[5][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[5][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[5][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[5][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[5][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[4][95:77] == addr_i[31:13] && regs[4][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[4][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[4][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[4][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[4][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[6][95:77] == addr_i[31:13] && regs[6][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[6][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[6][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[6][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[6][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[5][95:77] == addr_i[31:13] && regs[5][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[5][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[5][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[5][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[5][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[7][95:77] == addr_i[31:13] && regs[7][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[7][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[7][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[7][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[7][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[6][95:77] == addr_i[31:13] && regs[6][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[6][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[6][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[6][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[6][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[8][95:77] == addr_i[31:13] && regs[8][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[8][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[8][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[8][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[8][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[7][95:77] == addr_i[31:13] && regs[7][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[7][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[7][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[7][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[7][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[9][95:77] == addr_i[31:13] && regs[9][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[9][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[9][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[9][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[9][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[8][95:77] == addr_i[31:13] && regs[8][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[8][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[8][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[8][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[8][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[10][95:77] == addr_i[31:13] && regs[10][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[10][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[10][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[10][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[10][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[9][95:77] == addr_i[31:13] && regs[9][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[9][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[9][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[9][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[9][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[11][95:77] == addr_i[31:13] && regs[11][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[11][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[11][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[11][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[11][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[10][95:77] == addr_i[31:13] && regs[10][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[10][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[10][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[10][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[10][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[12][95:77] == addr_i[31:13] && regs[12][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[12][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[12][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[12][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[12][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[11][95:77] == addr_i[31:13] && regs[11][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[11][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[11][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[11][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[11][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[13][95:77] == addr_i[31:13] && regs[13][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[13][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[13][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[13][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[13][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[12][95:77] == addr_i[31:13] && regs[12][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[12][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[12][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[12][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[12][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[14][95:77] == addr_i[31:13] && regs[14][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[14][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[14][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[14][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[14][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[13][95:77] == addr_i[31:13] && regs[13][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[13][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[13][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[13][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[13][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
 
-	        	if (regs[15][95:77] == addr_i[31:13] && regs[15][71:64] == entryhi_i[7:0]) begin
-	        		if (addr_i[12] == 1'b0 && regs[15][33] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[15][57:38], addr_i[11:0]};
-	        		end
-	        		if (addr_i[12] == 1'b1 && regs[15][1] == 1'b1) begin
-	        			sram_ce <= 1'b1;
-	        			tlb_hit <= 1'b1;
-	        			addr_o <= {regs[15][25:6], addr_i[11:0]};
-	        		end
-	        	end
+	        	// if (regs[14][95:77] == addr_i[31:13] && regs[14][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[14][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[14][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[14][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[14][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
+
+	        	// if (regs[15][95:77] == addr_i[31:13] && regs[15][71:64] == entryhi_i[7:0]) begin
+	        	// 	if (addr_i[12] == 1'b0 && regs[15][33] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[15][57:38], addr_i[11:0]};
+	        	// 	end
+	        	// 	if (addr_i[12] == 1'b1 && regs[15][1] == 1'b1) begin
+	        	// 		sram_ce <= 1'b1;
+	        	// 		tlb_hit <= 1'b1;
+	        	// 		addr_o <= {regs[15][25:6], addr_i[11:0]};
+	        	// 	end
+	        	// end
+
 	        end
 
         end

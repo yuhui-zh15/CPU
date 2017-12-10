@@ -360,7 +360,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                     flash_byte_n <= 1'b1;
                     flash_we_n <= 1'b1;
                     openmips_mem_data_i <= { 16'b0, flash_data }; // <TODO> flash_data is 16bit
-                    //led_bits <= flash_data;
+                    led_bits <= flash_data;
                 end else if (openmips_mem_serial_ce_o) begin
                     if (openmips_mem_we_o) begin
                         TxD_data <= openmips_mem_data_o[7:0];
@@ -418,13 +418,14 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     end
 
     always @(posedge clk_in) begin
+        number <= openmips_if_addr_o[7:0];
         if (touch_btn[5]) begin
             number <= 8'b0; 
         end else if (openmips_mem_serial_ce_o) begin
             // number <= openmips_if_addr_o[7:0];
             // led_bits <= openmips_if_data_i[15:0];
             number <= openmips_mem_data_o[7:0];
-            led_bits <= openmips_mem_data_o[15:0];
+            //led_bits <= openmips_mem_data_o[15:0];
         end
     end
 

@@ -790,7 +790,7 @@ module id(
 
             // CP0 mfc0 & mtc0
             if (inst_i[31:21] == 11'b01000000000 &&
-                inst_i[10:0] == 11'b00000000000)
+                inst_i[10:3] == 8'b00000000)
             begin
                 aluop_o <= `EXE_MFC0_OP;
                 alusel_o <= `EXE_RES_MOVE;
@@ -800,7 +800,7 @@ module id(
                 reg1_read_o <= `ReadDisable;
                 reg2_read_o <= `ReadDisable;
             end else if (inst_i[31:21] == 11'b01000000100 &&
-                         inst_i[10:0] == 11'b00000000000)
+                         inst_i[10:3] == 8'b00000000)
             begin
                 aluop_o <= `EXE_MTC0_OP;
                 alusel_o <= `EXE_RES_NOP;

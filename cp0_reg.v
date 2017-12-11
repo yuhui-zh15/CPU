@@ -19,7 +19,7 @@ module cp0_reg(
 	output reg[`RegBus] cause_o,
 	output reg[`RegBus] epc_o,
 	output reg[`RegBus] config_o,
-	output reg[`RegBus] prid_o,
+	output reg[`RegBus] ebase_o,
 
 	// tlb/mmu
 	output reg[`RegBus] index_o, // 0
@@ -49,7 +49,7 @@ module cp0_reg(
 			cause_o <= `ZeroWord;
 			epc_o <= `ZeroWord;
 			config_o <= 32'b00000000000000001000000000000000;
-			prid_o <= 32'b00000000010011000000000000000000;
+			ebase_o <= 32'b10000000000000000000000000000000;
 			timer_int_o <= `InterruptNotAssert;
 			index_o <= `ZeroWord;
 			random_o <= `ZeroWord;
@@ -110,6 +110,9 @@ module cp0_reg(
 					`CP0_REG_CAUSE: begin
 						cause_o[9:8] <= data_i[9:8];
 						cause_o[23:22] <= data_i[23:22];
+					end
+					`CP0_REG_EBASE: begin
+						ebase_o[29:12] <= data_i[29:12];
 					end
 				endcase // waddr_i
 			end // if (we_i == `WriteEnable)
@@ -261,8 +264,13 @@ module cp0_reg(
 				`CP0_REG_EPC: begin
 					data_o <= epc_o;
 				end
-				`CP0_REG_PRId: begin
-					data_o <= prid_o;
+				`CP0_REG_EBASE: begin
+					//data_o <= ebase_o;
+					data_o[31] <= 1'b0;
+					data_o[30] <= 1'b0;
+					data_o[29:12] <= ebase_o[29:12];
+					data_o[11:10] <= 2'b00;
+					data_o[9:0] <= ebase_o[9:0];
 				end
 				`CP0_REG_CONFIG: begin
 					data_o <= config_o;

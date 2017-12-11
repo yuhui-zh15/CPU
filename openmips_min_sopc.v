@@ -37,22 +37,11 @@ module openmips_min_sopc(
         .timer_int_o(timer_int)
     );
 
-//    inst_rom inst_rom0(
-//        .addr(inst_addr),
-//        .inst(inst),
-//        .ce(rom_ce)
-//    );
-
-    try_rom try_rom0(
-        .a(inst_addr[13:2]),
-        .spo(inst)
+    inst_rom inst_rom0(
+        .addr(inst_addr),
+        .inst(inst),
+        .ce(rom_ce)
     );
-
-//    rom rom0(
-//        .ce(rom_ce),
-//        .addr(inst_addr),
-//        .inst()
-//    );
 
     data_ram data_ram0(
         .clk(clk),

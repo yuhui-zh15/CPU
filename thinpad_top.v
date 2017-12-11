@@ -276,16 +276,17 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire openmips_mem_serial_ce_o;
     wire openmips_mem_rom_ce_o;
 
-//    rom rom0(
-//        .ce(rom_ce),
-//        .addr(rom_addr),
-//        .inst(rom_data)
-//    );
-    
-    rom_mem rom_mem0(
-        .a(rom_addr),
-        .spo(rom_data)
+    rom rom0(
+        .clk(clk_in),
+        .ce(rom_ce),
+        .addr(rom_addr),
+        .inst(rom_data)
     );
+    
+    // rom_mem rom_mem0(
+    //     .a(rom_addr),
+    //     .spo(rom_data)
+    // );
 
     reg rom_ce;
     reg[11:0] rom_addr;

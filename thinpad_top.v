@@ -164,6 +164,19 @@ always @(posedge clk_in) begin
     clk_25 <= ~clk_25;
 end
 
+reg clk_debug;
+reg[14:0] counter_debug;
+initial begin
+    clk_debug <= 1'b0;
+    counter_debug <= 23'b0;
+end
+always @(posedge clk_in) begin
+    counter_debug <= counter_debug + 1;
+    if (&counter_debug) begin
+        clk_debug <= ~clk_debug; 
+    end
+end
+
 //Ext serial port receive and transmit, 115200 baudrate, no parity
 wire [7:0] RxD_data;
 wire RxD_data_ready;
@@ -217,10 +230,10 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
 
     wire[5:0] int;
     wire timer_int;
-    assign int = {5'b00000, timer_int};
+    assign int = {3'b000, RxD_data_ready, 1'b0, timer_int};
 
     openmips openmips0(
-        .clk(clk_uart_in), // 25MHz
+        .clk(clk_25), // 25MHz
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
@@ -362,7 +375,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                     flash_byte_n <= 1'b1;
                     flash_we_n <= 1'b1;
                     openmips_mem_data_i <= { 16'b0, flash_data };
-                    led_bits <= flash_data;
+                    // led_bits <= flash_data;
                 end else if (openmips_mem_serial_ce_o) begin
                     if (openmips_mem_addr_o[3:0] == 4'hc) begin
                         openmips_mem_data_i <= { 30'b0, RxD_idle, TxD_busy }; // <TODO>
@@ -421,14 +434,21 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
 
     always @(posedge clk_in) begin
         number <= openmips_if_addr_o[7:0];
+        led_bits <= openmips_if_addr_o[23:8];
         if (touch_btn[5]) begin
             number <= 8'b0; 
         end else if (openmips_mem_serial_ce_o) begin
             // number <= openmips_if_addr_o[7:0];
             // led_bits <= openmips_if_data_i[15:0];
-            number <= openmips_mem_data_o[7:0];
-            //led_bits <= openmips_mem_data_o[15:0];
+            // number <= openmips_mem_data_o[7:0];
+            // led_bits <= openmips_mem_data_o[15:0];
         end
     end
+
+    // ila_0 ila_0_0 (
+    //     .clk(clk_uart_in), // input wire clk
+    //     .probe0(touch_btn[5]), // input wire [0:0]  probe0  
+    //     .probe1(openmips_if_addr_o[3:0]) // input wire [3:0]  probe1
+    // );
 
 endmodule

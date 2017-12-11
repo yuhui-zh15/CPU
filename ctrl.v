@@ -81,7 +81,7 @@ module ctrl(
             flush <= 1'b0;
             mem_we_o <= 1'b1;
         end else if (stallreq_from_mem == `Stop) begin
-            stall <= 6'b000011;
+            stall <= 6'b000111;
             flush <= 1'b0;
             mem_we_o <= 1'b0;
         end else begin

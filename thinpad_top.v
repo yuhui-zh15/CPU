@@ -233,7 +233,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     assign int = {3'b000, RxD_data_ready, 1'b0, timer_int};
 
     openmips openmips0(
-        .clk(clk_debug), // 25MHz
+        .clk(clk_25), // 25MHz
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
@@ -293,6 +293,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire[31:0] rom_data;
 
     assign base_ram_data = (openmips_mem_ce_o && openmips_mem_sram_ce_o && openmips_mem_we_o)? openmips_mem_data_o: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
+    assign ext_ram_data = (openmips_mem_ce_o && openmips_mem_sram_ce_o && openmips_mem_we_o)? openmips_mem_data_o: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz; // To drive the inout net
 
     always @(*) begin
         if (touch_btn[5]) begin

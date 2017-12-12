@@ -8,6 +8,11 @@ module thinpad_min_sopc();
     wire [3:0] ram_be_n;
     wire ram_ce_n;
     wire ram_we_n;
+    wire [31:0] ext_ram_data;
+    wire [19:0] ext_ram_addr;
+    wire [3:0] ext_ram_be_n;
+    wire ext_ram_ce_n;
+    wire ext_ram_we_n;
     wire [5:0] touch_btn;
     wire [22:0] flash_addr;
     wire [15:0] flash_data;
@@ -47,6 +52,11 @@ module thinpad_min_sopc();
         .base_ram_be_n(ram_be_n),
         .base_ram_we_n(ram_we_n),
         .base_ram_ce_n(ram_ce_n),
+        .ext_ram_data(ext_ram_data),
+        .ext_ram_addr(ext_ram_addr),
+        .ext_ram_be_n(ext_ram_be_n),
+        .ext_ram_we_n(ext_ram_we_n),
+        .ext_ram_ce_n(ext_ram_ce_n),
         .flash_data(flash_data),
         .flash_a(flash_addr)
 
@@ -65,6 +75,15 @@ module thinpad_min_sopc();
         .be(ram_be_n),
         .data(ram_data),
         .ce(ram_ce_n)   
+    );
+
+    ram ram1(
+        .clk(clk),
+        .we(ext_ram_we_n),
+        .addr(ext_ram_addr),
+        .be(ext_ram_be_n),
+        .data(ext_ram_data),
+        .ce(ext_ram_ce_n)      
     );
 
 endmodule // openmips_min_sopc

@@ -165,10 +165,10 @@ always @(posedge clk_in) begin
 end
 
 reg clk_debug;
-reg[14:0] counter_debug;
+reg[1:0] counter_debug;
 initial begin
     clk_debug <= 1'b0;
-    counter_debug <= 23'b0;
+    counter_debug <= 2'b0;
 end
 always @(posedge clk_in) begin
     counter_debug <= counter_debug + 1;
@@ -233,7 +233,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     assign int = {3'b000, RxD_data_ready, 1'b0, timer_int};
 
     openmips openmips0(
-        .clk(clk_uart_in), // 25MHz
+        .clk(clk_debug), // 25MHz
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
@@ -379,7 +379,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                     // led_bits <= flash_data;
                 end else if (openmips_mem_serial_ce_o) begin
                     if (openmips_mem_addr_o[3:0] == 4'hc) begin
-                        openmips_mem_data_i <= { 30'b0, RxD_idle, TxD_busy }; // <TODO>
+                        openmips_mem_data_i <= { 30'b0, ~RxD_idle, ~TxD_busy }; // <TODO>
                     end else if (openmips_mem_addr_o[3:0] == 4'h8) begin
                         if (openmips_mem_we_o) begin
                             TxD_data <= openmips_mem_data_o[7:0];
@@ -420,7 +420,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                     openmips_if_data_i <= { 16'b0, flash_data };
                 end else if (openmips_if_serial_ce_o) begin
                     if (openmips_if_addr_o[3:0] == 4'hc) begin
-                        openmips_if_data_i <= { 30'b0, RxD_idle, TxD_busy }; // <TODO>
+                        openmips_if_data_i <= { 30'b0, ~RxD_idle, ~TxD_busy }; // <TODO>
                     end else if (openmips_if_addr_o[3:0] == 4'h8) begin
                         openmips_if_data_i <= { 24'b0, RxD_data };
                     end

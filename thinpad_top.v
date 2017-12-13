@@ -239,8 +239,6 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     always @(posedge RxD_data_ready) begin   
         if (touch_btn[5]) begin 
             serial_read_status <= 1'b0;
-            // serial_read_status <= 1'b0;
-            //already_read_status <= 1'b0;
         end else begin
             serial_read_status <= ~serial_read_status;
             serial_read_data <= RxD_data;
@@ -297,11 +295,6 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .addr(rom_addr),
         .inst(rom_data)
     );
-    
-    // rom_mem rom_mem0(
-    //     .a(rom_addr),
-    //     .spo(rom_data)
-    // );
 
     reg rom_ce;
     reg[11:0] rom_addr;
@@ -469,6 +462,11 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     //     .clk(clk_uart_in), // input wire clk
     //     .probe0(touch_btn[5]), // input wire [0:0]  probe0  
     //     .probe1(openmips_if_addr_o[3:0]) // input wire [3:0]  probe1
+    // );
+
+    // rom_mem rom_mem0(
+    //     .a(rom_addr),
+    //     .spo(rom_data)
     // );
 
 endmodule

@@ -188,7 +188,7 @@ reg [7:0] TxD_data_reg;
 reg TxD_start_reg;
 reg [1:0] counter;
 
-always @(posedge clk_in) begin
+always @(posedge clk_uart_in) begin
     if (touch_btn[5]) begin
         TxD_data_reg <= 8'b0;
         TxD_start_reg <= 1'b0; 
@@ -228,12 +228,27 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
 );
 /* =========== Demo code end =========== */
 
-    wire[5:0] int;
+    wire[5:0] int_i;
     wire timer_int;
-    assign int = {3'b000, RxD_data_ready, 1'b0, timer_int};
+    assign int_i = {3'b000, serial_read_status^already_read_status, 1'b0, timer_int};
+
+    reg serial_read_status = 1'b0;
+    reg already_read_status = 1'b0;
+    reg[7:0] serial_read_data;
+
+    always @(posedge RxD_data_ready) begin   
+        if (touch_btn[5]) begin 
+            serial_read_status <= 1'b0;
+            // serial_read_status <= 1'b0;
+            //already_read_status <= 1'b0;
+        end else begin
+            serial_read_status <= ~serial_read_status;
+            serial_read_data <= RxD_data;
+        end
+    end
 
     openmips openmips0(
-        .clk(clk_25), // 25MHz
+        .clk(clk_debug), // 25MHz
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),
@@ -254,7 +269,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .mem_serial_ce_o(openmips_mem_serial_ce_o),
         .mem_rom_ce_o(openmips_mem_rom_ce_o),
 
-        .int_i(int),
+        .int_i(int_i),
         .timer_int_o(timer_int)
     );
 
@@ -319,6 +334,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             rom_addr <= 12'b0;
             openmips_if_data_i <= 32'b0;
             openmips_mem_data_i <= 32'b0;
+            already_read_status <= serial_read_status;
         end else begin
             base_ram_addr <= 20'b0;
             base_ram_be_n <= 4'b1111;
@@ -380,13 +396,14 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                     // led_bits <= flash_data;
                 end else if (openmips_mem_serial_ce_o) begin
                     if (openmips_mem_addr_o[3:0] == 4'hc) begin
-                        openmips_mem_data_i <= { 30'b0, ~RxD_idle, ~TxD_busy }; // <TODO>
+                        openmips_mem_data_i <= { 30'b0, serial_read_status^already_read_status, ~TxD_busy }; // <TODO>
                     end else if (openmips_mem_addr_o[3:0] == 4'h8) begin
                         if (openmips_mem_we_o) begin
                             TxD_data <= openmips_mem_data_o[7:0];
                             TxD_start <= 1'b1;
                         end else begin
-                            openmips_mem_data_i <= { 24'b0, RxD_data };
+                            already_read_status <= serial_read_status;
+                            openmips_mem_data_i <= { 24'b0, serial_read_data };
                         end
                     end
                 end else if (openmips_mem_rom_ce_o) begin
@@ -421,9 +438,10 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                     openmips_if_data_i <= { 16'b0, flash_data };
                 end else if (openmips_if_serial_ce_o) begin
                     if (openmips_if_addr_o[3:0] == 4'hc) begin
-                        openmips_if_data_i <= { 30'b0, ~RxD_idle, ~TxD_busy }; // <TODO>
+                        openmips_if_data_i <= { 30'b0, serial_read_status^already_read_status, ~TxD_busy }; // <TODO>
                     end else if (openmips_if_addr_o[3:0] == 4'h8) begin
-                        openmips_if_data_i <= { 24'b0, RxD_data };
+                        already_read_status <= serial_read_status;
+                        openmips_if_data_i <= { 24'b0, serial_read_data };
                     end
                 end else if (openmips_if_rom_ce_o) begin
                     rom_addr <= openmips_if_addr_o[13:2];

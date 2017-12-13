@@ -40,26 +40,26 @@ module ctrl(
             stall <= 6'b000000;
             mem_we_o <= 1'b0;
             case (excepttype_i)
-                32'h00000001: begin
-                    new_pc <= 32'h80000380;
+                32'h00000001: begin // interrupt
+                    new_pc <= 32'h800012a0;
                 end
-                32'h00000008: begin
-                    new_pc <= 32'h80000380;
+                32'h00000008: begin // syscall
+                    new_pc <= 32'h800012a0;
                 end
-                32'h0000000a: begin
-                    new_pc <= 32'h80000380;
+                32'h0000000a: begin // invalid
+                    new_pc <= 32'h800012a0;
                 end
-                32'h0000000d: begin
-                    new_pc <= 32'h80000380;
+                32'h0000000d: begin // trap
+                    new_pc <= 32'h800012a0;
                 end
-                32'h0000000c: begin
-                    new_pc <= 32'h80000380;
+                32'h0000000c: begin // overflow
+                    new_pc <= 32'h800012a0;
                 end
-                32'h0000000e: begin
+                32'h0000000e: begin // eret
                     new_pc <= cp0_epc_i;
                 end
-                32'h0000000f: begin
-                    new_pc <= 32'h80000380; // need to be change to uCore
+                32'h0000000f: begin // tlbmiss
+                    new_pc <= 32'h800012a0; // need to be change to uCore
                 end
                 default: begin
                 end
@@ -81,7 +81,7 @@ module ctrl(
             flush <= 1'b0;
             mem_we_o <= 1'b1;
         end else if (stallreq_from_mem == `Stop) begin
-            stall <= 6'b000011;
+            stall <= 6'b000111;
             flush <= 1'b0;
             mem_we_o <= 1'b0;
         end else begin

@@ -1,37 +1,44 @@
-`include "defines.v"
+// inout wire[31:0] ram_data;
+// output reg[19:0] ram_addr;
+// output reg[3:0] ram_be_n;
+// output reg ram_ce_n;
+// output reg ram_oe_n;
+// output reg ram_we_n;
 
 module ram(
     input wire clk,
     input wire ce,
     input wire we,
+    input wire oe,
     input wire[19:0] addr,
-    input wire[3:0] sel,
+    input wire[3:0] be,
     inout wire[31:0] data
 );
-    reg[31:0] data_mem[0:1048576];
+    reg[31:0] data_ram[0:1048575];
+    
+    // initial $readmemh ("ram.data", data_ram);
 
-    initial $readmemh ("inst_rom.data", data_mem);
-
+    assign oe = 1'b0;
 
     always @(posedge clk) begin
-        if (ce == `ChipDisable) begin
+        if (ce == 1'b1) begin
             
-        end else if (we == `WriteEnable) begin
-            if (sel[3] == 1'b1) begin
-                data_mem[addr][31:24] <= data[31:24]; 
+        end else if (we == 1'b0) begin
+            if (be[3] == 1'b0) begin
+                data_ram[addr][7:0] <= data[31:24]; 
             end
-            if (sel[2] == 1'b1) begin
-                data_mem[addr][23:16] <= data[23:16]; 
+            if (be[2] == 1'b0) begin
+                data_ram[addr][15:8] <= data[23:16]; 
             end
-            if (sel[1] == 1'b1) begin
-                data_mem[addr][15:8] <= data[15:8]; 
+            if (be[1] == 1'b0) begin
+                data_ram[addr][23:16] <= data[15:8]; 
             end
-            if (sel[0] == 1'b1) begin
-                data_mem[addr][7:0] <= data[7:0]; 
+            if (be[0] == 1'b0) begin
+                data_ram[addr][31:24] <= data[7:0]; 
             end
         end
     end
 
-    assign data = we? 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz: data_mem[addr];
+    assign data = we? { data_ram[addr][7:0], data_ram[addr][15:8], data_ram[addr][23:16], data_ram[addr][31:24] }: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;
 
 endmodule // data_ram

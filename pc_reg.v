@@ -32,7 +32,7 @@ module pc_reg(
 
     always @(posedge clk) begin
         if (ce == `ChipDisable) begin
-            virtual_pc <= 32'h80000000;
+            virtual_pc <= 32'hbfc00000;
         end else begin 
             if (flush == 1'b1) begin
                 virtual_pc <= new_pc;

@@ -160,7 +160,7 @@ module openmips(
     wire[`RegBus]   cp0_cause;
     wire[`RegBus]   cp0_epc;
     wire[`RegBus]   cp0_config;
-    wire[`RegBus]   cp0_prid; 
+    wire[`RegBus]   cp0_ebase; 
     wire[`RegBus]   cp0_index; 
     wire[`RegBus]   cp0_entrylo0; 
     wire[`RegBus]   cp0_entrylo1; 
@@ -596,7 +596,7 @@ module openmips(
         .cause_o(cp0_cause),
         .epc_o(cp0_epc),
         .config_o(cp0_config),
-        .prid_o(cp0_prid),
+        .ebase_o(cp0_ebase),
 
         // MMU/TLB
         .index_o            (cp0_index),

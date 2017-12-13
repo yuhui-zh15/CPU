@@ -165,6 +165,9 @@
 `define InstBus 31:0
 `define InstMemNum 262143
 `define InstMemNumLog2 18
+`define RomBus 9:0
+`define RomNum 1023
+`define RomNumLog2 10
 
 // Instruction RAM
 `define DataAddrBus 31:0
@@ -199,7 +202,7 @@
 `define CP0_REG_STATUS 5'b01100
 `define CP0_REG_CAUSE 5'b01101
 `define CP0_REG_EPC 5'b01110
-`define CP0_REG_PRId 5'b01111
+`define CP0_REG_EBASE 5'b01111
 `define CP0_REG_CONFIG 5'b10000
 
 // Exception

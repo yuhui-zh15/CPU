@@ -5,13 +5,21 @@ module thinpad_min_sopc();
 
     wire [31:0] ram_data;
     wire [19:0] ram_addr;
-    wire ram_be_n;
+    wire [3:0] ram_be_n;
     wire ram_ce_n;
     wire ram_we_n;
+    wire [31:0] ext_ram_data;
+    wire [19:0] ext_ram_addr;
+    wire [3:0] ext_ram_be_n;
+    wire ext_ram_ce_n;
+    wire ext_ram_we_n;
     wire [5:0] touch_btn;
+    wire [22:0] flash_addr;
+    wire [15:0] flash_data;
 
     reg clk;
     reg clk_25;
+    reg CLOCK_11059200;
     reg rst;
 
     initial begin
@@ -21,6 +29,10 @@ module thinpad_min_sopc();
     initial begin
         clk_25 = 1'b0;
         forever #20 clk_25 = ~clk_25;
+    end
+    initial begin
+        CLOCK_11059200 = 1'b0;
+        forever #45.211227 CLOCK_11059200 = ~CLOCK_11059200;
     end
 
     initial begin
@@ -33,23 +45,45 @@ module thinpad_min_sopc();
 
     thinpad_top thinpad_top0(
         .clk_in(clk),
-        .clk_uart_in(clk_25),
+        .clk_uart_in(CLOCK_11059200),
         .touch_btn(touch_btn),
         .base_ram_data(ram_data),
         .base_ram_addr(ram_addr),
         .base_ram_be_n(ram_be_n),
         .base_ram_we_n(ram_we_n),
-        .base_ram_ce_n(ram_ce_n)
+        .base_ram_ce_n(ram_ce_n),
+        .ext_ram_data(ext_ram_data),
+        .ext_ram_addr(ext_ram_addr),
+        .ext_ram_be_n(ext_ram_be_n),
+        .ext_ram_we_n(ext_ram_we_n),
+        .ext_ram_ce_n(ext_ram_ce_n),
+        .flash_data(flash_data),
+        .flash_a(flash_addr)
 
+    );
+    
+    flash flash0(
+        .clk(clk),
+        .a(flash_addr[22:1]),
+        .data(flash_data)
     );
 
     ram ram0(
         .clk(clk),
-        .we(~ram_we_n),
+        .we(ram_we_n),
         .addr(ram_addr),
-        .sel(~ram_be_n),
+        .be(ram_be_n),
         .data(ram_data),
-        .ce(~ram_ce_n)   
+        .ce(ram_ce_n)   
+    );
+
+    ram ram1(
+        .clk(clk),
+        .we(ext_ram_we_n),
+        .addr(ext_ram_addr),
+        .be(ext_ram_be_n),
+        .data(ext_ram_data),
+        .ce(ext_ram_ce_n)      
     );
 
 endmodule // openmips_min_sopc

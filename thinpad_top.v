@@ -246,7 +246,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     end
 
     openmips openmips0(
-        .clk(clk_debug), // 25MHz
+        .clk(clk_25), // 25MHz
         .rst(touch_btn[5]),
     
         .if_addr_o(openmips_if_addr_o),

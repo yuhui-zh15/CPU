@@ -41,25 +41,25 @@ module ctrl(
             mem_we_o <= 1'b0;
             case (excepttype_i)
                 32'h00000001: begin // interrupt
-                    new_pc <= 32'h800012a0;
+                    new_pc <= 32'h800246a8;
                 end
                 32'h00000008: begin // syscall
-                    new_pc <= 32'h800012a0;
+                    new_pc <= 32'h800246a8;
                 end
                 32'h0000000a: begin // invalid
-                    new_pc <= 32'h800012a0;
+                    new_pc <= 32'h800246a8;
                 end
                 32'h0000000d: begin // trap
-                    new_pc <= 32'h800012a0;
+                    new_pc <= 32'h800246a8;
                 end
                 32'h0000000c: begin // overflow
-                    new_pc <= 32'h800012a0;
+                    new_pc <= 32'h800246a8;
                 end
                 32'h0000000e: begin // eret
                     new_pc <= cp0_epc_i;
                 end
                 32'h0000000f: begin // tlbmiss
-                    new_pc <= 32'h800012a0; // need to be change to uCore
+                    new_pc <= 32'h80024698; // need to be change to uCore
                 end
                 default: begin
                 end

@@ -757,7 +757,7 @@ module id(
             end
 
             // SHIFT SA
-            if (inst_i[31:21] == 11'b00000000000) begin
+            else if (inst_i[31:21] == 11'b00000000000) begin
                 if (op3 == `EXE_SLL) begin
                     wreg_o <= `WriteEnable;
                     aluop_o <= `EXE_SLL_OP;
@@ -789,9 +789,8 @@ module id(
             end
 
             // CP0 mfc0 & mtc0
-            if (inst_i[31:21] == 11'b01000000000 &&
-                inst_i[10:3] == 8'b00000000)
-            begin
+            else if (inst_i[31:21] == 11'b01000000000 &&
+                inst_i[10:3] == 8'b00000000) begin
                 aluop_o <= `EXE_MFC0_OP;
                 alusel_o <= `EXE_RES_MOVE;
                 wd_o <= inst_i[20:16]; // rt
@@ -799,9 +798,9 @@ module id(
                 instvalid <= `InstValid;
                 reg1_read_o <= `ReadDisable;
                 reg2_read_o <= `ReadDisable;
-            end else if (inst_i[31:21] == 11'b01000000100 &&
-                         inst_i[10:3] == 8'b00000000)
-            begin
+            end 
+            else if (inst_i[31:21] == 11'b01000000100 &&
+                inst_i[10:3] == 8'b00000000) begin
                 aluop_o <= `EXE_MTC0_OP;
                 alusel_o <= `EXE_RES_NOP;
                 wreg_o <= `WriteDisable;
@@ -810,6 +809,14 @@ module id(
                 reg1_addr_o <= inst_i[20:16]; // rt
                 reg2_read_o <= `ReadDisable;
             end
+
+            else if (inst_i == `EXE_TLBWI) begin
+				instvalid <= `InstValid;
+			end
+			
+			else if (inst_i == `EXE_TLBWR) begin
+				instvalid <= `InstValid;
+			end
 
         end
     end

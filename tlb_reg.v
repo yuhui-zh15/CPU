@@ -77,12 +77,9 @@ module tlb_reg(
 	always @(posedge clk) begin
 		if (rst == `RstEnable) begin
 		end else begin
-			// TLBWI
-			if (inst_i == 32'b01000010000000000000000000000010) begin
+			if (inst_i == `EXE_TLBWI) begin
 				regs[tlbwi_i] = new_tlb;
-			end
-			// TLBWR
-			if (inst_i == 32'b01000010000000000000000000000110) begin
+			end else if (inst_i == `EXE_TLBWR) begin
 				regs[tlbwr_i] = new_tlb;
 			end
 		end

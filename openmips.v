@@ -573,7 +573,8 @@ module openmips(
         .cp0_epc_i       (latest_epc),
         .excepttype_i    (mem_excepttype_o),
         .mem_we_o         (mem_we_o),
-        .mem_we_i         (we_from_mem)
+        .mem_we_i         (we_from_mem),
+        .ebase_i(cp0_ebase)
     );
 
     // cp0

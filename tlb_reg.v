@@ -37,50 +37,51 @@ module tlb_reg(
 	reg[`TlbBus] new_tlb;
 
 	always @ (*) begin
-		if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_INDEX) begin
-			tlbwi_i <= mem_cp0_reg_data[3:0];
-		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_INDEX) begin
-			tlbwi_i <= wb_cp0_reg_data[3:0];
-		end else begin
-			tlbwi_i <= index_i[3:0];
-		end
+		// if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_INDEX) begin
+		// 	tlbwi_i <= mem_cp0_reg_data[3:0];
+		// end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_INDEX) begin
+		// 	tlbwi_i <= wb_cp0_reg_data[3:0];
+		// end else begin
+		tlbwi_i <= index_i[3:0];
+		// end
 	end
 
 	always @ (*) begin
-		if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_RANDOM) begin
-			tlbwr_i <= mem_cp0_reg_data[3:0];
-		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_RANDOM) begin
-			tlbwr_i <= wb_cp0_reg_data[3:0];
-		end else begin
-			tlbwr_i <= random_i[3:0];
-		end
+		// if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_RANDOM) begin
+		// 	tlbwr_i <= mem_cp0_reg_data[3:0];
+		// end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_RANDOM) begin
+		// 	tlbwr_i <= wb_cp0_reg_data[3:0];
+		// end else begin
+		tlbwr_i <= random_i[3:0];
+		// end
 	end	
 
 	always @ (*) begin
-		if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYHI) begin
-			new_tlb = {mem_cp0_reg_data, entrylo0_i, entrylo1_i};
-		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYHI) begin
-			new_tlb = {wb_cp0_reg_data, entrylo0_i, entrylo1_i};
-		end if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYLO0) begin
-			new_tlb = {mem_cp0_reg_data, entrylo0_i, entrylo1_i};
-		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYLO0) begin
-			new_tlb = {wb_cp0_reg_data, entrylo0_i, entrylo1_i};
-		end if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYLO1) begin
-			new_tlb = {mem_cp0_reg_data, entrylo0_i, entrylo1_i};
-		end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYLO1) begin
-			new_tlb = {wb_cp0_reg_data, entrylo0_i, entrylo1_i};
-		end else begin
-			new_tlb = {entryhi_i, entrylo0_i, entrylo1_i};
-		end
+		new_tlb <= {entryhi_i, entrylo0_i, entrylo1_i};
+		// if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYHI) begin
+		// 	new_tlb[95:64] <= mem_cp0_reg_data;
+		// end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYHI) begin
+		// 	new_tlb[95:64] <= wb_cp0_reg_data;
+		// end 
+		// if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYLO0) begin
+		// 	new_tlb[63:32] <= mem_cp0_reg_data;
+		// end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYLO0) begin
+		// 	new_tlb[63:32] <= wb_cp0_reg_data;
+		// end 
+		// if (mem_cp0_reg_we == `WriteEnable && mem_cp0_reg_write_addr == `CP0_REG_ENTRYLO1) begin
+		// 	new_tlb[31:0] <= mem_cp0_reg_data;
+		// end else if (wb_cp0_reg_we == `WriteEnable && wb_cp0_reg_write_addr == `CP0_REG_ENTRYLO1) begin
+		// 	new_tlb[31:0] <= wb_cp0_reg_data;
+		// end 
 	end
 	
 	always @(posedge clk) begin
 		if (rst == `RstEnable) begin
 		end else begin
 			if (inst_i == `EXE_TLBWI) begin
-				regs[tlbwi_i] = new_tlb;
+				regs[tlbwi_i] <= new_tlb;
 			end else if (inst_i == `EXE_TLBWR) begin
-				regs[tlbwr_i] = new_tlb;
+				regs[tlbwr_i] <= new_tlb;
 			end
 		end
 	end
@@ -128,7 +129,7 @@ module tlb_reg(
         		// addr_o <= addr_i;
         		// sram_ce <= 1'b1;
 
-	        	if (regs[0][95:77] == addr_i[31:13] && regs[0][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[0][95:77] == addr_i[31:13] && (regs[0][71:64] == entryhi_i[7:0] || regs[0][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[0][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -141,7 +142,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[1][95:77] == addr_i[31:13] && regs[1][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[1][95:77] == addr_i[31:13] && (regs[1][71:64] == entryhi_i[7:0] || regs[1][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[1][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -154,7 +155,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[2][95:77] == addr_i[31:13] && regs[2][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[2][95:77] == addr_i[31:13] && (regs[2][71:64] == entryhi_i[7:0] || regs[2][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[2][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -167,7 +168,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[3][95:77] == addr_i[31:13] && regs[3][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[3][95:77] == addr_i[31:13] && (regs[3][71:64] == entryhi_i[7:0] || regs[3][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[3][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -180,7 +181,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[4][95:77] == addr_i[31:13] && regs[4][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[4][95:77] == addr_i[31:13] && (regs[4][71:64] == entryhi_i[7:0] || regs[4][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[4][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -193,7 +194,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[5][95:77] == addr_i[31:13] && regs[5][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[5][95:77] == addr_i[31:13] && (regs[5][71:64] == entryhi_i[7:0] || regs[5][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[5][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -206,7 +207,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[6][95:77] == addr_i[31:13] && regs[6][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[6][95:77] == addr_i[31:13] && (regs[6][71:64] == entryhi_i[7:0] || regs[6][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[6][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -219,7 +220,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[7][95:77] == addr_i[31:13] && regs[7][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[7][95:77] == addr_i[31:13] && (regs[7][71:64] == entryhi_i[7:0] || regs[7][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[7][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -232,7 +233,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[8][95:77] == addr_i[31:13] && regs[8][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[8][95:77] == addr_i[31:13] && (regs[8][71:64] == entryhi_i[7:0] || regs[8][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[8][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -245,7 +246,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[9][95:77] == addr_i[31:13] && regs[9][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[9][95:77] == addr_i[31:13] && (regs[9][71:64] == entryhi_i[7:0] || regs[9][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[9][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -258,7 +259,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[10][95:77] == addr_i[31:13] && regs[10][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[10][95:77] == addr_i[31:13] && (regs[10][71:64] == entryhi_i[7:0] || regs[10][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[10][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -271,7 +272,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[11][95:77] == addr_i[31:13] && regs[11][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[11][95:77] == addr_i[31:13] && (regs[11][71:64] == entryhi_i[7:0] || regs[11][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[11][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -284,7 +285,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[12][95:77] == addr_i[31:13] && regs[12][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[12][95:77] == addr_i[31:13] && (regs[12][71:64] == entryhi_i[7:0] || regs[12][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[12][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -297,7 +298,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[13][95:77] == addr_i[31:13] && regs[13][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[13][95:77] == addr_i[31:13] && (regs[13][71:64] == entryhi_i[7:0] || regs[13][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[13][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -310,7 +311,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[14][95:77] == addr_i[31:13] && regs[14][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[14][95:77] == addr_i[31:13] && (regs[14][71:64] == entryhi_i[7:0] || regs[14][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[14][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;
@@ -323,7 +324,7 @@ module tlb_reg(
 	        		end
 	        	end
 
-	        	if (regs[15][95:77] == addr_i[31:13] && regs[15][71:64] == entryhi_i[7:0]) begin
+	        	if (regs[15][95:77] == addr_i[31:13] && (regs[15][71:64] == entryhi_i[7:0] || regs[15][0] == 1'b1)) begin
 	        		if (addr_i[12] == 1'b0 && regs[15][33] == 1'b1) begin
 	        			sram_ce <= 1'b1;
 	        			tlb_hit <= 1'b1;

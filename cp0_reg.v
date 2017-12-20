@@ -205,6 +205,21 @@ module cp0_reg(
 					badvaddr_o <= bad_address_i;
 				end
 
+				32'h0000000b: begin
+					if (status_o[1] == 1'b0) begin						
+						if (is_in_delay_slot_i == `InDelaySlot) begin
+							epc_o <= current_inst_addr_i - 4;
+							cause_o[31] <= 1'b1;
+						end else begin
+							epc_o <= current_inst_addr_i;
+							cause_o[31] <= 1'b0;
+						end
+					end
+					status_o[1] <= 1'b1;
+					cause_o[6:2] <= 5'b00011;
+					badvaddr_o <= bad_address_i;
+				end				
+
 				default: begin
 				end
 

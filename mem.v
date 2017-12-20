@@ -52,7 +52,9 @@ module mem(
     output wire[`RegBus] cp0_epc_o,
     output wire is_in_delay_slot_o,
     output wire[`RegBus] current_inst_address_o,
-    output reg[`InstAddrBus] bad_address
+    output reg[`InstAddrBus] bad_address,
+    input wire[`RegBus] inst_i,
+    output wire[`RegBus] inst_o
 );
 
     wire[`RegBus] zero32;
@@ -68,6 +70,7 @@ module mem(
 
     assign is_in_delay_slot_o = is_in_delay_slot_i;
     assign current_inst_address_o =  current_inst_address_i;
+    assign inst_o = inst_i;
 
     always @ (*) begin
         if (rst == `RstEnable) begin
@@ -127,10 +130,13 @@ module mem(
             end else if (excepttype_i[13] == 1'b1) begin
                 excepttype_o <= 32'h0000000f;
                 bad_address <= current_inst_address_i;
-            end else if (tlb_hit == 1'b0 && mem_ce_o == 1'b1) begin
+            end else if (tlb_hit == 1'b0 && mem_ce_o == 1'b1 && mem_we == `WriteDisable) begin
                 excepttype_o <= 32'h0000000f;
                 bad_address <= mem_addr_i;
-            end
+            end else if (tlb_hit == 1'b0 && mem_ce_o == 1'b1 && mem_we == `WriteEnable) begin
+                excepttype_o <= 32'h0000000b;
+                bad_address <= mem_addr_i;
+            end 
             //end
         end
     end

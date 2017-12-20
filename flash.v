@@ -18,7 +18,7 @@ module flash(
 );
     reg[15:0] data_flash[0:4194303];
 
-    initial $readmemh ("ucore.data", data_flash);
+    initial $readmemh ("flash.data", data_flash);
 
     assign rp = 1'b1;
     assign byte = 1'b1;

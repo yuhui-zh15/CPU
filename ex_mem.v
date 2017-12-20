@@ -40,7 +40,10 @@ module ex_mem(
     input wire[`RegBus] ex_current_inst_address,
     output reg[31:0] mem_excepttype,
     output reg mem_is_in_delay_slot,
-    output reg[`RegBus] mem_current_inst_address
+    output reg[`RegBus] mem_current_inst_address,
+
+    input wire[`RegBus] ex_inst,
+    output reg[`RegBus] mem_inst
 );
 
     always @(posedge clk) begin
@@ -60,6 +63,7 @@ module ex_mem(
             mem_excepttype <= `ZeroWord;
             mem_is_in_delay_slot <= `NotInDelaySlot;
             mem_current_inst_address <= `ZeroWord;
+            mem_inst <= `ZeroWord;
         end else if (flush == 1'b1) begin
             mem_wd <= `NOPRegAddr;
             mem_wreg <= `WriteDisable;
@@ -75,7 +79,8 @@ module ex_mem(
             mem_cp0_reg_data <= `ZeroWord;
             mem_excepttype <= `ZeroWord;
             mem_is_in_delay_slot <= `NotInDelaySlot;
-            mem_current_inst_address <= `ZeroWord;            
+            mem_current_inst_address <= `ZeroWord;   
+            mem_inst <= `ZeroWord;         
         end else if (stall[3] == `Stop && stall[4] == `NoStop) begin
             mem_wd <= `NOPRegAddr;
             mem_wreg <= `WriteDisable;
@@ -92,6 +97,7 @@ module ex_mem(
             mem_excepttype <= `ZeroWord;
             mem_is_in_delay_slot <= `NotInDelaySlot;
             mem_current_inst_address <= `ZeroWord;
+            mem_inst <= `ZeroWord;
         end else if (stall[3] == `NoStop) begin
             mem_wd <= ex_wd;
             mem_wreg <= ex_wreg;
@@ -108,6 +114,7 @@ module ex_mem(
             mem_excepttype <= ex_excepttype;
             mem_is_in_delay_slot <= ex_is_in_delay_slot;
             mem_current_inst_address <= ex_current_inst_address;
+            mem_inst <= ex_inst;
         end
     end
 

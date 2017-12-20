@@ -63,6 +63,7 @@ module openmips(
     wire[`RegBus] ex_current_inst_address_i;
 
     // Connect ex to ex_mem
+    wire[`RegBus] ex_inst_o;
     wire ex_wreg_o;
     wire[`RegAddrBus] ex_wd_o;
     wire[`RegBus] ex_wdata_o;
@@ -81,6 +82,7 @@ module openmips(
     wire ex_is_in_delay_slot_o;
 
     // Connect ex_mem to mem
+    wire[`RegBus] mem_inst_i;
     wire mem_wreg_i;
     wire[`RegAddrBus] mem_wd_i;
     wire[`RegBus] mem_wdata_i;
@@ -99,6 +101,7 @@ module openmips(
     wire mem_is_in_delay_slot_i;
 
     // Connect mem to mem_wb
+    wire[`RegBus] mem_inst_o;
     wire mem_wreg_o;
     wire[`RegAddrBus] mem_wd_o;
     wire[`RegBus] mem_wdata_o;
@@ -113,6 +116,7 @@ module openmips(
     wire mem_is_in_delay_slot_o;
 
     // Connect mem_wb to rewrite
+    wire[`RegBus] wb_inst_i;
     wire wb_wreg_i;
     wire[`RegAddrBus] wb_wd_i;
     wire[`RegBus] wb_wdata_i;
@@ -201,7 +205,7 @@ module openmips(
         .clk                   (clk),
         .rst                   (rst),
         .addr_i                (virtual_pc),
-        .inst_i                (ex_inst_i),
+        .inst_i                (wb_inst_i),
 
         .index_i               (cp0_index),
         .random_i              (cp0_random),
@@ -349,6 +353,7 @@ module openmips(
         .hi_i(hi),
         .lo_i(lo),
         .inst_i(ex_inst_i),
+        .inst_o                (ex_inst_o),
         .wb_hi_i(wb_hi_i), // Caution!
         .wb_lo_i(wb_lo_i), 
         .wb_whilo_i(wb_whilo_i),
@@ -429,12 +434,16 @@ module openmips(
         .ex_is_in_delay_slot     (ex_is_in_delay_slot_o),
         .mem_excepttype          (mem_excepttype_i),
         .mem_current_inst_address(mem_current_inst_address_i),
-        .mem_is_in_delay_slot    (mem_is_in_delay_slot_i)
+        .mem_is_in_delay_slot    (mem_is_in_delay_slot_i),
+        .ex_inst                 (ex_inst_o),
+        .mem_inst                (mem_inst_i)
     );
 
     // mem
     mem mem0(
         .rst(rst),
+        .inst_i(mem_inst_i),
+        .inst_o(mem_inst_o),
         // From ex_mem
         .wd_i(mem_wd_i),
         .wreg_i(mem_wreg_i),
@@ -492,7 +501,7 @@ module openmips(
         .clk                   (clk),
         .rst                   (rst),
         .addr_i                (virtual_addr),
-        .inst_i                (ex_inst_i),
+        .inst_i                (wb_inst_i),
 
         .index_i               (cp0_index),
         .random_i              (cp0_random),
@@ -543,7 +552,9 @@ module openmips(
         .wb_cp0_reg_write_addr(wb_cp0_reg_write_addr_i),
         .wb_cp0_reg_we(wb_cp0_reg_we_i),
         // Exception
-        .flush                 (flush)
+        .flush                 (flush),
+        .mem_inst              (mem_inst_o),
+        .wb_inst               (wb_inst_i)
     );
 
     // hilo_reg

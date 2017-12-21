@@ -113,31 +113,31 @@ module mem(
         end else begin
             excepttype_o <= `ZeroWord;
             bad_address <= `ZeroWord;
-            //if (current_inst_address_i != `ZeroWord) begin // ?
-            if (((cp0_cause[15:8] & cp0_status[15:8]) != 8'h00) && (cp0_status[1] == 1'b0) && (cp0_status[0] == 1'b1)) begin
-                // 空指令控制
-                excepttype_o <= 32'h00000001;
-            end else if (excepttype_i[8] == 1'b1) begin
-                excepttype_o <= 32'h00000008;
-            end else if (excepttype_i[9] == 1'b1) begin
-                excepttype_o <= 32'h0000000a;
-            end else if (excepttype_i[10] == 1'b1) begin
-                excepttype_o <= 32'h0000000d;
-            end else if (excepttype_i[11] == 1'b1) begin
-                excepttype_o <= 32'h0000000c;
-            end else if (excepttype_i[12] == 1'b1) begin
-                excepttype_o <= 32'h0000000e;
-            end else if (excepttype_i[13] == 1'b1) begin
-                excepttype_o <= 32'h0000000f;
-                bad_address <= current_inst_address_i;
-            end else if (tlb_hit == 1'b0 && mem_ce_o == 1'b1 && mem_we == `WriteDisable) begin
-                excepttype_o <= 32'h0000000f;
-                bad_address <= mem_addr_i;
-            end else if (tlb_hit == 1'b0 && mem_ce_o == 1'b1 && mem_we == `WriteEnable) begin
-                excepttype_o <= 32'h0000000b;
-                bad_address <= mem_addr_i;
-            end 
-            //end
+            if (current_inst_address_i != `ZeroWord) begin // ?
+                if (((cp0_cause[15:8] & cp0_status[15:8]) != 8'h00) && (cp0_status[1] == 1'b0) && (cp0_status[0] == 1'b1)) begin
+                    // 空指令控制
+                    excepttype_o <= 32'h00000001;
+                end else if (excepttype_i[8] == 1'b1) begin
+                    excepttype_o <= 32'h00000008;
+                end else if (excepttype_i[9] == 1'b1) begin
+                    excepttype_o <= 32'h0000000a;
+                end else if (excepttype_i[10] == 1'b1) begin
+                    excepttype_o <= 32'h0000000d;
+                end else if (excepttype_i[11] == 1'b1) begin
+                    excepttype_o <= 32'h0000000c;
+                end else if (excepttype_i[12] == 1'b1) begin
+                    excepttype_o <= 32'h0000000e;
+                end else if (excepttype_i[13] == 1'b1) begin
+                    excepttype_o <= 32'h0000000f;
+                    bad_address <= current_inst_address_i;
+                end else if (tlb_hit == 1'b0 && mem_ce_o == 1'b1 && mem_we == `WriteDisable) begin
+                    excepttype_o <= 32'h0000000f;
+                    bad_address <= mem_addr_i;
+                end else if (tlb_hit == 1'b0 && mem_ce_o == 1'b1 && mem_we == `WriteEnable) begin
+                    excepttype_o <= 32'h0000000b;
+                    bad_address <= mem_addr_i;
+                end 
+            end
         end
     end
 

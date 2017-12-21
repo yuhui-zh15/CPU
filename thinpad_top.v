@@ -230,7 +230,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
 
     wire[5:0] int_i;
     wire timer_int;
-    assign int_i = {timer_int, 1'b0, serial_read_status^already_read_status, 3'b000}; //{3'b000, serial_read_status^already_read_status, 1'b0, timer_int};
+    assign int_i = {timer_int, 2'b00, serial_read_status^already_read_status, 2'b00}; //{3'b000, serial_read_status^already_read_status, 1'b0, timer_int};
 
     reg serial_read_status = 1'b0;
     reg already_read_status = 1'b0;

@@ -14,6 +14,7 @@ module ex(
     output reg[`RegAddrBus] wd_o,
     output reg wreg_o,
     output reg[`RegBus] wdata_o,
+    output wire[`RegBus] inst_o,
     // Value from hilo_reg
     input wire[`RegBus] hi_i,
     input wire[`RegBus] lo_i,
@@ -72,6 +73,8 @@ module ex(
     assign aluop_o = aluop_i;
     assign mem_addr_o = reg1_i + {{16{inst_i[15]}}, inst_i[15:0]};
     assign reg2_o = reg2_i;
+
+    assign inst_o = inst_i;
 
     reg[`RegBus] logicout;
     reg[`RegBus] shiftres;

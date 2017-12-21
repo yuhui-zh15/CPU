@@ -1,6 +1,6 @@
 #coding=utf-8
 
-f = open('monitor.elf', 'rb')
+f = open('ucore.img', 'rb')
 
 cnt = 0
 while True:

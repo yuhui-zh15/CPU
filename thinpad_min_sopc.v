@@ -38,7 +38,7 @@ module thinpad_min_sopc();
     initial begin
         rst = 1'b1;
         #195 rst = 1'b0;
-        #50000000 $stop; 
+        #500000000 $stop; 
     end
 
     assign touch_btn = {rst, 5'b00000};

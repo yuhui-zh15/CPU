@@ -26,7 +26,10 @@ module mem_wb(
     output reg[4:0] wb_cp0_reg_write_addr,
     output reg[`RegBus] wb_cp0_reg_data,
     // Exception
-    input wire flush
+    input wire flush,
+
+    input wire[`RegBus] mem_inst,
+    output reg[`RegBus] wb_inst
 );
 
     always @(posedge clk) begin
@@ -40,6 +43,7 @@ module mem_wb(
             wb_cp0_reg_we <= `WriteDisable;
             wb_cp0_reg_write_addr <= 5'b00000;
             wb_cp0_reg_data <= `ZeroWord;
+            wb_inst <= `ZeroWord;
         end else if (flush == 1'b1) begin
             wb_wd <= `NOPRegAddr;
             wb_wreg <= `WriteDisable;
@@ -49,7 +53,8 @@ module mem_wb(
             wb_whilo <= `WriteDisable;
             wb_cp0_reg_we <= `WriteDisable;
             wb_cp0_reg_write_addr <= 5'b00000;
-            wb_cp0_reg_data <= `ZeroWord;            
+            wb_cp0_reg_data <= `ZeroWord;    
+            wb_inst <= `ZeroWord;        
         end else if (stall[4] == `Stop && stall[5] == `NoStop) begin
             wb_wd <= `NOPRegAddr;
             wb_wreg <= `WriteDisable;
@@ -60,6 +65,7 @@ module mem_wb(
             wb_cp0_reg_we <= `WriteDisable;
             wb_cp0_reg_write_addr <= 5'b00000;
             wb_cp0_reg_data <= `ZeroWord;
+            wb_inst <= `ZeroWord;
         end else if (stall[4] == `NoStop) begin
             wb_wd <= mem_wd;
             wb_wreg <= mem_wreg;
@@ -70,6 +76,7 @@ module mem_wb(
             wb_cp0_reg_we <= mem_cp0_reg_we;
             wb_cp0_reg_write_addr <= mem_cp0_reg_write_addr;
             wb_cp0_reg_data <= mem_cp0_reg_data;
+            wb_inst <= mem_inst;
         end
     end
 

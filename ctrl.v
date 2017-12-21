@@ -62,6 +62,9 @@ module ctrl(
                 32'h0000000f: begin // tlbmiss
                     new_pc <= ebase_i; // need to be change to uCore
                 end
+                32'h0000000b: begin
+                    new_pc <= ebase_i;
+                end
                 default: begin
                 end
             endcase // excepttype_i

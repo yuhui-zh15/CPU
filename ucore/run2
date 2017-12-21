@@ -1,4 +1,4 @@
 #!/bin/sh
 
-qemu-system-mipsel -M mipssim -m 32M -serial stdio -kernel obj/ucore-kernel-initrd
+qemu-system-mipsel -M mipssim -m 8M -serial stdio -kernel obj/ucore-kernel-initrd
 

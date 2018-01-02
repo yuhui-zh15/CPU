@@ -216,15 +216,40 @@ async_transmitter #(.ClkFrequency(11059200),.Baud(115200))
 //VGA display pattern generation
 wire[2:0] red,green;
 wire[1:0] blue;
-assign video_pixel = {red,green,blue};
+// assign video_pixel = {red,green,blue};
 assign video_clk = clk_in;
+wire[18:0] gaddr_r;
+wire[18:0] gaddr_w;
+wire[7:0] gdata_w;
+assign gdata_w = 8'b11111111;
+assign gaddr_w = 19'b0;
+
+wire gram_ce;
+wire gram_we;
+assign gram_ce = 1'b1;
+assign gram_we = 1'b1;
+
+gram gram0(
+    .addra(gaddr_w),
+    .clka(clk_in),
+    .dina(gdata_w),
+    .ena(gram_ce),
+    .wea(gram_we),
+
+    .addrb(gaddr_r),
+    .clkb(clk_in),
+    .doutb(video_pixel),
+    .enb(gram_ce)
+);
+
 vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     .clk(clk_in), 
     .hdata(red),
     .vdata({blue,green}),
     .hsync(video_hsync),
     .vsync(video_vsync),
-    .data_enable(video_de)
+    .data_enable(video_de),
+    .addr(gaddr_r)
 );
 /* =========== Demo code end =========== */
 

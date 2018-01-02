@@ -27,6 +27,7 @@ module tlb_reg(
     output reg flash_ce,
     output reg rom_ce,
     output reg serial_ce,
+	output reg vga_ce,
     output reg[`RegBus] addr_o
     
 );
@@ -94,6 +95,7 @@ module tlb_reg(
             flash_ce <= 1'b0;
             rom_ce <= 1'b0;
             serial_ce <= 1'b0;
+			vga_ce <= 1'b0;
         end else begin
         	tlb_hit <= 1'b0;
         	addr_o <= `ZeroWord;
@@ -101,6 +103,7 @@ module tlb_reg(
             flash_ce <= 1'b0;
             rom_ce <= 1'b0;
             serial_ce <= 1'b0;
+			vga_ce <= 1'b0;
 
         	if (addr_i >= 32'h80000000 && addr_i <= 32'h9fffffff) begin
 
@@ -112,8 +115,9 @@ module tlb_reg(
 
         		tlb_hit <= 1'b1;
         		addr_o <= {3'b0, addr_i[28:0]};
-        		
-        		if (addr_i >= 32'hbe000000 && addr_i <= 32'hbeffffff) begin
+        		if (addr_i >= 32'hba000000 && addr_i <= 32'hba080000) begin
+				  	vga_ce <= 1'b1;
+        		end else if (addr_i >= 32'hbe000000 && addr_i <= 32'hbeffffff) begin
         			flash_ce <= 1'b1;
         		end else if (addr_i >= 32'hbfc00000 && addr_i <= 32'hbfc00fff) begin
         			rom_ce <= 1'b1;

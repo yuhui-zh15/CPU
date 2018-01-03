@@ -12,6 +12,7 @@ module openmips(
     output wire if_flash_ce_o,
     output wire if_rom_ce_o,
     output wire if_serial_ce_o,
+    output wire if_vga_ce_o,
     output wire if_ce_o,
 
     input wire[`RegBus] mem_data_i,
@@ -23,6 +24,7 @@ module openmips(
     output wire mem_flash_ce_o,
     output wire mem_rom_ce_o,
     output wire mem_serial_ce_o,
+    output wire mem_vga_ce_o,
     output wire mem_ce_o,
 
     output wire timer_int_o
@@ -226,7 +228,8 @@ module openmips(
         .sram_ce               (if_sram_ce_o),
         .flash_ce              (if_flash_ce_o),
         .rom_ce                (if_rom_ce_o),
-        .serial_ce             (if_serial_ce_o)   
+        .serial_ce             (if_serial_ce_o),   
+        .vga_ce                (if_vga_ce_o)
     );
 
     assign if_addr_o = pc;
@@ -522,7 +525,8 @@ module openmips(
         .sram_ce               (mem_sram_ce_o),
         .flash_ce              (mem_flash_ce_o),
         .rom_ce                (mem_rom_ce_o),
-        .serial_ce             (mem_serial_ce_o)
+        .serial_ce             (mem_serial_ce_o),
+        .vga_ce                (mem_vga_ce_o)
     );
 
     // mem_wb

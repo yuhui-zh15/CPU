@@ -216,15 +216,37 @@ async_transmitter #(.ClkFrequency(11059200),.Baud(115200))
 //VGA display pattern generation
 wire[2:0] red,green;
 wire[1:0] blue;
-assign video_pixel = {red,green,blue};
+// assign video_pixel = {red,green,blue};
 assign video_clk = clk_in;
+wire[18:0] gaddr_r;
+reg[18:0] gaddr_w;
+reg[7:0] gdata_w;
+
+wire gram_ce;
+reg gram_we;
+assign gram_ce = 1'b1;
+
+gram gram0(
+    .addra(gaddr_w),
+    .clka(clk_in), 
+    .dina(gdata_w),
+    .ena(gram_ce), 
+    .wea(gram_we), 
+
+    .addrb(gaddr_r), 
+    .clkb(clk_in), 
+    .doutb(video_pixel), 
+    .enb(gram_ce) 
+);
+
 vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     .clk(clk_in), 
     .hdata(red),
     .vdata({blue,green}),
     .hsync(video_hsync),
     .vsync(video_vsync),
-    .data_enable(video_de)
+    .data_enable(video_de),
+    .addr(gaddr_r)
 );
 /* =========== Demo code end =========== */
 
@@ -255,6 +277,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .if_sram_ce_o(openmips_if_sram_ce_o),
         .if_flash_ce_o(openmips_if_flash_ce_o),
         .if_serial_ce_o(openmips_if_serial_ce_o),
+        .if_vga_ce_o(openmips_if_vga_ce_o),
         .if_rom_ce_o(openmips_if_rom_ce_o),
         .mem_we_o(openmips_mem_we_o),
         .mem_addr_o(openmips_mem_addr_o),
@@ -265,6 +288,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
         .mem_sram_ce_o(openmips_mem_sram_ce_o),
         .mem_flash_ce_o(openmips_mem_flash_ce_o),
         .mem_serial_ce_o(openmips_mem_serial_ce_o),
+        .mem_vga_ce_o(openmips_mem_vga_ce_o),
         .mem_rom_ce_o(openmips_mem_rom_ce_o),
 
         .int_i(int_i),
@@ -277,6 +301,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire openmips_if_sram_ce_o;
     wire openmips_if_flash_ce_o;
     wire openmips_if_serial_ce_o;
+    wire openmips_if_vga_ce_o;
     wire openmips_if_rom_ce_o;
     wire openmips_mem_we_o;
     wire[31:0] openmips_mem_addr_o;
@@ -287,6 +312,7 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
     wire openmips_mem_sram_ce_o;
     wire openmips_mem_flash_ce_o;
     wire openmips_mem_serial_ce_o;
+    wire openmips_mem_vga_ce_o;
     wire openmips_mem_rom_ce_o;
 
     rom rom0(
@@ -323,6 +349,9 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             flash_we_n <= 1'b1;
             TxD_data <= 8'b0;
             TxD_start <= 1'b0;
+            gaddr_w <= 19'b0;
+            gdata_w <= 8'b0;
+            gram_we <= 1'b0;
             rom_ce <= 1'b0;
             rom_addr <= 12'b0;
             openmips_if_data_i <= 32'b0;
@@ -347,6 +376,9 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
             flash_we_n <= 1'b1;
             TxD_data <= 8'b0;
             TxD_start <= 1'b0;
+            gaddr_w <= 19'b0;
+            gdata_w <= 8'b0;
+            gram_we <= 1'b0;
             rom_ce <= 1'b0;
             rom_addr <= 12'b0;
             openmips_if_data_i <= 32'b0;
@@ -399,6 +431,10 @@ vga #(12, 800, 856, 976, 1040, 600, 637, 643, 666, 1, 1) vga800x600at75 (
                             openmips_mem_data_i <= { 24'b0, serial_read_data };
                         end
                     end
+                end else if (openmips_mem_vga_ce_o) begin
+                    gaddr_w <= openmips_mem_addr_o[18:0];
+                    gdata_w <= openmips_mem_data_o[7:0];
+                    gram_we <= 1'b1;
                 end else if (openmips_mem_rom_ce_o) begin
                     rom_addr <= openmips_mem_addr_o[13:2];
                     rom_ce <= 1'b1;

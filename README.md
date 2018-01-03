@@ -14,6 +14,10 @@ NonExist
 
 周正平
 
+# Requirement
+
+增加了简单双端block memory的IP core，需要在IP catalog选项里新增一个名称为gram，读写数据width=8bit，读写深度=480000的IP core便可以编译。
+
 # Function Test
 
 - 算术运算指令（共12(0xC)条）

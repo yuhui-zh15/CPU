@@ -1,0 +1,6 @@
+all:
+	g++ -o process process.cpp lib/lodepng.cpp
+	./process
+	gcc -o vga_simulation vga_simulation.c lib/lodepng.c
+	./vga_simulation
+	rm process vga_simulation

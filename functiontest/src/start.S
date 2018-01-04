@@ -274,14 +274,14 @@ inst_test:
 #    nop
 #    jal wait_1s
 #    nop
-#    jal n2_addi_test  #addi
-#    nop
-#    jal wait_1s
-#    nop
-#    jal n3_addu_test  #addu
-#    nop
-#    jal wait_1s
-#    nop
+    jal n2_addi_test  #addi
+    nop
+    jal wait_1s
+    nop
+    jal n3_addu_test  #addu
+    nop
+    jal wait_1s
+    nop
 #    jal n4_addiu_test    #addiu
 #    nop
 #    jal wait_1s
@@ -310,14 +310,14 @@ inst_test:
 #    nop
 #    jal wait_1s
 #    nop
-# #    jal n11_div_test     #div
-# #    nop
-# #    jal wait_1s
-# #    nop
-# #    jal n12_divu_test    #divu
-# #    nop
-# #    jal wait_1s
-# #    nop
+###     jal n11_div_test     #div
+###     nop
+###     jal wait_1s
+###     nop
+###     jal n12_divu_test    #divu
+###     nop
+###     jal wait_1s
+###     nop
 #    jal n13_mult_test    #mult
 #    nop
 #    jal wait_1s
@@ -406,14 +406,14 @@ inst_test:
 #    nop
 #    jal wait_1s
 #    nop
-# #    jal n35_bltzal_test   #bltzal
-# #    nop
-# #    jal wait_1s
-# #    nop
-# #    jal n36_bgezal_test  #bgezal
-# #    nop
-# #    jal wait_1s
-# #    nop
+### #    jal n35_bltzal_test   #bltzal
+### #    nop
+### #    jal wait_1s
+### #    nop
+### #    jal n36_bgezal_test  #bgezal
+### #    nop
+### #    jal wait_1s
+### #    nop
 #    jal n37_j_test       #j
 #    nop
 #    jal wait_1s
@@ -446,14 +446,14 @@ inst_test:
 #    nop
 #    jal wait_1s
 #    nop
-# #    jal n45_break_test   #break
-# #    nop
-# #    jal wait_1s
-# #    nop
-#     jal n46_syscall_test #syscall
-#     nop
-#     jal wait_1s
-#     nop
+#### #    jal n45_break_test   #break
+#### #    nop
+#### #    jal wait_1s
+#### #    nop
+#    jal n46_syscall_test #syscall
+#    nop
+#    jal wait_1s
+#    nop
 #    jal n47_lb_test      #lb
 #    nop
 #    jal wait_1s
@@ -461,8 +461,8 @@ inst_test:
 #    jal n48_lbu_test     #lbu
 #    nop
 #    jal wait_1s
-#    nop
-#    jal n49_lh_test      #lh
+#    nop 
+#	jal n49_lh_test      #lh
 #    nop
 #    jal wait_1s
 #    nop
@@ -474,19 +474,19 @@ inst_test:
 #    nop
 #    jal wait_1s
 #    nop
-# # #  jal n52_lwl_test     #lwl
-# # #  nop
-# # #  jal wait_1s
-# # #  nop
-# # #  jal n53_lwr_test     #lwr
-# # #  nop
-# # #  jal wait_1s
-# # #  nop
+## # #  jal n52_lwl_test     #lwl
+## # #  nop
+## # #  jal wait_1s
+## # #  nop
+## # #  jal n53_lwr_test     #lwr
+## # #  nop
+## # #  jal wait_1s
+## # #  nop
 #    jal n52_sb_test      #sb
 #    nop
 #    jal wait_1s
 #    nop
-#    jal n53_sh_test      #sh
+#	jal n53_sh_test      #sh
 #    nop
 #    jal wait_1s
 #    nop
@@ -514,7 +514,7 @@ inst_test:
 #     nop
 #     jal wait_1s
 #     nop
-# #ex
+#    #ex
 #    la v0, n58_add_ex_test    #add_ex
 #    jalr v0
 #    nop
@@ -530,41 +530,41 @@ inst_test:
 #    nop
 #    jal wait_1s
 #    nop
-#    la v0, n61_lh_ex_test    #lh_ex
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-#    la v0, n62_lhu_ex_test    #lhu_ex
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-#    la v0, n63_lw_ex_test    #lw_ex
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-#    la v0, n64_sh_ex_test    #sh_ex
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-#    la v0, n65_sw_ex_test    #sw_ex
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-#    la v0, n66_eret_ex_test    #adel_if_ex
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-#    la v0, n67_reserved_instruction_ex_test    #ri_ex
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
+###    la v0, n61_lh_ex_test    #lh_ex
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n62_lhu_ex_test    #lhu_ex
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n63_lw_ex_test    #lw_ex
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n64_sh_ex_test    #sh_ex
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n65_sw_ex_test    #sw_ex
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n66_eret_ex_test    #adel_if_ex
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n67_reserved_instruction_ex_test    #ri_ex
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
 #   la v0, n68_beq_ds_test     #beq_ds
 #   jalr v0
 #   nop
@@ -595,16 +595,16 @@ inst_test:
 #   nop
 #   jal wait_1s
 #   nop
-##    la v0, n74_bltzal_ds_test   #bltzal_ds
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-#    la v0, n75_bgezal_ds_test  #bgezal_ds
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
+###    la v0, n74_bltzal_ds_test   #bltzal_ds
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n75_bgezal_ds_test  #bgezal_ds
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
 #   la v0, n76_j_ds_test       #j_ds
 #   jalr v0
 #   nop
@@ -625,66 +625,76 @@ inst_test:
 #   nop
 #   jal wait_1s
 #   nop
-   la v0, n80_beq_ex_ds_test     #beq_ds
-   jalr v0
-   nop
-   jal wait_1s
-   nop
-   la v0, n81_bne_ex_ds_test     #bne_ds
-   jalr v0
-   nop
-   jal wait_1s
-   nop
-   la v0, n82_bgez_ex_ds_test    #bgez_ds
-   jalr v0
-   nop
-   jal wait_1s
-   nop
-   la v0, n83_bgtz_ex_ds_test    #bgtz_ds
-   jalr v0
-   nop
-   jal wait_1s
-   nop
-   la v0, n84_blez_ex_ds_test    #blez_ds
-   jalr v0
-   nop
-   jal wait_1s
-   nop
-   la v0, n85_bltz_ex_ds_test    #bltz_ds
-   jalr v0
-    nop
-   jal wait_1s
-   nop
-#    la v0, n86_bltzal_ex_ds_test   #bltzal_ds
-#    jalr v0
+#   la v0, n80_beq_ex_ds_test     #beq_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n81_bne_ex_ds_test     #bne_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n82_bgez_ex_ds_test    #bgez_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n83_bgtz_ex_ds_test    #bgtz_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n84_blez_ex_ds_test    #blez_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n85_bltz_ex_ds_test    #bltz_ds
+#   jalr v0
 #    nop
-#    jal wait_1s
+#   jal wait_1s
+#   nop
+###    la v0, n86_bltzal_ex_ds_test   #bltzal_ds
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+###    la v0, n87_bgezal_ex_ds_test  #bgezal_ds
+###    jalr v0
+###    nop
+###    jal wait_1s
+###    nop
+#   la v0, n88_j_ex_ds_test       #j_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n89_jal_ex_ds_test     #jal_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n90_jr_ex_ds_test      #jr_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
+#   nop
+#   la v0, n91_jalr_ex_ds_test    #jalr_ds
+#   jalr v0
+#   nop
+#   jal wait_1s
 #    nop
-#    la v0, n87_bgezal_ex_ds_test  #bgezal_ds
-#    jalr v0
-#    nop
-#    jal wait_1s
-#    nop
-   la v0, n88_j_ex_ds_test       #j_ds
+   la v0, n92_tlbwi_test    #tlbwi
    jalr v0
    nop
    jal wait_1s
    nop
-   la v0, n89_jal_ex_ds_test     #jal_ds
+   la v0, n93_tlbwr_test    #tlbwr
    jalr v0
    nop
    jal wait_1s
    nop
-   la v0, n90_jr_ex_ds_test      #jr_ds
-   jalr v0
-   nop
-   jal wait_1s
-   nop
-   la v0, n91_jalr_ex_ds_test    #jalr_ds
-   jalr v0
-   nop
-   jal wait_1s
-    nop
 
 
 test_end:

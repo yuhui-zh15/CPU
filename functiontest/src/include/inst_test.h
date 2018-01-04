@@ -576,3 +576,147 @@
     li s2, vd; \
     bne s0, s2, inst_error; \
     nop
+
+/* 92
+ * TEST_TLBWI(ENTRYHI, ENTRYLO0, ENTRYLO1, INDEX, data, base_addr)
+ */
+#define TEST_TLBWI(entryhi, entrylo0, entrylo1, index, data, base_addr) \
+	li s2, 0; \
+	mtc0 s2, c0_entrylo0; \
+	mtc0 s2, c0_entrylo1; \
+	mtc0 s2, c0_entryhi; \
+	li s2, 0; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 1; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 2; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 3; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 4; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 5; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 6; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 7; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 8; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 9; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 10; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 11; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 12; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 13; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 14; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 15; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, entryhi; \
+	mtc0 s2, c0_entryhi; \
+	li s2, entrylo0; \
+	mtc0 s2, c0_entrylo0; \
+	li s2, entrylo1; \
+	mtc0 s2, c0_entrylo1; \
+	li s2, index; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li t1, data; \
+	li t0, base_addr; \
+	sw t1, 0x0(t0); \
+	lw s0, 0x0(t0); \
+    li s2, data; \
+    bne s0, s2, inst_error; \
+    nop
+
+/* 93
+ * TEST_TLBWR(ENTRYHI, ENTRYLO0, ENTRYLO1, data, base_addr)
+ */
+#define TEST_TLBWR(entryhi, entrylo0, entrylo1, data, base_addr) \
+	li s2, 0; \
+	mtc0 s2, c0_entrylo0; \
+	mtc0 s2, c0_entrylo1; \
+	mtc0 s2, c0_entryhi; \
+	li s2, 0; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 1; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 2; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 3; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 4; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 5; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 6; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 7; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 8; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 9; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 10; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 11; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 12; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 13; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 14; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, 15; \
+	mtc0 s2, c0_index; \
+	tlbwi; \
+	li s2, entryhi; \
+	mtc0 s2, c0_entryhi; \
+	li s2, entrylo0; \
+	mtc0 s2, c0_entrylo0; \
+	li s2, entrylo1; \
+	mtc0 s2, c0_entrylo1; \
+	tlbwr; \
+	li t1, data; \
+	li t0, base_addr; \
+	sw t1, 0x0(t0); \
+	lw s0, 0x0(t0); \
+    li s2, data; \
+    bne s0, s2, inst_error; \
+    nop

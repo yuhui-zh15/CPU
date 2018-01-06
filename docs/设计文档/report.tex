@@ -1,0 +1,72 @@
+\input{config.tex}
+
+\title{\yihao{软工计原联合项目} \\ \erhao{设计文档}}
+\date{}
+\author{NonExist组\\张钰晖，杨一滨，周正平}
+\begin{document}
+\maketitle
+\clearpage
+\tableofcontents
+
+\input{Chap0.tex}
+
+\input{Chap1.tex}
+
+\input{Chap2.tex}
+
+\input{Chap3.tex}
+
+\input{Chap4.tex}
+
+
+% \section{算法实现}
+
+% \subsubsection{BasicRNNCell}
+
+%     \paragraph{算法原理} BasicRNNCell为最基础的一类Cell，从输入到输出，实现的仅为最简单的线性变换，并加以激活，无门机制控制记忆的写入与遗忘：
+%     $$h_t = \tanh([h_{t-1}, x_t] \cdot W + b)$$
+%     \image[4in]{BasicRNNCell}{BasicRNNCell}
+
+%     \paragraph{实现方法} 实现时，只需模拟上述公式即可：
+
+    % \begin{enumerate}
+    %     \itembf{词向量导入}： 在\texttt{main.py}中导入预训练的词向量；
+    %     \itembf{模型搭建}： 在\texttt{model.py}中实现\texttt{placeholder}等，搭建基于RNN的神经网络；
+    %     \itembf{基本单元}： 在\texttt{cell.py}中实现BasicRNNCell, GRUCell, BasicLSTMCell等基础单元；
+    %     \itembf{模型可视化}： 在\texttt{main.py}中加入TensorBoard可视化代码。
+    % \end{enumerate}
+
+    % \begin{lstlisting}
+    % for vocab in vocab_list:
+    %     if vocab in embed_dict:
+    %         embed.append(embed_dict[vocab])
+    %     else:
+    %         embed.append([0.0] * FLAGS.embed_units)
+    % \end{lstlisting}
+
+    % \tablethreeL{变量}{形状}{含义}
+    %     $x_t$ & $[batch\_size \times embed\_units]$ & 当前时刻的输入 \\
+    %     \midrule
+    %     $z_t$ & $[batch\_size \times num\_units]$ & update门，候选状态对新状态的影响 \\
+    %     $r_t$ & $[batch\_size \times num\_units]$ & reset门，旧状态对候选状态的影响 \\
+    %     \midrule
+    %     $W_z, b_z$ & $[(embed\_units + num\_units) \times num\_units]$, $[num\_units]$ & update门的变换矩阵、偏置 \\
+    %     $W_r, b_r$ & $[(embed\_units + num\_units) \times num\_units]$, $[num\_units]$ & reset门的变换矩阵、偏置 \\
+    %     $W, b$ & $[(embed\_units + num\_units) \times num\_units]$, $[num\_units]$ & 从旧状态到候选状态的变换矩阵、偏置 \\
+    %     \midrule
+    %     $\tilde{h_t}$ & $[batch\_size \times num\_units]$ & 候选状态 \\
+    %     $h_t$ & $[batch\_size \times num\_units]$ & 产生的新状态 \\
+    % \tableend
+
+    % \image[6in]{loss_gru}{GRUCell loss-epoch曲线}
+
+% \begin{thebibliography}{9}
+%     \bibitem{GRUPaper} http://arxiv.org/abs/1406.1078
+%     \bibitem{LSTMPaper} http://arxiv.org/abs/1409.2329
+%     \bibitem{RNNTutorial} https://zhuanlan.zhihu.com/p/28196873
+%     \bibitem{LSTMTutorial} http://colah.github.io/posts/2015-08-Understanding-LSTMs/
+%     \bibitem{GRUTutorial} http://blog.csdn.net/meanme/article/details/48845793
+%     \bibitem{BiLSTMTutorial} http://blog.csdn.net/wuzqChom/article/details/75453327
+% \end{thebibliography}
+
+\end{document}

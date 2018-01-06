@@ -1,79 +1,302 @@
 \chapter{指令流水}
 
+本章介绍了MIPS标准五级流水线的实现，同时实现了绝大部分需要基本指令。
+
 \section{pc\_reg}
 
     \subsection{简介概述}
-    a
+    pc\_reg阶段实现程序计数，是五级流水线的第一级，记录了当前指令地址，同时对下一条指令地址进行计算与选择，是一个简单的时序逻辑电路。
 
     \subsection{接口定义}
-    a
+        
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & CPU外部 & 时钟信号\\
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 6 & stall & ctrl & 流水线暂停使能\\
+            input & wire & 1 & tlb\_hit & tlb\_reg & TLB是否命中\\
+            input & wire & 32 & physical\_pc & tlb\_reg & 物理地址\\
+            input & wire & 1 & flush & ctrl & 流水线清空使能\\
+            input & wire & 32 & new\_pc & ctrl & 下一指令地址\\
+            input & wire & 1 & branch\_flag\_i & id & 跳转使能信号 \\
+            input & wire & 32 & branch\_target\_addr\_i & id & 分支跳转地址 \\
+            output & reg & 32 & virtual\_pc & tlb\_reg、if\_id & 虚拟地址 \\
+            output & reg & 32 & pc & CPU外部 & 指令地址 \\
+            output & reg & 1 & ce & CPU外部 & 访存使能信号 \\
+            output & reg & 32 & excepttype\_o & if\_id & 异常类型\\
+        \tableend
 
     \subsection{设计细节}
-    a
+    初始时virtual\_pc指向0xbfc00000（ROM起始地址），之后virtual\_pc每个时钟周期加4，若上一条指令为分支跳转指令，则virtual\_pc置为分支跳转地址。
 
 \section{if\_id}
 
     \subsection{简介概述}
-    a
+    if\_id用于衔接五级流水线第一阶段if和第二阶段id，在时钟上升沿储存if阶段数据，传递给id阶段，将if阶段所得到的指令传递至id阶段进行译码，是一个简单的时序逻辑电路。
 
     \subsection{接口定义}
-    a
+
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & CPU外部 & 时钟信号\\
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 32 & if\_pc & pc\_reg & 指令地址\\
+            input & wire & 32 & if\_inst & pc\_reg & 指令内容\\
+            input & wire & 32 & if\_excepttype & pc\_reg & 异常类型 \\
+            input & wire & 6 & stall & ctrl & 流水线暂停使能 \\
+            input & wire & 1 & flush & ctrl & 流水线清空使能 \\
+            output & reg & 32 & id\_pc & id & 指令地址 \\
+            output & reg & 32 & id\_inst & id & 指令内容 \\
+            output & reg & 32 & id\_excepttype & id & 异常类型 \\
+        \tableend
 
     \subsection{设计细节}
-    a
+    当if阶段没有被暂停，置id\_pc为if\_id，id\_excepttype为if\_excepttype，此时如果没有发生TLB缺失异常，置id\_inst为if\_inst，其余情况下id\_pc、id\_inst和id\_excepttype均置0。
 
 \section{id}
 
     \subsection{简介概述}
-    a
+    id阶段实现指令译码，是五级流水线的第二级，主要是识别指令类型和各字段、读取通用寄存器值、产生流水线控制信号，除此之外，id阶段还需要实现数据旁路、分支判断处理等，是一个复杂的组合逻辑电路。
 
     \subsection{接口定义}
-    a
+
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 32 & pc\_i & if\_id & 指令地址\\
+            input & wire & 32 & inst\_i & if\_id & 指令内容 \\
+            input & wire & 32 & reg1\_data\_i & regfile & 通用寄存器读端口1数据 \\
+            input & wire & 32 & reg2\_data\_i & regfile & 通用寄存器读端口2数据 \\
+            input & wire & 1 & ex\_wreg\_i & ex & 旁路信号，EX阶段是否写回通用寄存器 \\
+            input & wire & 32 & ex\_wdata\_i & ex & 旁路信号，EX阶段写回通用寄存器数据 \\
+            input & wire & 5 & ex\_wd\_i & ex & 旁路信号，EX阶段写回通用寄存器地址 \\
+            input & wire & 8 & ex\_aluop\_i & ex & 旁路信号，EX阶段指令类型 \\
+            input & wire & 1 & mem\_wreg\_i & mem & 旁路信号，MEM阶段是否写回通用寄存器 \\
+            input & wire & 32 & mem\_wdata\_i & mem & 旁路信号，MEM阶段写回通用寄存器数据 \\
+            input & wire & 5 & mem\_wd\_i & mem & 旁路信号，MEM阶段写回通用寄存器地址 \\
+            input & wire & 1 & is\_in\_delay\_slot\_i & id\_ex & 当前指令是否位于分支延迟槽中\\
+            input & wire & 32 & excepttype\_i & if\_id & 异常类型 \\
+            output & reg & 1 & next\_inst\_in\_delay\_slot\_o & id\_ex & 下一条指令是否位于分支延迟槽中\\
+            output & reg & 1 & branch\_flag\_o & pc\_reg & 跳转使能信号 \\ 
+            output & reg & 32 & branch\_target\_addr\_o & pc\_reg & 分支跳转地址 \\
+            output & reg & 32 & link\_addr\_o & <TODO> & <TODO> \\
+            output & reg & 1 & is\_in\_delay\_slot\_o & id\_ex & 当前指令是否位于分支延迟槽中\\
+            output & reg & 1 & reg1\_read\_o & regfile & 通用寄存器读端口1使能 \\
+            output & reg & 1 & reg2\_read\_o & regfile & 通用寄存器读端口2使能 \\
+            output & reg & 5 & reg1\_addr\_o & regfile & 通用寄存器读端口1地址 \\
+            output & reg & 5 & reg2\_addr\_o & regfile & 通用寄存器读端口2地址 \\
+            output & reg & 8 & aluop\_o & id\_ex & ALU运算类型 \\
+            output & reg & 3 & alusel\_o & id\_ex & ALU选择类型 \\
+            output & reg & 32 & reg1\_o & id\_ex & ALU第一个操作数 \\
+            output & reg & 32 & reg2\_o & id\_ex & ALU第二个操作数 \\
+            output & reg & 5 & wd\_o & id\_ex & 通用寄存器写端口地址 \\
+            output & reg & 1 & wreg\_o & id\_ex & 通用寄存器写端口使能 \\
+            output & wire & 32 & inst\_o & id\_ex & 指令内容\\
+            output & wire & 1 & stallreq & <TODO> & <TODO> \\
+            output & wire & 32 & excepttype\_o & id\_ex & 异常类型\\
+            output & wire & 32 & current\_inst\_address\_o & <TODO> & <TODO> \\
+        \tableend
 
     \subsection{设计细节}
-    a
+    ID阶段将识别指令的操作码和各个字段，根据指令操作码向EX阶段传入其所需信号。<TODO>
 
 \section{id\_ex}
     
     \subsection{简介概述}
-    a
+    id\_ex用于衔接五级流水线第二阶段id和第三阶段ex，在时钟上升沿储存id阶段数据，传递给ex阶段，将id阶段译码阶段传递至ex阶段进行算数逻辑运算，是一个简单的时序逻辑电路。
 
     \subsection{接口定义}
-    a
+        
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & CPU外部 & 时钟信号\\
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 8 & id\_aluop & id & ALU运算类型\\
+            input & wire & 3 & id\_alusel & id & ALU选择类型\\
+            input & wire & 32 & id\_reg1 & id & ALU第一个操作数 \\
+            input & wire & 32 & id\_reg2 & id & ALU第二个操作数\\
+            input & wire & 5 & id\_wd & id & 通用寄存器写端口地址\\
+            input & wire & 1 & id\_wreg & id & 通用寄存器写端口使能\\
+            input & wire & 32 & id\_link\_addr & id & <TODO> \\
+            input & wire & 1 & id\_is\_in\_delay\_slot & id & 当前指令是否位于分支延迟槽中 \\
+            input & wire & 1 & next\_inst\_in\_delay\_slot\_i & id & 下一条指令是否位于分支延迟槽中\\
+            input & wire & 32 & id\_inst & id & 指令内容\\
+            input & wire & 32 & id\_current\_inst\_address & id & <TODO> \\
+            input & wire & 32 & id\_excepttype & id & 异常类型\\
+            input & wire & 6 & stall & ctrl & 流水线暂停使能\\
+            input & wire & 1 & flush & ctrl & 流水线清空使能\\
+            output & reg & 8 & ex\_aluop & ex & ALU运算类型\\
+            output & reg & 3 & ex\_alusel & ex & ALU选择类型\\
+            output & reg & 32 & ex\_reg1 & ex& ALU第一个操作数\\
+            output & reg & 32 & ex\_reg2 & ex& ALU第二个操作数\\
+            output & reg & 5 & ex\_wd & ex& 通用寄存器写端口地址\\
+            output & reg & 1 & ex\_wreg & ex& 通用寄存器写端口使能\\
+            output & reg & 32 & ex\_link\_addr & ex& <TODO>\\
+            output & reg & 1 & ex\_is\_in\_delay\_slot & ex & 当前指令是否位于分支延迟槽中 \\
+            output & reg & 1 & is\_in\_delay\_slot\_o & ex & <TODO>\\
+            output & reg & 32 & ex\_inst & ex & 指令内容 \\
+            output & reg & 32 & ex\_current\_inst\_address & ex& 指令地址\\
+            output & reg & 32 & ex\_excepttype & ex& 异常类型\\
+        \tableend
 
     \subsection{设计细节}
-    a
+    <TODO>
 
 \section{ex}
 
     \subsection{简介概述}
-    a
+    ex阶段实现算数逻辑运算，是五级流水线的第三级，主要是进行各种算数逻辑运算，例如加法、减法、乘法、移位、与或非等操作，除此之外，ex阶段还需要实现数据旁路、分支判断处理等，是一个复杂的组合逻辑电路。
 
     \subsection{接口定义}
-    a
-
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 8 & aluop\_i & id\_ex & ALU运算类型\\
+            input & wire & 3 & alusel\_i & id\_ex & ALU选择类型\\
+            input & wire & 32 & reg1\_i & id\_ex & ALU第一个操作数 \\
+            input & wire & 32 & reg2\_i & id\_ex & ALU第二个操作数\\
+            input & wire & 5 & wd\_i & id\_ex & 通用寄存器写端口地址 \\
+            input & wire & 1 & wreg\_i & id\_ex & 通用寄存器写端口使能\\
+            input & wire & 32 & inst\_i & id\_ex & 指令内容\\
+            input & wire & 32 & hi\_i & hilo\_reg & HI寄存器读出数据\\
+            input & wire & 32 & lo\_i & hilo\_reg & LO寄存器读出数据\\
+            input & wire & 32 & wb\_hi\_i & mem\_wb & 旁路信号，WB阶段写回HI寄存器数据 \\
+            input & wire & 32 & wb\_lo\_i & mem\_wb & 旁路信号，WB阶段写回LO寄存器数据 \\
+            input & wire & 1 & wb\_whilo\_i & mem\_wb & 旁路信号，WB阶段是否写回HILO寄存器\\
+            input & wire & 32 & mem\_hi\_i & ex\_mem & 旁路信号，MEM阶段写回HI寄存器数据\\
+            input & wire & 32 & mem\_lo\_i & ex\_mem & 旁路信号，MEM阶段写回LO寄存器数据\\
+            input & wire & 1 & mem\_whilo\_i & ex\_mem & 旁路信号，MEM阶段是否写回HILO寄存器\\
+            input & wire & 32 & link\_addr\_i & id\_ex & LINK地址 \\
+            input & wire & 1 & is\_in\_delay\_slot\_i & id\_ex & 当前指令是否位于分支延迟槽中\\
+            input & wire & 1 & mem\_cp0\_reg\_we & ex\_mem & 旁路信号，MEM阶段是否写回CP0寄存器\\
+            input & wire & 5 & mem\_cp0\_reg\_write\_addr & ex\_mem & 旁路信号，MEM阶段写回CP0寄存器地址\\
+            input & wire & 32 & mem\_cp0\_reg\_data & ex\_mem & 旁路信号，MEM阶段写回CP0寄存器数据\\
+            input & wire & 1 & wb\_cp0\_reg\_we & mem\_wb & 旁路信号，WB阶段是否写回CP0寄存器\\
+            input & wire & 5 & wb\_cp0\_reg\_write\_addr & mem\_wb & 旁路信号，WB阶段写回CP0寄存器地址\\
+            input & wire & 32 & wb\_cp0\_reg\_data & mem\_wb & 旁路信号，WB阶段写回CP0寄存器数据 \\
+            input & wire & 32 & cp0\_reg\_data\_i & cp0\_reg & CP0协处理器寄存器读出数据\\
+            input & wire & 32 & excepttype\_i & id\_ex & 异常类型\\
+            input & wire & 32 & current\_inst\_address\_i & id\_ex & 指令地址\\
+            output & reg & 5 & wd\_o & ex\_mem & 通用寄存器写端口地址\\
+            output & reg & 1 & wreg\_o & ex\_mem& 通用寄存器写端口使能\\
+            output & reg & 32 & wdata\_o & ex\_mem& 通用寄存器写端口数据\\
+            output & wire & 32 & inst\_o & ex\_mem& 指令内容\\
+            output & reg & 32 & hi\_o & ex\_mem& HI寄存器写入数据\\
+            output & reg & 32 & lo\_o & ex\_mem& LO寄存器写入数据\\
+            output & reg & 1 & whilo\_o & ex\_mem& HILO寄存器写使能\\
+            output & wire & 8 & aluop\_o & ex\_mem& ALU运算类型\\
+            output & wire & 32 & mem\_addr\_o & ex\_mem& <TODO>\\
+            output & wire & 32 & reg2\_o & ex\_mem& ALU第二个操作数\\
+            output & wire & 1 & stallreq & <TODO>&<TODO> \\
+            output & reg & 5 & cp0\_reg\_read\_addr\_o & cp0\_reg & CP0协处理器寄存器读出地址 \\
+            output & reg & 1 & cp0\_reg\_we\_o & ex\_mem& CP0协处理器寄存器写使能\\
+            output & reg & 5 & cp0\_reg\_write\_addr\_o & ex\_mem& CP0协处理器寄存器写入地址\\
+            output & reg & 32 & cp0\_reg\_data\_o & ex\_mem& CP0协处理器寄存器写入数据\\
+            output & wire & 32 & excepttype\_o & ex\_mem& 异常类型\\
+            output & wire & 32 & current\_inst\_address\_o & ex\_mem& 指令地址\\
+            output & wire & 1 & is\_in\_delay\_slot\_o & ex\_mem& 当前指令是否位于分支延迟槽中\\
+        \tableend
     \subsection{设计细节}
-    a
+    <TODO>
 
 \section{ex\_mem}
 
     \subsection{简介概述}
-    a
+    ex\_mem用于衔接五级流水线第三阶段ex和第四阶段mem，在时钟上升沿储存ex阶段数据，传递给mem阶段，将ex阶段需要写入的数据传递至mem阶段进行访存操作，是一个简单的时序逻辑电路。
 
     \subsection{接口定义}
-    a
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & CPU外部 & 时钟信号\\
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 5 & ex\_wd & ex& 通用寄存器写端口地址\\
+            input & wire & 1 & ex\_wreg & ex& 通用寄存器写端口使能\\
+            input & wire & 32 & ex\_wdata & ex& 通用寄存器写端口数据\\
+            input & wire & 32 & ex\_hi & ex& HI寄存器写入数据\\
+            input & wire & 32 & ex\_lo & ex& LO寄存器写入数据\\
+            input & wire & 1 & ex\_whilo & ex& HILO寄存器写使能\\
+            input & wire & 8 & ex\_aluop & ex& ALU运算类型\\
+            input & wire & 32 & ex\_mem\_addr & ex& <TODO>\\
+            input & wire & 32 & ex\_reg2 & ex& ALU第二个操作数\\
+            input & wire & 1 & ex\_cp0\_reg\_we & ex& CP0协处理器寄存器写使能\\
+            input & wire & 5 & ex\_cp0\_reg\_write\_addr & ex& CP0协处理器寄存器写入地址\\
+            input & wire & 32 & ex\_cp0\_reg\_data & ex& CP0协处理器寄存器写入数据\\
+            input & wire & 32 & ex\_excepttype & ex& 异常类型\\
+            input & wire & 1 & ex\_is\_in\_delay\_slot & ex& 当前指令是否位于分支延迟槽中\\
+            input & wire & 32 & ex\_current\_inst\_address & ex& 指令地址\\
+            input & wire & 32 & ex\_inst & ex& 指令内容\\
+            input & wire & 6 & stall & ctrl& 流水线暂停使能\\
+            input & wire & 1 & flush & ctrl& 流水线清空使能\\
 
+            output & reg & 5 & mem\_wd & mem& 通用寄存器写端口地址\\
+            output & reg & 1 & mem\_wreg & mem& 通用寄存器写端口使能\\
+            output & reg & 32 & mem\_wdata & mem& 通用寄存器写端口数据\\
+            output & reg & 32 & mem\_hi & mem& HI寄存器写入数据\\
+            output & reg & 32 & mem\_lo & mem& LO寄存器写入数据\\
+            output & reg & 1 & mem\_whilo & mem& HILO寄存器写使能\\
+            output & reg & 8 & mem\_aluop & mem& ALU运算类型\\
+            output & reg & 32 & mem\_mem\_addr & mem& \\
+            output & reg & 32 & mem\_reg2 & mem& ALU第二个操作数\\
+            output & reg & 1 & mem\_cp0\_reg\_we & mem& CP0协处理器寄存器写使能\\
+            output & reg & 5 & mem\_cp0\_reg\_write\_addr & mem& CP0协处理器寄存器写入地址\\
+            output & reg & 32 & mem\_cp0\_reg\_data & mem& CP0协处理器寄存器写入数据\\
+            output & reg & 32 & mem\_excepttype & mem& 异常类型\\
+            output & reg & 1 & mem\_is\_in\_delay\_slot & mem& 当前指令是否位于分支延迟槽中\\
+            output & reg & 32 & mem\_current\_inst\_address & mem& 指令地址\\
+            output & reg & 32 & mem\_inst & mem& 指令内容\\
+        \tableend
     \subsection{设计细节}
-    a
+    <TODO>
 
 \section{mem}
 
     \subsection{简介概述}
-    a
+    mem阶段实现访存操作，是五级流水线的第四级，是一个复杂的组合逻辑电路。
 
     \subsection{接口定义}
-    a
-
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 5 & wd\_i & ex\_mem& \\
+            input & wire & 1 & wreg\_i & ex\_mem& \\
+            input & wire & 32 & wdata\_i & ex\_mem& \\
+            input & wire & 32 & hi\_i & ex\_mem& \\
+            input & wire & 32 & lo\_i & ex\_mem& \\
+            input & wire & 1 & whilo\_i & ex\_mem& \\
+            input & wire & 8 & aluop\_i & ex\_mem& \\
+            input & wire & 32 & mem\_addr\_i & &ex\_mem \\
+            input & wire & 32 & reg2\_i & ex\_mem& \\
+            input & wire & 32 & mem\_data\_i & ex\_mem& \\
+            input & wire & 1 & tlb\_hit & tlb\_reg& \\
+            input & wire & 32 & physical\_addr & tle\_reg& \\
+            input & wire & 1 & cp0\_reg\_we\_i & ex\_mem& \\
+            input & wire & 5 & cp0\_reg\_write\_addr\_i & ex\_mem& \\
+            input & wire & 32 & cp0\_reg\_data\_i & ex\_mem& \\
+            input & wire & 32 & excepttype\_i & ex\_mem& \\
+            input & wire & 1 & is\_in\_delay\_slot\_i & ex\_mem& \\
+            input & wire & 32 & current\_inst\_address\_i & ex\_mem& \\
+            input & wire & 32 & cp0\_status\_i & & \\
+            input & wire & 32 & cp0\_cause\_i & & \\
+            input & wire & 32 & cp0\_epc\_i & & \\
+            input & wire & 1 & wb\_cp0\_reg\_we & & \\
+            input & wire & 5 & wb\_cp0\_reg\_write\_addr & & \\
+            input & wire & 32 & wb\_cp0\_reg\_data & & \\
+            input & wire & 32 & inst\_i & & \\
+            output & reg & 5 & wd\_o & & \\
+            output & reg & 1 & wreg\_o & & \\
+            output & reg & 32 & wdata\_o & & \\
+            output & reg & 32 & hi\_o & & \\
+            output & reg & 32 & lo\_o & & \\
+            output & reg & 1 & whilo\_o & & \\
+            output & reg & 32 & mem\_addr\_o & & \\
+            output & wire & 1 & mem\_we\_o & & \\
+            output & reg & 4 & mem\_sel\_o & & \\
+            output & reg & 32 & mem\_data\_o & & \\
+            output & reg & 1 & mem\_ce\_o & & \\
+            output & wire & 32 & virtual\_addr & & \\
+            output & reg & 1 & cp0\_reg\_we\_o & & \\
+            output & reg & 5 & cp0\_reg\_write\_addr\_o & & \\
+            output & reg & 32 & cp0\_reg\_data\_o & & \\
+            output & reg & 32 & excepttype\_o & & \\
+            output & wire & 32 & cp0\_epc\_o & & \\
+            output & wire & 1 & is\_in\_delay\_slot\_o & & \\
+            output & wire & 32 & current\_inst\_address\_o & & \\
+            output & reg & 32 & bad\_address & & \\
+            output & wire & 32 & inst\_o & & \\
+        \tableend
     \subsection{设计细节}
     a
 

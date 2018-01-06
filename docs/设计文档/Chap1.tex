@@ -221,7 +221,6 @@
             input & wire & 32 & ex\_inst & ex& 指令内容\\
             input & wire & 6 & stall & ctrl& 流水线暂停使能\\
             input & wire & 1 & flush & ctrl& 流水线清空使能\\
-
             output & reg & 5 & mem\_wd & mem& 通用寄存器写端口地址\\
             output & reg & 1 & mem\_wreg & mem& 通用寄存器写端口使能\\
             output & reg & 32 & mem\_wdata & mem& 通用寄存器写端口数据\\
@@ -250,85 +249,128 @@
     \subsection{接口定义}
         \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & rst & CPU外部 & 复位信号\\
-            input & wire & 5 & wd\_i & ex\_mem& \\
-            input & wire & 1 & wreg\_i & ex\_mem& \\
-            input & wire & 32 & wdata\_i & ex\_mem& \\
-            input & wire & 32 & hi\_i & ex\_mem& \\
-            input & wire & 32 & lo\_i & ex\_mem& \\
-            input & wire & 1 & whilo\_i & ex\_mem& \\
-            input & wire & 8 & aluop\_i & ex\_mem& \\
-            input & wire & 32 & mem\_addr\_i & &ex\_mem \\
-            input & wire & 32 & reg2\_i & ex\_mem& \\
-            input & wire & 32 & mem\_data\_i & ex\_mem& \\
-            input & wire & 1 & tlb\_hit & tlb\_reg& \\
-            input & wire & 32 & physical\_addr & tle\_reg& \\
-            input & wire & 1 & cp0\_reg\_we\_i & ex\_mem& \\
-            input & wire & 5 & cp0\_reg\_write\_addr\_i & ex\_mem& \\
-            input & wire & 32 & cp0\_reg\_data\_i & ex\_mem& \\
-            input & wire & 32 & excepttype\_i & ex\_mem& \\
-            input & wire & 1 & is\_in\_delay\_slot\_i & ex\_mem& \\
-            input & wire & 32 & current\_inst\_address\_i & ex\_mem& \\
-            input & wire & 32 & cp0\_status\_i & & \\
-            input & wire & 32 & cp0\_cause\_i & & \\
-            input & wire & 32 & cp0\_epc\_i & & \\
-            input & wire & 1 & wb\_cp0\_reg\_we & & \\
-            input & wire & 5 & wb\_cp0\_reg\_write\_addr & & \\
-            input & wire & 32 & wb\_cp0\_reg\_data & & \\
-            input & wire & 32 & inst\_i & & \\
-            output & reg & 5 & wd\_o & & \\
-            output & reg & 1 & wreg\_o & & \\
-            output & reg & 32 & wdata\_o & & \\
-            output & reg & 32 & hi\_o & & \\
-            output & reg & 32 & lo\_o & & \\
-            output & reg & 1 & whilo\_o & & \\
-            output & reg & 32 & mem\_addr\_o & & \\
-            output & wire & 1 & mem\_we\_o & & \\
-            output & reg & 4 & mem\_sel\_o & & \\
-            output & reg & 32 & mem\_data\_o & & \\
-            output & reg & 1 & mem\_ce\_o & & \\
-            output & wire & 32 & virtual\_addr & & \\
-            output & reg & 1 & cp0\_reg\_we\_o & & \\
-            output & reg & 5 & cp0\_reg\_write\_addr\_o & & \\
-            output & reg & 32 & cp0\_reg\_data\_o & & \\
-            output & reg & 32 & excepttype\_o & & \\
-            output & wire & 32 & cp0\_epc\_o & & \\
-            output & wire & 1 & is\_in\_delay\_slot\_o & & \\
-            output & wire & 32 & current\_inst\_address\_o & & \\
-            output & reg & 32 & bad\_address & & \\
-            output & wire & 32 & inst\_o & & \\
+            input & wire & 5 & wd\_i & ex\_mem& 通用寄存器写端口地址\\
+            input & wire & 1 & wreg\_i & ex\_mem& 通用寄存器写端口使能\\
+            input & wire & 32 & wdata\_i & ex\_mem& 通用寄存器写端口数据\\
+            input & wire & 32 & hi\_i & ex\_mem& HI寄存器写入数据\\
+            input & wire & 32 & lo\_i & ex\_mem& LO寄存器写入数据\\
+            input & wire & 1 & whilo\_i & ex\_mem& HILO寄存器写使能\\
+            input & wire & 8 & aluop\_i & ex\_mem& ALU运算类型\\
+            input & wire & 32 & mem\_addr\_i & <TODO>&<TODO> \\
+            input & wire & 32 & reg2\_i & ex\_mem& ALU第二个操作数\\
+            input & wire & 32 & mem\_data\_i & <TODO>& <TODO>\\
+            input & wire & 1 & tlb\_hit & tlb\_reg& TLB是否命中\\
+            input & wire & 32 & physical\_addr & tlb\_reg& 物理地址\\
+            input & wire & 1 & cp0\_reg\_we\_i & ex\_mem& CP0协处理器寄存器写使能\\
+            input & wire & 5 & cp0\_reg\_write\_addr\_i & ex\_mem& CP0协处理器寄存器写入地址\\
+            input & wire & 32 & cp0\_reg\_data\_i & ex\_mem& CP0协处理器寄存器写入数据\\
+            input & wire & 32 & excepttype\_i & ex\_mem& 异常类型\\
+            input & wire & 1 & is\_in\_delay\_slot\_i & ex\_mem& 当前指令是否位于分支延迟槽中\\
+            input & wire & 32 & current\_inst\_address\_i & ex\_mem& 指令地址\\
+            input & wire & 32 & cp0\_status\_i & cp0\_reg& CP0协处理器Status寄存器读出数据\\
+            input & wire & 32 & cp0\_cause\_i & cp0\_reg& CP0协处理器Cause寄存器读出数据\\
+            input & wire & 32 & cp0\_epc\_i & cp0\_reg& CP0协处理器Epc寄存器读出数据\\
+            input & wire & 1 & wb\_cp0\_reg\_we & mem\_wb& 旁路信号，WB阶段是否写回CP0寄存器\\
+            input & wire & 5 & wb\_cp0\_reg\_write\_addr & mem\_wb& 旁路信号，WB阶段写回CP0寄存器地址\\
+            input & wire & 32 & wb\_cp0\_reg\_data & mem\_wb& 旁路信号，WB阶段写回CP0寄存器数据\\
+            input & wire & 32 & inst\_i & ex\_mem& 指令内容\\
+            output & reg & 5 & wd\_o & mem\_wb& 通用寄存器写端口地址\\
+            output & reg & 1 & wreg\_o & mem\_wb& 通用寄存器写端口使能\\
+            output & reg & 32 & wdata\_o & mem\_wb& 通用寄存器写端口数据\\
+            output & reg & 32 & hi\_o & mem\_wb& HI寄存器写入数据\\
+            output & reg & 32 & lo\_o & mem\_wb& LO寄存器写入数据\\
+            output & reg & 1 & whilo\_o & mem\_wb& HILO寄存器写使能\\
+            output & reg & 32 & mem\_addr\_o & <TODO>& 外设写地址\\
+            output & wire & 1 & mem\_we\_o & <TODO>& 外设写使能\\
+            output & reg & 4 & mem\_sel\_o & <TODO>& 外设写片选\\
+            output & reg & 32 & mem\_data\_o & <TODO>& 外设写数据\\
+            output & reg & 1 & mem\_ce\_o & <TODO>& 外设写使能\\
+            output & wire & 32 & virtual\_addr & <TODO>& 虚拟地址\\
+            output & reg & 1 & cp0\_reg\_we\_o & mem\_wb& CP0协处理器寄存器写使能\\
+            output & reg & 5 & cp0\_reg\_write\_addr\_o & mem\_wb& CP0协处理器寄存器写入地址\\
+            output & reg & 32 & cp0\_reg\_data\_o & mem\_wb& CP0协处理器寄存器写入数据\\
+            output & reg & 32 & excepttype\_o & <TODO>& 异常类型\\
+            output & wire & 32 & cp0\_epc\_o & <TODO>& CP0协处理器Epc寄存器写入数据\\
+            output & wire & 1 & is\_in\_delay\_slot\_o & <TODO>& 当前指令是否位于分支延迟槽中\\
+            output & wire & 32 & current\_inst\_address\_o & <TODO>& 指令地址\\
+            output & reg & 32 & bad\_address & <TODO>& <TODO>\\
+            output & wire & 32 & inst\_o & mem\_wb& 指令内容\\
         \tableend
     \subsection{设计细节}
-    a
+    <TODO>
 
 \section{mem\_wb}
 
     \subsection{简介概述}
-    a
+    mem\_wb用于衔接五级流水线第四阶段mem和第五阶段wb，在时钟上升沿储存mem阶段数据，传递给对应的寄存器，是一个简单的时序逻辑电路。
 
     \subsection{接口定义}
-    a
-
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & CPU外部 & 时钟信号\\
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 5 & mem\_wd & mem& 通用寄存器写端口地址\\
+            input & wire & 1 & mem\_wreg & mem& 通用寄存器写端口使能\\
+            input & wire & 32 & mem\_wdata & mem& 通用寄存器写端口数据\\
+            input & wire & 32 & mem\_hi & mem& HI寄存器写入数据\\
+            input & wire & 32 & mem\_lo & mem& LO寄存器写入数据\\
+            input & wire & 1 & mem\_whilo & mem& HILO寄存器写使能\\
+            input & wire & 1 & mem\_cp0\_reg\_we & mem& CP0协处理器寄存器写使能\\
+            input & wire & 5 & mem\_cp0\_reg\_write\_addr & mem& CP0协处理器寄存器写入地址\\
+            input & wire & 32 & mem\_cp0\_reg\_data & mem& CP0协处理器寄存器写入数据\\
+            input & wire & 32 & mem\_inst & mem& 指令内容\\
+            input & wire & 6 & stall & ctrl& 流水线暂停使能\\
+            input & wire & 1 & flush & ctrl& 流水线清空使能\\
+            output & reg & 5 & wb\_wd & regfile& 通用寄存器写端口地址\\
+            output & reg & 1 & wb\_wreg & regfile& 通用寄存器写端口使能\\
+            output & reg & 32 & wb\_wdata & regfile& 通用寄存器写端口数据\\
+            output & reg & 32 & wb\_hi & hilo\_reg& HI寄存器写入数据\\
+            output & reg & 32 & wb\_lo & hilo\_reg& LO寄存器写入数据\\
+            output & reg & 1 & wb\_whilo & hilo\_reg& HILO寄存器写使能\\
+            output & reg & 1 & wb\_cp0\_reg\_we & cp0\_reg& CP0协处理器寄存器写使能\\
+            output & reg & 5 & wb\_cp0\_reg\_write\_addr & cp0\_reg& CP0协处理器寄存器写入地址\\
+            output & reg & 32 & wb\_cp0\_reg\_data & cp0\_reg& CP0协处理器寄存器写入数据\\      
+            output & reg & 32 & wb\_inst & <TODO> & 指令内容\\
+        \tableend
     \subsection{设计细节}
-    a
+    <TODO>
 
 \section{regfile}
 
     \subsection{简介概述}
-    a
+    <TODO>
 
     \subsection{接口定义}
-    a
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & CPU外部 & 时钟信号\\
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 1 & we & mem\_wb& 通用寄存器写端口使能\\
+            input & wire & 5 & waddr & mem\_wb& 通用寄存器写端口地址\\
+            input & wire & 32 & wdata & mem\_wb& 通用寄存器写端口数据\\
+            input & wire & 1 & re1 & id& 通用寄存器读端口1使能 \\ %<TODO>: is id?
+            input & wire & 5 & raddr1 & id& 通用寄存器读端口1地址\\
+            input & wire & 1 & re2 & id& 通用寄存器读端口1使能 \\
+            input & wire & 5 & raddr2 & id& 通用寄存器读端口1地址\\
+            output & reg & 32 & rdata1 & id& 通用寄存器读端口1数据 \\
+            output & reg & 32 & rdata2 & id& 通用寄存器读端口1数据 \\
+        \tableend
 
     \subsection{设计细节}
-    a
+    <TODO>
 
 \section{hilo\_reg}
 
     \subsection{简介概述}
-    a
+    <TODO>
 
     \subsection{接口定义}
-    a
-
+        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & CPU外部 & 时钟信号\\
+            input & wire & 1 & rst & CPU外部 & 复位信号\\
+            input & wire & 1 & we & mem\_wb& HILO寄存器写使能\\
+            input & wire & 32 & hi\_i & mem\_wb& HI寄存器写入数据\\
+            input & wire & 32 & lo\_i & mem\_wb& LO寄存器写入数据\\
+            output & reg & 32 & hi\_o & ex& HI寄存器读出数据\\ %<TODO> is ex?
+            output & reg & 32 & lo\_o & ex& LO寄存器读出数据\\
+        \tableend
     \subsection{设计细节}
-    a
+    <TODO>

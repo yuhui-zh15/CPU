@@ -15,8 +15,13 @@
 \usepackage{ifthen}
 \usepackage[top = 1in, bottom = 1in, left = 1in, right = 1in]{geometry}
 
+% for mac
 \setmonofont[Mapping={}]{Monaco}  %英文引号之类的正常显示，相当于设置英文字体
 \setsansfont{Monaco} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
+
+% for windows
+% \setmonofont[Mapping={}]{Consolas}  %英文引号之类的正常显示，相当于设置英文字体
+% \setsansfont{Consolas} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
 
 \newcommand{\image}[3][3in]{
     \begin{figure}[H]
@@ -108,7 +113,7 @@
 
 \newcommand{\tablesixL}[6] {
     \begin{table}[H] \centering
-    \begin{tabular}{ l l l l l l }
+    \begin{tabular}{ l l l l l p{5cm} }
     \toprule
     \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} & \textbf{#6} \\
     \midrule

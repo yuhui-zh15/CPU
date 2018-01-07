@@ -13,15 +13,16 @@
 \usepackage{hyperref}
 \usepackage{booktabs} % 表格上的不同横线
 \usepackage{ifthen}
+\usepackage{longtable}
 \usepackage[top = 1in, bottom = 1in, left = 1in, right = 1in]{geometry}
 
 % for mac
-\setmonofont[Mapping={}]{Monaco}  %英文引号之类的正常显示，相当于设置英文字体
-\setsansfont{Monaco} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
+% \setmonofont[Mapping={}]{Monaco}  %英文引号之类的正常显示，相当于设置英文字体
+% \setsansfont{Monaco} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
 
 % for windows
-% \setmonofont[Mapping={}]{Consolas}  %英文引号之类的正常显示，相当于设置英文字体
-% \setsansfont{Consolas} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
+\setmonofont[Mapping={}]{Monaco}  %英文引号之类的正常显示，相当于设置英文字体
+\setsansfont{Monaco} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
 
 \newcommand{\image}[3][3in]{
     \begin{figure}[H]
@@ -119,10 +120,22 @@
     \midrule
 }
 
+\newcommand{\longtablesixL}[6] {
+    \begin{longtable}{ l l l l l p{4.3cm} } 
+    \toprule 
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} & \textbf{#6} \\
+    \midrule
+}
+
 \newcommand{\tableend} {
     \bottomrule
     \end{tabular}
     \end{table}
+}
+
+\newcommand{\longtableend} {
+    \bottomrule
+    \end{longtable}
 }
 
 \newcommand{\chuhao}{\fontsize{42pt}{\baselineskip}\selectfont}

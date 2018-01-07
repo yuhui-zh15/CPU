@@ -9,7 +9,7 @@
 
     \subsection{接口定义}
         
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & 时钟信号\\
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 6 & stall & ctrl & 流水线暂停使能\\
@@ -23,7 +23,7 @@
             output & reg & 32 & pc & CPU外部 & 指令地址 \\
             output & reg & 1 & ce & CPU外部 & 访存使能信号 \\
             output & reg & 32 & excepttype\_o & if\_id & 异常类型\\
-        \tableend
+        \longtableend
 
     \subsection{设计细节}
     初始时virtual\_pc指向0xbfc00000（ROM起始地址），之后virtual\_pc每个时钟周期加4，若上一条指令为分支跳转指令，则virtual\_pc置为分支跳转地址。
@@ -35,7 +35,7 @@
 
     \subsection{接口定义}
 
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & 时钟信号\\
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 32 & if\_pc & pc\_reg & 指令地址\\
@@ -46,7 +46,7 @@
             output & reg & 32 & id\_pc & id & 指令地址 \\
             output & reg & 32 & id\_inst & id & 指令内容 \\
             output & reg & 32 & id\_excepttype & id & 异常类型 \\
-        \tableend
+        \longtableend
 
     \subsection{设计细节}
     当if阶段没有被暂停，置id\_pc为if\_id，id\_excepttype为if\_excepttype，此时如果没有发生TLB缺失异常，置id\_inst为if\_inst，其余情况下id\_pc、id\_inst和id\_excepttype均置0。
@@ -58,7 +58,7 @@
 
     \subsection{接口定义}
 
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 32 & pc\_i & if\_id & 指令地址\\
             input & wire & 32 & inst\_i & if\_id & 指令内容 \\
@@ -92,7 +92,7 @@
             output & wire & 1 & stallreq & <TODO> & <TODO> \\
             output & wire & 32 & excepttype\_o & id\_ex & 异常类型\\
             output & wire & 32 & current\_inst\_address\_o & <TODO> & <TODO> \\
-        \tableend
+        \longtableend
 
     \subsection{设计细节}
     ID阶段将识别指令的操作码和各个字段，根据指令操作码向EX阶段传入其所需信号。<TODO>
@@ -104,7 +104,7 @@
 
     \subsection{接口定义}
         
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & 时钟信号\\
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 8 & id\_aluop & id & ALU运算类型\\
@@ -133,7 +133,7 @@
             output & reg & 32 & ex\_inst & ex & 指令内容 \\
             output & reg & 32 & ex\_current\_inst\_address & ex& 指令地址\\
             output & reg & 32 & ex\_excepttype & ex& 异常类型\\
-        \tableend
+        \longtableend
 
     \subsection{设计细节}
     <TODO>
@@ -144,7 +144,7 @@
     ex阶段实现算数逻辑运算，是五级流水线的第三级，主要是进行各种算数逻辑运算，例如加法、减法、乘法、移位、与或非等操作，除此之外，ex阶段还需要实现数据旁路、分支判断处理等，是一个复杂的组合逻辑电路。
 
     \subsection{接口定义}
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 8 & aluop\_i & id\_ex & ALU运算类型\\
             input & wire & 3 & alusel\_i & id\_ex & ALU选择类型\\
@@ -190,7 +190,7 @@
             output & wire & 32 & excepttype\_o & ex\_mem& 异常类型\\
             output & wire & 32 & current\_inst\_address\_o & ex\_mem& 指令地址\\
             output & wire & 1 & is\_in\_delay\_slot\_o & ex\_mem& 当前指令是否位于分支延迟槽中\\
-        \tableend
+        \longtableend
     \subsection{设计细节}
     <TODO>
 
@@ -200,7 +200,7 @@
     ex\_mem用于衔接五级流水线第三阶段ex和第四阶段mem，在时钟上升沿储存ex阶段数据，传递给mem阶段，将ex阶段需要写入的数据传递至mem阶段进行访存操作，是一个简单的时序逻辑电路。
 
     \subsection{接口定义}
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & 时钟信号\\
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 5 & ex\_wd & ex& 通用寄存器写端口地址\\
@@ -237,7 +237,7 @@
             output & reg & 1 & mem\_is\_in\_delay\_slot & mem& 当前指令是否位于分支延迟槽中\\
             output & reg & 32 & mem\_current\_inst\_address & mem& 指令地址\\
             output & reg & 32 & mem\_inst & mem& 指令内容\\
-        \tableend
+        \longtableend
     \subsection{设计细节}
     <TODO>
 
@@ -247,7 +247,7 @@
     mem阶段实现访存操作，是五级流水线的第四级，是一个复杂的组合逻辑电路。
 
     \subsection{接口定义}
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 5 & wd\_i & ex\_mem& 通用寄存器写端口地址\\
             input & wire & 1 & wreg\_i & ex\_mem& 通用寄存器写端口使能\\
@@ -295,7 +295,7 @@
             output & wire & 32 & current\_inst\_address\_o & <TODO>& 指令地址\\
             output & reg & 32 & bad\_address & <TODO>& <TODO>\\
             output & wire & 32 & inst\_o & mem\_wb& 指令内容\\
-        \tableend
+        \longtableend
     \subsection{设计细节}
     <TODO>
 
@@ -305,7 +305,7 @@
     mem\_wb用于衔接五级流水线第四阶段mem和第五阶段wb，在时钟上升沿储存mem阶段数据，传递给对应的寄存器，是一个简单的时序逻辑电路。
 
     \subsection{接口定义}
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & 时钟信号\\
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 5 & mem\_wd & mem& 通用寄存器写端口地址\\
@@ -330,7 +330,7 @@
             output & reg & 5 & wb\_cp0\_reg\_write\_addr & cp0\_reg& CP0协处理器寄存器写入地址\\
             output & reg & 32 & wb\_cp0\_reg\_data & cp0\_reg& CP0协处理器寄存器写入数据\\      
             output & reg & 32 & wb\_inst & <TODO> & 指令内容\\
-        \tableend
+        \longtableend
     \subsection{设计细节}
     <TODO>
 
@@ -340,7 +340,7 @@
     <TODO>
 
     \subsection{接口定义}
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & 时钟信号\\
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 1 & we & mem\_wb& 通用寄存器写端口使能\\
@@ -352,7 +352,7 @@
             input & wire & 5 & raddr2 & id& 通用寄存器读端口1地址\\
             output & reg & 32 & rdata1 & id& 通用寄存器读端口1数据 \\
             output & reg & 32 & rdata2 & id& 通用寄存器读端口1数据 \\
-        \tableend
+        \longtableend
 
     \subsection{设计细节}
     <TODO>
@@ -363,7 +363,7 @@
     <TODO>
 
     \subsection{接口定义}
-        \tablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & 时钟信号\\
             input & wire & 1 & rst & CPU外部 & 复位信号\\
             input & wire & 1 & we & mem\_wb& HILO寄存器写使能\\
@@ -371,6 +371,6 @@
             input & wire & 32 & lo\_i & mem\_wb& LO寄存器写入数据\\
             output & reg & 32 & hi\_o & ex& HI寄存器读出数据\\ %<TODO> is ex?
             output & reg & 32 & lo\_o & ex& LO寄存器读出数据\\
-        \tableend
+        \longtableend
     \subsection{设计细节}
     <TODO>

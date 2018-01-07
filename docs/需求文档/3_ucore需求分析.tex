@@ -1,0 +1,192 @@
+\chapter{ucore需求分析}
+
+正如引言部分所述，``运行ucore操作系统''为本项目的顶级需求。这一部分将主要介绍
+
+\section{Boot}
+
+\section{运算跳转}
+
+\section{地址映射}
+
+\image[3in]{mips_mmu.PNG}{MIPS标准地址映射}
+
+地址映射在硬件上由MMU（Memory Manage Unit）完成，其最重要的意义体现在2方面：
+
+\begin{enumerate}
+    \item {\bf 内存管理（面向软件）}：使进程在寻址时可以超过物理内存大小，且多个进程的地址空间互不干扰
+    \item {\bf 外设调度（面向硬件）}：面向CPU统一各个外设的访问接口，使之均可使用访存指令进行读写
+\end{enumerate}
+
+这一部分将深入解析ucore的地址映射标准，从而明确对硬件MMU（Memory Manage Unit）的需求。
+
+\subsection{相关文件}
+
+首先列出ucore定义地址映射的关键文件：
+
+\tablefourL{文件}{关键变量}{值}{简介}
+    boot/bootasm.S & FLASH\_START & 0xBE000000 & FLASH的起始虚拟地址 \\
+                   & FLASH\_SIZE &  0x01000000 & FLASH的地址大小 \\
+    \midrule
+    kern/mm/memlayout.h & KMEMSIZE & 1M & 内存总大小 \\
+    kern/include/mips\_vm.h &  MIPS\_KUSEG & 0x00000000 & kuseg段起始地址 \\
+                            &  MIPS\_KSEG0 & 0x80000000 & kseg0段起始地址 \\
+                            &  MIPS\_KSEG1 & 0xa0000000 & kseg1段起始地址 \\
+                            &  MIPS\_KSEG2 & 0xc0000000 & kseg2段起始地址 \\
+    \midrule
+    include/thumips.h & COM1 & 0xBFD003F8 & 串口虚拟地址 \\
+\tableend
+
+\subsection{内存管理：TLB}
+
+内存管理需求主要面向运行在操统之上的应用软件。首先，应用程序的大小不应受到物理内存的限制，例如开发板上的RAM总大小仅有8M，但对于32位机器而言，可用虚拟地址空间可达$2^{32} = 4G$；其次，各应用程序的地址空间应各自独立。
+
+\paragraph{页表}
+操统因而需维护页表（Page Table），以实现从虚拟地址到物理地址的转换。具体而言，每当程序访问内存时，需进行2次访问：
+\begin{enumerate}
+    \item {\bf 查询页表}：读取页表，查找对应的物理地址
+    \item {\bf 获取数据}：访问该物理地址，获取数据
+\end{enumerate}
+
+\image[5in]{tlb_entry}{TLB表项}
+
+\paragraph{TLB}
+由于内存访问具有局部性，如能将页表最近被访问的一部分以CPU内部的逻辑单元存储，则访存效率可获得极大提高。TLB（Translation Lookaside Buffer）就是这样一种高速缓存。具体而言，在加入TLB之后，程序访存流程如下：
+
+\begin{enumerate}
+    \item {\bf 查询TLB}：根据虚拟地址的高20位（32减去页位数12），查找TLB中的表项
+    \item {\bf TLB HIT}： 如TLB中有此表项，则直接其对应的物理地址
+    \item {\bf TLB MISS}：如TLB中无此表项，则再进一步访问内存查询页表，获取物理地址之后，将其作为一个新表项写入TLB
+\end{enumerate}
+
+\subsection{外设调度}
+
+在CPU核心之外，运转着ROM、RAM（相当于内存）、FLASH（相当于硬盘）、串口（相当于标准输出）、VGA（相当于显示屏）等多个外部设备。它们的用途、接口、访问时序各不相同。
+
+然而，对于操作系统与CPU而言，它们的访问接口是统一的：均使用L/S型指令实现收/发数据。这个过程中需要进行地址映射。
+
+\paragraph{RAM}
+除操统文件中的定义、``内存管理''小节的说明外，考虑到开发板上提供了2块大小为4M的RAM（Base RAM与Ext RAM），可将KMEMSIZE改为8M，从而提供更大的内存空间。
+
+\paragraph{FLASH、串口}
+见操统文件中的定义。
+
+\paragraph{ROM}
+在Boot阶段，CPU复位时PC位于VA 0xBFC00000处，因而该虚拟地址应映射到ROM。此外，考虑BootLoader指令较少，为ROM分配1KB的地址空间即可。
+
+\paragraph{VGA}
+此外，项目计划实现拓展功能VGA，其屏幕大小为800x600，故而需要480000 B的地址空间用于显存。姑且在kseg1段中分配一段开始于VA 0xBA000000、大小为512KB的地址空间留作显存。
+
+\subsection{需求分析}
+
+综上所述，MMU需要将VA的kuseg、kseg2段通过TLB映射到内存（RAM），在kseg0段通过抹去最高位直接得到RAM中的PA，在kseg1段将部分地址映射到除RAM外的各个外设。
+
+以下给出最终地址映射方案：
+
+\tablefourL{段（权限）}{虚拟地址}{映射目标（物理地址）}{备注}
+    kuseg（用户态） & 0x00000000 - 0x7FFFFFFF & RAM（通过查询TLB动态确定） & 用户程序 \\
+    \midrule
+    kseg0（内核态） & 0x80000000 - 0x807FFFFF & RAM（0x00000000 - 0x007FFFFF） & 开机时存放操作系统 \\
+    \midrule
+    kseg1（内核态） & 0xBE000000 - 0xBEFFFFFF & FLASH & 关机时存放操作系统 \\
+                 & 0xBFC00000 - 0xBFC00FFF & ROM & 存放BootLoader \\
+                 & 0xBFD003F8 - 0xBFD003FC & 串口 & 串口数据/串口状态 \\
+                 & 0xBA000000 - 0xBA080000 & VGA & 显存，用于显示图像 \\
+    \midrule
+    kseg2（内核态） & 0xC0000000 - 0xFFFFFFF & RAM（通过查询TLB动态确定） & \\
+\tableend
+
+\section{异常处理}
+
+在MIPS32架构中，有一些事件会打断程序的正常执行流程。一些由{\bf 外部事件}触发，如串口有数据待读入，称为\emph{中断}；另一些则由CPU{\bf 内部指令}引起，如算术溢出、系统调用等。这些事件统称为\emph{异常}。
+
+以下对异常处理流程进行归纳，并总结ucore涉及的所有异常，从而明确对硬件的需求。
+
+\subsection{相关文件}
+
+以下列出ucore异常处理的部分关键文件：
+
+\tablethreeL{文件}{关键函数}{简介}
+    trap/vector.S & \_\_exception\_vector & 异常处理向量，汇集各入口 \\
+    trap/exception.S & ramExcHandle\_tlbmiss & TLB异常处理入口 \\
+                     & ramExcHandle\_general & 通用异常处理入口 \\
+                     & common\_exception & 保存现场、调用操统异常处理代码、恢复现场 \\
+    trap/trap.c & mips\_trap & 操统异常处理代码 \\
+                & trap\_dispatch & 被mips\_trap调用，分类处理各种异常 \\
+\tableend
+
+\subsection{异常处理流程}
+
+% <TODO>: Please check
+% <TODO>: 泳道图？
+
+\paragraph{硬件端（CPU）}
+
+\begin{enumerate}
+    \item {\bf 异常响应}：硬件检测异常，并将异常原因、类型等存入CP0相关寄存器中
+    \item {\bf 异常处理}：将PC跳转到CP0 Ebase寄存器所指示的操统异常处理入口地址，并禁用异常检测
+    \item {\bf 异常返回}：执行ERET指令，跳转回被异常打断的指令，重新使能异常检测
+\end{enumerate}
+
+\paragraph{软件端（ucore）}
+
+\begin{enumerate}
+    \item {\bf 异常响应}：保存现场（通用寄存器等）至内存中
+    \item {\bf 异常处理}：从异常处理入口处开始，根据异常类型，执行异常处理代码
+    \item {\bf 异常返回}：从内存中恢复现场，并使用ERET指令返回
+\end{enumerate}
+
+\subsection{需求分析}
+
+根据上述分析，只需针对ucore能够处理的那些异常，在硬件上加以实现，即可满足异常处理需求。
+
+阅读trap.c : trap\_dispatch函数可知ucore处理的所有异常类型。它们通过CP0 Cause寄存器的ExcCode（异常号）字段加以区分：
+
+\paragraph{中断}
+
+中断由CP0 Cause寄存器的IP标志位（中断号）进一步区分，包括如下2种：
+\tablefourL{异常名（异常号）}{中断名（中断号）}{硬件触发条件}{ucore处理流程}
+    Interrupt（0） & 时钟中断（7） & CP0 Compare与Count寄存器的值相等 & 进程调度后重启时钟 \\
+                   & 串口中断（4） & 串行接口处有数据待写入 & 读串口并写入stdin \\
+\tableend
+
+\paragraph{TLB MISS}
+
+在访存load或store时TLB中无匹配表项时产生，包括如下2种异常：
+\tablethreeL{异常名（异常号）}{硬件触发条件}{ucore处理流程}
+    TLBL（2） & 访存load时TLB中无匹配表项 & 首先根据CP0 BadVAddr寄存器确定缺失地址，\\
+                                    &&  然后通过设置CP0相关寄存器构造新的TLB表项，\\
+                                    &&  最后使用tlbwr指令随机选择一个位置，重填该项 \\
+    TLBS（3） & 访存store时TLB中无匹配表项 & 同上 \\
+\tableend
+
+\paragraph{系统调用}
+
+系统调用由Syscall序号进一步区分，其类型在操作系统中定义，硬件无需关心其具体实现：
+\tablethreeL{异常名（异常号）}{硬件触发条件}{ucore处理流程}
+    Syscall（8） & 执行指令SYSCALL & 根据Syscall序号，调用syscall/syscall.c中相应的处理代码 \\
+\tableend
+
+\paragraph{其他异常}
+
+此类异常无需在硬件上实现。因为它们在ucore中的实现均为简单报错，如发生在用户态，则用户进程退出；如发生在内核态，则系统panic。总而言之，即使硬件实现了这些异常，亦无法使ucore在这些情况下正常运行。为完整起见，亦在此列出：
+
+\tablethreeL{异常名（异常号）}{硬件触发条件}{ucore处理流程}
+    ADEL（4） & 访存load时地址未对齐 & 简单报错 \\
+    ADES（5） & 访存store时地址未对齐 & 简单报错 \\
+    RI（10） & 无效指令 & 简单报错 \\
+    CPU（11） & 协处理器不可用 & 简单报错 \\
+    OV（12） & 算术溢出 & 简单报错 \\
+\tableend
+
+% \subsection{新增指令需求}
+%
+% 除了此前分析的计算指令、跳转指令、访存指令外，异常部分新增指令如下：
+%
+% \tablethreeL{指令名称}{指令类型}{说明}
+%     MFC0 & 特权指令 & 读CP0：维护CP0相关寄存器的值，以便异常处理使用 \\
+%     MFC0 & 特权指令 & 写CP0：维护CP0相关寄存器的值，以便异常处理使用 \\
+%     SYSCALL & 陷入指令 & 触发系统调用异常，调用操统处理代码 \\
+%     ERET & 特权指令 & 异常处理完毕时返回，并重启异常检测使能 \\
+%     TLBWR & 特权指令 & 随机选择一个位置，重填缺失的TLB表项 \\
+%     TLBWI & 特权指令 & <TODO>: 用到了吗？ \\
+% \tableend

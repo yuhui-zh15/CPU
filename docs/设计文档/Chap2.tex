@@ -3,22 +3,64 @@
 \section{ctrl}
 
     \subsection{简介概述}
-    a
+    <TODO>
 
     \subsection{接口定义}
-    a
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & & \\
+            input & wire & 1 & rst & & \\
+            input & wire & 1 & stallreq\_from\_id & & \\
+            input & wire & 1 & stallreq\_from\_ex & & \\
+            input & wire & 1 & stallreq\_from\_mem & & \\
+            input & wire & 1 & mem\_we\_i & & \\
+            input & wire & 32 & ebase\_i & & \\
+            input & wire & 32 & excepttype\_i & & \\
+            input & wire & 32 & cp0\_epc\_i & & \\
+            output & reg & 6 & stall & & \\
+            output & reg & 1 & mem\_we\_o & & \\
+            output & reg & 32 & new\_pc & & \\
+            output & reg & 1 & flush & & \\
+        \longtableend
 
     \subsection{设计细节}
-    a
+    <TODO>
 
 \section{cp0\_reg}
 
     \subsection{简介概述}
-    a
+    <TODO>
 
     \subsection{接口定义}
-    a
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & & \\
+            input & wire & 1 & rst & & \\
+            input & wire & 1 & we\_i & & \\
+            input & wire & 5 & waddr\_i & & \\
+            input & wire & 5 & raddr\_i & & \\
+            input & wire & 32 & data\_i & & \\
+            input & wire & 6 & int\_i & & \\
+            input & wire & 32 & bad\_address\_i & & \\
+            input & wire & 32 & excepttype\_i & & \\
+            input & wire & 32 & current\_inst\_addr\_i & & \\
+            input & wire & 1 & is\_in\_delay\_slot\_i & & \\
+            output & reg & 32 & data\_o & & \\
+            output & reg & 32 & count\_o & & \\
+            output & reg & 32 & compare\_o & & \\
+            output & reg & 32 & status\_o & & \\
+            output & reg & 32 & cause\_o & & \\
+            output & reg & 32 & epc\_o & & \\
+            output & reg & 32 & config\_o & & \\
+            output & reg & 32 & ebase\_o & & \\
+            output & reg & 32 & index\_o, & & \\
+            output & reg & 32 & random\_o, & & \\
+            output & reg & 32 & entrylo0\_o, & & \\
+            output & reg & 32 & entrylo1\_o, & & \\
+            output & reg & 32 & pagemask\_o, & & \\
+            output & reg & 32 & badvaddr\_o, & & \\
+            output & reg & 32 & entryhi\_o, & & \\
+            output & reg & 1 & timer\_int\_o, & & \\
+        \longtableend
 
     \subsection{设计细节}
-    a
+    <TODO>
 

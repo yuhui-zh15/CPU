@@ -3,32 +3,67 @@
 \section{tlb\_reg}
 
     \subsection{简介概述}
-    a
+    <TODO>
 
     \subsection{接口定义}
-    a
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & & \\
+            input & wire & 1 & rst & & \\
+            input & wire & 32 & addr\_i & & \\
+            input & wire & 32 & inst\_i & & \\
+            input & wire & 32 & index\_i & & \\
+            input & wire & 32 & random\_i & & \\
+            input & wire & 32 & entrylo0\_i & & \\
+            input & wire & 32 & entrylo1\_i & & \\
+            input & wire & 32 & entryhi\_i & & \\
+            input & wire & 1 & mem\_cp0\_reg\_we & & \\
+            input & wire & 5 & mem\_cp0\_reg\_write\_addr & & \\
+            input & wire & 32 & mem\_cp0\_reg\_data & & \\
+            input & wire & 1 & wb\_cp0\_reg\_we & & \\
+            input & wire & 5 & wb\_cp0\_reg\_write\_addr & & \\
+            input & wire & 32 & wb\_cp0\_reg\_data & & \\
+            output & reg & 1 & tlb\_hit, & & \\
+            output & reg & 1 & sram\_ce & & \\
+            output & reg & 1 & flash\_ce & & \\
+            output & reg & 1 & rom\_ce & & \\
+            output & reg & 1 & serial\_ce & & \\
+            output & reg & 1 & vga\_ce & & \\
+            output & reg & 32 & addr\_o & & \\
+        \longtableend
 
     \subsection{设计细节}
-    a
-
-\section{cp0\_reg}
-
-    \subsection{简介概述}
-    a
-
-    \subsection{接口定义}
-    a
-
-    \subsection{设计细节}
-    a
+    <TODO>
 
 \section{openmips}
 
     \subsection{简介概述}
-    a
+    <TODO>
 
     \subsection{接口定义}
-    a
-
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
+            input & wire & 1 & clk & & \\
+            input & wire & 1 & rst & & \\
+            input & wire & 6 & int\_i & & \\
+            input & wire & 32 & if\_data\_i & & \\
+            input & wire & 32 & mem\_data\_i & & \\
+            output & wire & 32 & if\_addr\_o & & \\
+            output & wire & 1 & if\_sram\_ce\_o & & \\
+            output & wire & 1 & if\_flash\_ce\_o & & \\
+            output & wire & 1 & if\_rom\_ce\_o & & \\
+            output & wire & 1 & if\_serial\_ce\_o & & \\
+            output & wire & 1 & if\_vga\_ce\_o & & \\
+            output & wire & 1 & if\_ce\_o & & \\
+            output & wire & 32 & mem\_addr\_o & & \\
+            output & wire & 32 & mem\_data\_o & & \\
+            output & wire & 1 & mem\_we\_o & & \\
+            output & wire & 4 & mem\_sel\_o & & \\
+            output & wire & 1 & mem\_sram\_ce\_o & & \\
+            output & wire & 1 & mem\_flash\_ce\_o & & \\
+            output & wire & 1 & mem\_rom\_ce\_o & & \\
+            output & wire & 1 & mem\_serial\_ce\_o & & \\
+            output & wire & 1 & mem\_vga\_ce\_o & & \\
+            output & wire & 1 & mem\_ce\_o & & \\
+            output & wire & 1 & timer\_int\_o & & \\
+        \longtableend
     \subsection{设计细节}
-    a
+    <TODO>

@@ -2,9 +2,55 @@
 
 正如引言部分所述，``运行ucore操作系统''为本项目的顶级需求。这一部分将主要介绍
 
-\section{Boot}
+\section{Boot阶段}
 
-\section{运算跳转}
+\subsection{相关文件}
+
+\tabletwoL{文件}{简介}
+    boot/bootasm.S & BootLoader的MIPS汇编代码，需编译后存入ROM \\
+    init/init.c & 操作系统入口 \\
+\tableend
+
+\subsection{Boot过程}
+
+\image[3in]{boot}{BootLoader将ucore从FLASH拷贝至RAM中}
+
+由于FLASH断电不消失的特性，ucore需要存放在FLASH中；而系统加载完毕后，ucore应该在内存（RAM）中。因此，需要一个Boot程序，负责在硬件启动时将ucore从FLASH导入至RAM。
+
+CPU初始化时，置PC为Boot程序首地址，从ROM开始处（VA 0xBFC00000）运行Boot程序。每次从FLASH读出数据再写入RAM，直至拷贝完成。
+
+BootLoader拷贝完成后，将PC跳转至VA 0x80000000，进入操作系统入口。此时ucore进行初始化并输出调试信息。
+
+\subsection{需求分析}
+
+由上述分析可知，Boot过程的需求包括以下几点：
+
+\begin{enumerate}
+    \item {\bf ROM}：使用FPGA实现ROM，并设置硬件初始化时的PC值为ROM的虚拟地址（见``地址映射''一节）
+    \item {\bf BootLoader}：将BootLoader编译后写入ROM
+    \item {\bf ucore}：将ucore编译后写入FLASH
+\end{enumerate}
+
+\section{指令分析}
+
+\subsection{相关文件}
+
+ucore的所有文件
+
+\subsection{需求分析}
+
+ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu仿真可知，ucore运行共需要45条指令，包括如下几部分：
+
+\begin{enumerate}
+    \item {\bf 算术逻辑指令}：共22条，包括加减乘、与或非、移位等指令
+    \item {\bf 分支跳转指令}：共10条，包括分支（B）与跳转（J）指令
+    \item {\bf 访存指令}：共5条，包括读取（L）与写入（S）指令
+    \item {\bf 移动指令}：共2条，包括向HILO寄存器的移动
+    \item {\bf 陷入指令}：共1条，包括SYSCALL
+    \item {\bf 特权指令}：共5条，包括对CP0的访问、异常返回及TLB异常时使用的指令
+\end{enumerate}
+
+通过这45条指令，ucore实现了作为操作系统的调度功能。
 
 \section{地址映射}
 
@@ -36,7 +82,7 @@
     include/thumips.h & COM1 & 0xBFD003F8 & 串口虚拟地址 \\
 \tableend
 
-\subsection{内存管理：TLB}
+\subsection{内存管理}
 
 内存管理需求主要面向运行在操统之上的应用软件。首先，应用程序的大小不应受到物理内存的限制，例如开发板上的RAM总大小仅有8M，但对于32位机器而言，可用虚拟地址空间可达$2^{32} = 4G$；其次，各应用程序的地址空间应各自独立。
 
@@ -74,7 +120,7 @@
 在Boot阶段，CPU复位时PC位于VA 0xBFC00000处，因而该虚拟地址应映射到ROM。此外，考虑BootLoader指令较少，为ROM分配1KB的地址空间即可。
 
 \paragraph{VGA}
-此外，项目计划实现拓展功能VGA，其屏幕大小为800x600，故而需要480000 B的地址空间用于显存。姑且在kseg1段中分配一段开始于VA 0xBA000000、大小为512KB的地址空间留作显存。
+此外，项目计划实现拓展功能VGA，其屏幕大小为800x600，故而需要480KB的地址空间用于显存。姑且在kseg1段中分配一段开始于VA 0xBA000000、大小为512KB的地址空间留作显存。
 
 \subsection{需求分析}
 

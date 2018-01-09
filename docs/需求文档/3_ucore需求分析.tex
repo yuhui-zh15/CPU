@@ -70,7 +70,7 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
 
 通过这45条指令，ucore实现了作为操作系统的调度功能。
 
-该部分的需求为在硬件上实现这45条指令。
+该部分的需求为在硬件上实现这45条指令。详细分析见``指令系统需求分析''一章。
 
 \section{地址映射}
 
@@ -109,7 +109,7 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
 \paragraph{页表}
 操统因而需维护页表（Page Table），以实现从虚拟地址到物理地址的转换。具体而言，每当程序访问内存时，需进行2次访存：
 \begin{enumerate}
-    \item {\bf 查询页表}：读取页表，查找对应的物理地址
+    \item {\bf 查询页表}：读取内存中的页表，查找对应的物理地址
     \item {\bf 获取数据}：访问该物理地址，获取数据
 \end{enumerate}
 
@@ -172,11 +172,11 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
 以下列出ucore异常处理的部分关键文件：
 
 \tablethreeL{文件}{关键函数}{简介}
-    trap/vector.S & \_\_exception\_vector & 异常处理向量，汇集各入口 \\
-    trap/exception.S & ramExcHandle\_tlbmiss & TLB异常处理入口 \\
+    kern/trap/vector.S & \_\_exception\_vector & 异常处理向量，汇集各入口 \\
+    kern/trap/exception.S & ramExcHandle\_tlbmiss & TLB异常处理入口 \\
                      & ramExcHandle\_general & 通用异常处理入口 \\
                      & common\_exception & 保存现场、调用操统异常处理代码、恢复现场 \\
-    trap/trap.c & mips\_trap & 操统异常处理代码 \\
+    kern/trap/trap.c & mips\_trap & 操统异常处理代码 \\
                 & trap\_dispatch & 被mips\_trap调用，分类处理各种异常 \\
 \tableend
 

@@ -6,3 +6,4 @@ CPU.runs/
 CPU.xpr
 *.pyc
 inst_ram.coe
+thinpad_top.v.dump

@@ -1,4 +1,4 @@
-\chapter{引言}
+\chapter{文档说明}
 
 \section{背景}
 
@@ -14,22 +14,48 @@
 
 \begin{enumerate}
     \item {\bf 需求分析：} 明确软件（ucore）对硬件（CPU）的具体需求，及需完成的功能
-    \item {\bf 系统概述：} 对系统总体框架进行清晰完整的描述，确定迭代开发计划
+    \item {\bf 系统概述：} 对系统总体框架进行清晰完整的描述
     \item {\bf 学习目标：} 明确开发所需技术，订立学习目标
 \end{enumerate}
 
 其目标读者包括NonExist小组的开发者、成品CPU的使用者、项目的评估者。
 
-\section{项目概览}
+\section{需求概览}
 
 首先给出本项目的需求分析图：
 
-<TODO>
+\image[4in]{outline}{需求总览}
+
+可以看出，本项目的需求可以作如下分层：
+
+\begin{enumerate}
+    \item {\bf ucore}：操作系统，编译后由大量MIPS指令组成。需要硬件实现MIPS指令系统的一个子集。
+    \item {\bf 指令系统}：是MIPS指令系统的一个子集，需要硬件提供CPU（核心调度）与外部设备（组织集成）。
+    \item {\bf CPU与外部设备}：是硬件最底层的实现，由大量基础模块组成。各个基础模块由开发板提供的FPGA或外围芯片实现。
+\end{enumerate}
+
+本文档也因而遵从自顶向下的分析流程，其组织结构与需求分析的层次相似。
 
 \section{定义}
 
-<TODO>
+以下列出此项目涉及的部分英文简称及其含义（详细解释会在后文给出）：
 
-\section{参考资料}
-
-<TODO>
+\tablethreeL{英文简称}{英文全称}{含义}
+    MIPS & Microprocessor without  & 一种典型RISC指令集，本实验CPU的基本架构 \\
+         & interlocked piped stages & \\
+    CPU & Central Processing Unit & 中央处理器，负责硬件的核心调度 \\
+    \midrule
+    ALU & Arithmetic Logic Unit & 算术逻辑单元 \\
+    HI/LO & High/Low Register & 寄存器，用于存储乘法运算结果（64位）的高、低各32位 \\
+    \midrule
+    MMU & Memory Management Unit & 内存管理单元，用于地址映射 \\
+    TLB & Translation Lookaside Buffer & 快表，用于通过缓存加速MMU地址映射查表速度 \\
+    VA & Virtual Address & 虚拟地址 \\
+    PA & Physical Address & 物理地址 \\
+    \midrule
+    ROM & Read-Only Memory & 只读存储器，用于存储BootLoader \\
+    RAM & Random Access Memory & 随机存储器，用于实现内存 \\
+    FLASH & Flash Memory & 快闪存储器，用于实现硬盘 \\
+    VGA & Video Graphics Array & 视频图形阵列，一种显示器接口标准 \\
+    HDMI & High Definition Multimedia Interface & 高清晰度多媒体接口，一种显示器接口标准 \\
+\tableend

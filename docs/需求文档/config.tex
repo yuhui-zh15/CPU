@@ -13,8 +13,12 @@
 \usepackage{hyperref}
 \usepackage{booktabs} % 表格上的不同横线
 \usepackage{ifthen}
-\usepackage{natbib}
+\usepackage{titlesec}
+\usepackage[square,sort,comma,numbers]{natbib}
+\usepackage{url}
 \usepackage[top = 1in, bottom = 1in, left = 1in, right = 1in]{geometry}
+
+\titleformat*{\section}{\sanhao \bf \centering}
 
 \setmonofont[Mapping={}]{Courier New}  %英文引号之类的正常显示，相当于设置英文字体
 \setsansfont{Courier New} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
@@ -172,7 +176,7 @@
     % identifierstyle=\color{red},
     rulecolor=\color{black},
     frame=single,
-    language=matlab,
+    language=python,
 }
 
 % 设置hyperlink的颜色

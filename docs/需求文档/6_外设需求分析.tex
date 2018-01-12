@@ -1,11 +1,152 @@
 \chapter{外设需求分析}
 
+在上一章中，将本次工程需要实现的硬件系统划分为CPU、外设2大部分，并对其中的CPU部分进行了需求分析。本章分析外设部分。
+
+本章分为如下几个部分：
+
+\begin{enumerate}
+    \item {\bf ROM}：只读存储器，用于存储BootLoader
+    \item {\bf RAM}：随机存取存储器，用作内存
+    \item {\bf FLASH}：闪存，用作硬盘
+    \item {\bf 串口}：串行接口，用作通信（标准输入输出）
+    \item {\bf VGA}：光栅扫描显示器，用作图像显示
+    \item {\bf 总结}：对各个外设的需求进行总结
+\end{enumerate}
+
+除总结外，每部分主要介绍其参数、文档信息及功能。
+
 \section{ROM}
+
+ROM为只读存储器，需预先烧录，并提供读支持。
+
+ROM需利用FPGA上的逻辑单元实现，在Thinpad开发板上不额外提供元件。其具体需求在``ucore需求分析''的``Boot阶段''一节已经详述，此处不再赘言。
 
 \section{RAM}
 
+RAM在系统中充当内存，需提供读写支持。
+
+Thinpad开发板上提供的RAM包括BaseRAM（基础内存）与ExtRAM（扩展内存）2部分，其共同特点是断电后数据会消失。其大小均为4MB，每次可读或写32位。
+
+在寻址时，BaseRAM与ExtRAM均通过MMU统一进行地址映射。
+
+在硬件端，我们需要将RAM作为一个黑盒子集成至CPU。这要求阅读其文档（``使用说明书''），明确这个黑盒子提供的读、写、使能信号等接口。这样，在CPU的MMU部分便可实现接口的衔接：
+
+\tablethreeL{接口信号}{含义}{接口类型}
+    ram\_data[31:0] & data，数据总线，位宽32位，通过选择信号选择读哪些byte & inout \\
+    ram\_addr[19:0]	& address，地址总线，位宽20位，故RAM总大小为$32 \times 2^{20} = 4MB$ & output \\
+    ram\_be\_n[3:0]	& select，选择信号，位宽4位，选择32bit=4byte的哪些位进行读取或写入	& output \\
+    ram\_ce\_n	& chip enable，第一次下降有效 & output \\
+    ram\_oe\_n	& output enable，低电平为读入，置0表示使能 &	output \\
+    ram\_we\_n	& write enable，低电平为写入，置0表示使能 & <TODO> \\
+\tableend
+
+文档中提供的读写时序图如下，CPU在集成时需注意协调满足：
+
+\image[5in]{RAM_r}{RAM读时序}
+\image[5in]{RAM_w}{RAM写时序}
+
 \section{Flash}
+
+FLASH在系统中充当硬盘，用于存储ucore，仅需提供读支持。
+
+Thinpad开发板上提供的FLASH在掉电后不会丢失数据，其大小为8MB，采用字编址，每个地址空间存8bit，每次可选择读16位或8位。
+
+在寻址时，FLASH通过MMU统一进行地址映射。
+
+在硬件端，我们需要将FLASH作为一个黑盒子集成至MMU。这同样要求阅读其文档：
+
+\tablethreeL{接口信号}{含义}{接口类型}
+    flash\_a[22:0] & address，地址总线，位宽23位，故FLASH总大小为$8 \times 2^{23} = 8MB$ & output \\
+    flash\_rp\_n & reset，高电平为正常操作，低电平节电模式 & output \\
+    flash\_oe\_n & output enable，低电平为读入，置0表示使能 & output \\
+    flash\_data[15:0] & data，数据总线，位宽16位，一次读16bit & inout \\
+    flash\_ce\_n & chip enable，第一次下降有效 & output \\
+    flash\_byte\_n & byte enable，高电平一次读16bit，低电平一次读8bit & output \\
+    flash\_we\_n & write enable，低电平为写入，置0表示使能 & output \\
+    flash\_vpen & 写保护，置0表示使能 & output \\
+\tableend
+
+文档中提供的读时序图如下，CPU在集成时需注意协调满足：
+
+\image[6in]{FLASH_r}{FLASH读时序}
 
 \section{串口}
 
+串行接口在系统中负责通信，需提供读写支持。ucore读、写标准输入均通过此处。
+
+Thinpad开发板上提供的串口通过UART芯片进行访问，需要<TODO>位用作数据发送接收端口，及另<TODO>位用于串口状态标记。
+
+寻址时，串口通过MMU统一进行地址映射。
+
+在硬件端，我们需要将串口作为一个黑盒子集成至MMU。不同的是，串口的控制代码（async.v）已经由助教提供，并封装为2个模块。其接口如下所示：
+
+\tablethreeL{接口信号}{含义}{接口类型}
+    clk & 时钟 & input \\
+    TxD\_start & 开始标志，开始传输数据前需有1周期保持为高电平 & input \\
+    TxD\_data[7:0] & 发送至FPGA外部的数据，每次可发送8位 & input \\
+    TxD & 串行化后，发送至FPGA外部的数据，每次发送1位 & output \\
+    TxD\_busy & <TODO> & output \\
+\tablecapend{模块1：async\_transmitter接口}
+
+\tablethreeL{接口信号}{含义}{接口类型}
+    clk & 时钟 & input \\
+    RxD & 串行化的，来自FPGA外部的数据，每次发送1位 & input \\
+    RxD\_data\_ready & 串口是否有准备好的数据待接收 & output \\
+    RxD\_data[7:0] & 去串行化后，来自FPGA外部的数据，每次可接收8位 & output \\
+    % TODO：Please Check
+    RxD\_idle & 当一段时间内无接收数据时置1 & output \\
+    RxD\_endofpacket & 当一个数据包被识别时置1一个时钟周期 & output \\
+\tablecapend{模块2：async\_receiver接口}
+
+网站http://www.fpga4fun.com/SerialInterface.html中提供的读写概念图如下：
+
+\begin{figure}[H]
+    \centering
+    \miniimage[3in]{async_trans}{模块1：async\_transmitter}
+    \miniimage[3in]{async_recv}{模块2：async\_receiver}
+\end{figure}
+
+当串口传输数据时，需将其串行化后进行发送，遵循如下步骤：
+
+\begin{enumerate}
+    \item 无数据时，串口发送idle信号（=1）。
+    \item 每发送1byte = 8bit前，串口发送start信号（=0）。
+    \item 依次发送该字节的8位。
+    \item 每发送1byte = 8bit后，串口发送stop信号（=0）。
+\end{enumerate}
+
+例如，发送字节0x55时，串口发送数据的时序图如下：
+
+\image[6in]{serial}{串口发送字节0x55}
+
 \section{VGA}
+
+VGA为图像显示设备，需要显存提供读写支持。该设备的具体需求为通过逐行扫描的方式实现图像显示。
+
+Thinpad开发板提供了HDMI接口，使用时可与自己的HDMI显示屏进行连接。本次实验所使用的显示屏分辨率为$600 \times 800$像素，屏幕刷新率为<TODO>Hz。
+在将图像像素编码为8位（其中R/G/B各3/3/2位）后，输出至该引脚，即可实现图像显示功能。
+
+寻址时，显存通过MMU统一进行地址映射。
+
+在硬件端，我们需要将VGA集成至MMU。其中逐行扫描屏幕的代码（vga.v）已经由助教提供，我们只需再实现其中的显存模块。vga.v的接口如下所示：
+
+\tablethreeL{接口信号}{含义}{接口类型}
+    clk & 时钟 & input \\
+    hsync & 水平同步信号 & output \\
+    vsync & 竖直同步信号 & output \\
+    hdata & 水平像素位置 & output \\
+    vdata & 竖直像素位置 & output \\
+    data\_enable & 数据使能信号，使能时置1 & output \\
+\tablecapend{vga.v模块接口}
+
+\section{总结}
+
+以下对各个外设的需求进行总结：
+
+\tablethreeL{外设}{功能需求}{读写支持}
+    ROM & 只读存储器，能用于烧录存储BootLoader & R \\
+    RAM & 随机访问存储器，相当于内存，能用于实现运行时数据存储  & R/W \\
+    FLASH & 闪存，相当于硬盘，能用于存储ucore & R \\
+    串口 & 串行并行转换接口，能实现收发数据通信 & R/W \\
+    VGA & 图像显示接口，能逐行扫描显示图像 & R/W \\
+\tableend

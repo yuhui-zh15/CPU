@@ -1,4 +1,114 @@
-\chapter{uCore操作系统}
+\chapter{ucore操作系统}
 
+\section{简介概述}
 
+由于前面3个阶段已经对硬件进行了充分而严谨的测试，我们在ucore调试阶段仅遇到了2-3个bug，耗时2天。
 
+ucore操作系统\footnote{https://github.com/chyh1990/ucore-thumips}是我们需要完成的终极系统测试。其内核使用C语言与MIPS 32汇编语言编写，并提供若干使用C语言编写的用户态应用程序。
+其编译、仿真运行方式在需求文档中有详细的介绍，此处不再赘述。
+
+ucore是一个完整的操作系统，它综合使用了CPU实现的全部46条指令，是一个完整、全面的系统测试。
+
+相比32位监控程序，ucore增加了对MMU（与其中的TLB机制）的需求，其访存体系更加复杂；此外还增加了对TLB异常的处理，其处理方式不同于通用异常，因而对CPU的异常处理需求有所增强。
+
+ucore的主要流程如下：
+
+\begin{enumerate}
+    \item {\bf Boot阶段}：硬件初始化时将CP0的Status、Random寄存器初始化，并将TLB的``隐藏''位设为禁止匹配，最后置PC值为VA 0xBFC00000。
+    此后读取ROM中存储的BootLoader，将Flash中存储的监控程序拷贝至RAM。拷贝结束后跳转至操作系统入口VA 0x80000000。
+    \item {\bf 系统初始化}：这一阶段无效化所有TLB表项、打开时钟与串口中断、输出内核调试信息。此后进行内存管理、进程调度等高层初始化。
+    最终应输出信息``user sh is running!!!''，中途不能发生系统panic。
+    \item {\bf 启动完毕}：系统初始化完毕后进入用户态，可以运行如下列表中的应用程序以验证操作系统已正常运行：
+
+    \tabletwoL{应用程序}{功能（期望输出）}
+        pwd & 打印当前完整路径 \\
+        cat & 打印一个文件的内容 \\
+        sh & 打印一条语句``user sh is running!!!'' \\
+        forktest & 连续调用fork()函数，新建一系列线程，并打印信息 \\
+        yield & 连续调用yield()函数，要求进程重新调度，并打印信息 \\
+        hello & 打印一条语句``Hello world!!.''并显示当前进程编号 \\
+        faultreadkernel & 在用户态访问内核态地址，结果是系统panic \\
+        faultread & 在用户态访问非法内存地址0x0，结果是系统panic \\
+        badarg & 先调用fork()再调用yield()，打印进程调度信息 \\
+        pgdir & 打印页表信息 \\
+        exit & 先调用fork()再连续调用yield()，打印进程调度与退出信息 \\
+        sleep & 每隔一定时间打印一条信息 \\
+    \tableend
+\end{enumerate}
+
+\section{测试范畴}
+
+\subsection{测试覆盖面}
+
+\image[5in]{ucore}{ucore操作系统测试范畴（绿-可以测试；灰-不能测试）}
+
+ucore操作系统提供对CPU的完整测试。它测试了CPU的全部部件的正确性：
+
+\begin{enumerate}
+    \item {\bf 五级流水线}：包括IF、ID、EX、MEM、WB共5个模块。
+    \item {\bf 寄存器}：包括寄存器堆（32个通用寄存器）、HI/LO寄存器共2个模块。
+    \item {\bf CP0}：包括CP0共1个模块。
+    \item {\bf Control}：包括Control（流水线控制器）共1个模块。
+    \item {\bf MMU}：包括TLB共1个模块。
+    \item {\bf ROM}：包括ROM（存储BootLoader）共1个外部设备。
+    \item {\bf RAM}：包括RAM（用作内存）共1个外部设备。
+    \item {\bf Flash}：包括Flash（存储监控程序）共1个外部设备。
+    \item {\bf 串口}：包括串口（用于与用户终端交互）共1个外部设备。
+\end{enumerate}
+
+\subsection{测试要点}
+
+除去功能测例、32位监控程序已经覆盖的测试要点之外，ucore的测试要点主要集中于访存的TLB机制与TLB MISS异常的处理方面：
+
+\begin{enumerate}
+    \item {\bf 访存TLB机制}：ucore需要TLB对kuseg、kseg2段的访存进行地址映射，要求支持以TLBWI、TLBWR指令进行的写入操作。
+    \item {\bf TLB MISS异常}：ucore对TLB MISS异常进行处理，这需要硬件正确实现对Index、EntryLo、EntryHi等寄存器的维护。
+    \item {\bf 其他异常}：包括地址未对齐、算术溢出等异常。尽管在需求文档中已经分析，此类异常无需实现（因为即使实现了，在发生此类异常时ucore依旧会陷入panic），
+    但在调试时可能会由于其他的硬件错误触发此类异常。因而CPU需增加对此类异常的支持，以方便调试。
+\end{enumerate}
+
+\section{测试方法}
+
+ucore的系统测试步骤类似32位监控程序，如下：
+
+\begin{enumerate}
+    \item {\bf 系统初始化}
+
+    \begin{enumerate}
+        \item 将BootLoader编译后写入ROM对应的Verilog文件中。
+        \item 将ucore编译后烧写入Flash的地址0x0处。
+        \item 将CPU的.bit设计文件烧写入开发板FPGA中。
+        \item 点击开发板上Reset开关启动系统。
+    \end{enumerate}
+
+    \item {\bf 启动客户端（监控程序终端）}
+
+    \begin{enumerate}
+        \item 将开发板的USB接口连接至PC端，以建立串口通信。
+        \item 在串口调试精灵界面观察串口输出。ucore应依次输出如下内容：
+
+        \begin{enumerate}
+            \item 内核初始化信息，包括内存管理初始化、文件系统初始化等
+            \item 初始化成功信息``user sh is running!!!''
+        \end{enumerate}
+
+        \item 向串口发送pwd、cat、ls等命令执行用户态程序，并与ucore在qemu模拟器上执行相同命令时的输出比对，确认ucore已正确运行。
+    \end{enumerate}
+
+\end{enumerate}
+
+\section{测试结果}
+
+经过前面几个阶段的铺垫，我们很快便完成了ucore的调试。经测试，ucore操作系统可以正常启动，并且运行各个用户态程序可以观测到预期的输出：
+
+<TODO>：截图
+
+\section{问题与解决}
+
+<TODO>：建议简要描述一下这一阶段的几个bug
+
+\begin{enumerate}
+    \item {\bf TLBWI、TLBWR指令无效bug}：\url{http://47.94.142.165:8088/gitlab/PRJ11_NonExist/CPU/commit/66b30f55cb6210dac9e78d75e9d900bfc08d1647}
+    \item {\bf TLB MISS异常增加}：\url{http://47.94.142.165:8088/gitlab/PRJ11_NonExist/CPU/commit/e05335f0794c049d2729e8e803fa18676a2b6c99}
+    \item {\bf 应使用Ebase存储异常处理入口地址}：\url{http://47.94.142.165:8088/gitlab/PRJ11_NonExist/CPU/commit/73adcbb64baeff0d5ba79bc5a18e0724c8cf526a}
+\end{enumerate}

@@ -184,7 +184,7 @@
     \end{lstlisting}
 
     <TODO>: Please Check
-    
+
     宏TEST\_TLBWI会依次将CP0的Index寄存器赋值为0x0, 0x1, ..., 0xF，并依次调用TLBWI指令写TLB表项。最终，通过先向基址处写入数据再读出，判断其是否与原数据相等，作为测试通过的依据：
 
     \begin{lstlisting}[caption={inst\_test.h}]
@@ -384,9 +384,177 @@
 \subsection{仿真阶段}
 
 仿真阶段的主要目的在于首先借助EDA工具（Vivado）方便的仿真调试功能，找出显而易见、较为简单的bug，以减轻接下来在硬件上测试调试的负担。
-这一阶段仅测试CPU位于FPGA内部的核心逻辑是否正确，而所有外围设备（包括RAM）均不能测试，需使用自己模拟实现的RAM模块。
 
-模拟的RAM模块需首先将功能测例编译后的二进制文件转换成Verilog可接受的ASC-II文本文件，而后在initial语句中导入该文件，将CPU指令计数器置为0x80000000，开始仿真运行。
+这一阶段仅测试CPU位于FPGA内部的核心逻辑是否正确，需使用自己模拟的RAM模块和Flash模块。
+
+\paragraph{测试顶层文件} 本阶段测试所用的顶层文件（最小SOPC）如下。其中相比上一阶段，增加了对Flash的控制接口，并且包括BaseRAM和ExtRAM共2块RAM的接口，更好地模拟了开发板的真实情况：
+
+\begin{lstlisting}[language=verilog, caption={仿真测试顶层文件thinpad\_min\_sopc.v}]
+`include "defines.v"
+`timescale 1ns/1ps
+
+module thinpad_min_sopc();
+
+    wire [31:0] ram_data;
+    wire [19:0] ram_addr;
+    wire [3:0] ram_be_n;
+    wire ram_ce_n;
+    wire ram_we_n;
+    wire [31:0] ext_ram_data;
+    wire [19:0] ext_ram_addr;
+    wire [3:0] ext_ram_be_n;
+    wire ext_ram_ce_n;
+    wire ext_ram_we_n;
+    wire [5:0] touch_btn;
+    wire [22:0] flash_addr;
+    wire [15:0] flash_data;
+
+    reg clk;
+    reg clk_25;
+    reg CLOCK_11059200;
+    reg rst;
+
+    initial begin
+        clk = 1'b0;
+        forever #10 clk = ~clk;
+    end
+    initial begin
+        clk_25 = 1'b0;
+        forever #20 clk_25 = ~clk_25;
+    end
+    initial begin
+        CLOCK_11059200 = 1'b0;
+        forever #45.211227 CLOCK_11059200 = ~CLOCK_11059200;
+    end
+
+    initial begin
+        rst = 1'b1;
+        #195 rst = 1'b0;
+        #500000000 $stop;
+    end
+
+    assign touch_btn = {rst, 5'b00000};
+
+    thinpad_top thinpad_top0(
+        .clk_in(clk),
+        .clk_uart_in(CLOCK_11059200),
+        .touch_btn(touch_btn),
+        .base_ram_data(ram_data),
+        .base_ram_addr(ram_addr),
+        .base_ram_be_n(ram_be_n),
+        .base_ram_we_n(ram_we_n),
+        .base_ram_ce_n(ram_ce_n),
+        .ext_ram_data(ext_ram_data),
+        .ext_ram_addr(ext_ram_addr),
+        .ext_ram_be_n(ext_ram_be_n),
+        .ext_ram_we_n(ext_ram_we_n),
+        .ext_ram_ce_n(ext_ram_ce_n),
+        .flash_data(flash_data),
+        .flash_a(flash_addr)
+
+    );
+
+    flash flash0(
+        .clk(clk),
+        .a(flash_addr[22:1]),
+        .data(flash_data)
+    );
+
+    ram ram0(
+        .clk(clk),
+        .we(ram_we_n),
+        .addr(ram_addr),
+        .be(ram_be_n),
+        .data(ram_data),
+        .ce(ram_ce_n)
+    );
+
+    ram ram1(
+        .clk(clk),
+        .we(ext_ram_we_n),
+        .addr(ext_ram_addr),
+        .be(ext_ram_be_n),
+        .data(ext_ram_data),
+        .ce(ext_ram_ce_n)
+    );
+
+endmodule // openmips_min_sopc
+\end{lstlisting}
+
+
+\paragraph{模拟RAM}
+模拟的RAM模块需首先将功能测例编译后的二进制文件转换成Verilog可接受的ASC-II文本文件，而后在initial语句中导入该文件，将CPU指令计数器置为0x80000000，开始仿真运行：
+
+\begin{lstlisting}[language=verilog, caption={模拟RAM ram.v}]
+module ram(
+    input wire clk,
+    input wire ce,
+    input wire we,
+    input wire oe,
+    input wire[19:0] addr,
+    input wire[3:0] be,
+    inout wire[31:0] data
+);
+    reg[31:0] data_ram[0:1048575];
+
+    initial $readmemh ("ram.data", data_ram);
+
+    assign oe = 1'b0;
+
+    always @(posedge clk) begin
+        if (ce == 1'b1) begin
+
+        end else if (we == 1'b0) begin
+            if (be[3] == 1'b0) begin
+                data_ram[addr][7:0] <= data[31:24];
+            end
+            if (be[2] == 1'b0) begin
+                data_ram[addr][15:8] <= data[23:16];
+            end
+            if (be[1] == 1'b0) begin
+                data_ram[addr][23:16] <= data[15:8];
+            end
+            if (be[0] == 1'b0) begin
+                data_ram[addr][31:24] <= data[7:0];
+            end
+        end
+    end
+
+    assign data = we? { data_ram[addr][7:0], data_ram[addr][15:8], data_ram[addr][23:16], data_ram[addr][31:24] }: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;
+
+endmodule // data_ram
+\end{lstlisting}
+
+
+\paragraph{模拟Flash}
+模拟的Flash与模拟RAM类似，同样在其initial块中导入数据：
+
+\begin{lstlisting}
+module flash(
+    input wire clk,
+    input wire ce,
+    input wire we,
+    input wire oe,
+    input wire rp,
+    input wire byte,
+    input wire[21:0] a,
+    inout wire[15:0] data
+);
+    reg[15:0] data_flash[0:4194303];
+
+    initial $readmemh ("flash.data", data_flash);
+
+    assign rp = 1'b1;
+    assign byte = 1'b1;
+    assign we = 1'b1;
+    assign oe = 1'b0;
+    assign ce = 1'b0;
+
+    assign data = { data_flash[a][7:0], data_flash[a][15:8] };
+
+endmodule // data_flash
+\end{lstlisting}
+
 
 \begin{lstlisting}[language=verilog, caption={ram.v的initial块}]
      initial $readmemh ("ram.data", data_ram);

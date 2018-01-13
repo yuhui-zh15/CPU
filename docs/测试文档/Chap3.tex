@@ -21,6 +21,7 @@ ucore的主要流程如下：
     \item {\bf 启动完毕}：系统初始化完毕后进入用户态，可以运行如下列表中的应用程序以验证操作系统已正常运行：
 
     \tabletwoL{应用程序}{功能（期望输出）}
+        ls & 打印文件系统信息 \\
         pwd & 打印当前完整路径 \\
         cat & 打印一个文件的内容 \\
         sh & 打印一条语句``user sh is running!!!'' \\
@@ -99,9 +100,29 @@ ucore的系统测试步骤类似32位监控程序，如下：
 
 \section{测试结果}
 
-经过前面几个阶段的铺垫，我们很快便完成了ucore的调试。经测试，ucore操作系统可以正常启动，并且运行各个用户态程序可以观测到预期的输出：
+经过前面几个阶段的铺垫，我们很快便完成了ucore的调试。经测试，ucore操作系统可以正常启动，并且运行各个用户态程序可以观测到预期的输出。
 
-<TODO>：截图
+以下针对各个用户态程序，分别给出其qemu仿真结果，与Thinpad开发板上的运行结果：
+
+\newcommand{\userapp}[1]{
+    \subsection{#1}
+    \image[5.5in]{qemu/#1}{#1 qemu仿真结果}
+    \image[5.5in]{thinpad/#1}{#1 Thinpad运行结果}
+}
+
+\userapp{sh}
+\userapp{ls}
+\userapp{cat}
+\userapp{pwd}
+% \userapp{forktest}
+\userapp{yield}
+\userapp{hello}
+\userapp{faultreadkernel}
+\userapp{faultread}
+\userapp{badarg}
+\userapp{pgdir}
+\userapp{exit}
+\userapp{sleep}
 
 \section{问题与解决}
 

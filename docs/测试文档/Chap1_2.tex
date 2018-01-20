@@ -183,8 +183,6 @@
     END(n92_tlbwi_test)
     \end{lstlisting}
 
-    <TODO>: Please Check
-
     宏TEST\_TLBWI会依次将CP0的Index寄存器赋值为0x0, 0x1, ..., 0xF，并依次调用TLBWI指令写TLB表项。最终，通过先向基址处写入数据再读出，判断其是否与原数据相等，作为测试通过的依据：
 
     \begin{lstlisting}[caption={inst\_test.h}]
@@ -300,9 +298,7 @@
     END(n93_tlbwr_test)
     \end{lstlisting}
 
-    <TODO>: Please Check
-
-    宏TEST\_TLBWR会首先调用TLBWI指令共15次以构造所有TLB表项；然后调用TLBWR指令写入其中一个表项。最终，通过先向基址处写入数据再读出，判断其是否与原数据相等，作为测试通过的依据：
+    宏TEST\_TLBWR会首先调用TLBWI指令共15次以清空所有TLB表项；然后调用TLBWR指令写入其中一个表项。最终，通过先向基址处写入数据再读出，判断其是否与原数据相等，作为测试通过的依据：
 
     \begin{lstlisting}
     /* 93

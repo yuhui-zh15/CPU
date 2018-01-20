@@ -7,3 +7,4 @@ CPU.xpr
 *.pyc
 inst_ram.coe
 thinpad_top.v.dump
+docs/设计文档/report.pdf

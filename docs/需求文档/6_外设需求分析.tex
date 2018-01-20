@@ -37,7 +37,7 @@ Thinpad开发板上提供的RAM包括BaseRAM（基础内存）与ExtRAM（扩展
     ram\_be\_n[3:0]	& select，选择信号，位宽4位，选择32bit=4byte的哪些位进行读取或写入	& output \\
     ram\_ce\_n	& chip enable，第一次下降有效 & output \\
     ram\_oe\_n	& output enable，低电平为读入，置0表示使能 &	output \\
-    ram\_we\_n	& write enable，低电平为写入，置0表示使能 & <TODO> \\
+    ram\_we\_n	& write enable，低电平为写入，置0表示使能 & output \\
 \tableend
 
 文档中提供的读写时序图如下，CPU在集成时需注意协调满足：
@@ -74,7 +74,7 @@ Thinpad开发板上提供的FLASH在掉电后不会丢失数据，其大小为8M
 
 串行接口在系统中负责通信，需提供读写支持。ucore读、写标准输入均通过此处。
 
-Thinpad开发板上提供的串口通过UART芯片进行访问，需要<TODO>位用作数据发送接收端口，及另<TODO>位用于串口状态标记。
+Thinpad开发板上提供的串口通过UART芯片进行访问，0xBFD003F8用作数据发送接收端口，及另0xBFD003FC位用于串口状态标记。
 
 寻址时，串口通过MMU统一进行地址映射。
 
@@ -85,7 +85,7 @@ Thinpad开发板上提供的串口通过UART芯片进行访问，需要<TODO>位
     TxD\_start & 开始标志，开始传输数据前需有1周期保持为高电平 & input \\
     TxD\_data[7:0] & 发送至FPGA外部的数据，每次可发送8位 & input \\
     TxD & 串行化后，发送至FPGA外部的数据，每次发送1位 & output \\
-    TxD\_busy & <TODO> & output \\
+    TxD\_busy & 串口状态标志是否繁忙 & output \\
 \tablecapend{模块1：async\_transmitter接口}
 
 \tablethreeL{接口信号}{含义}{接口类型}
@@ -123,7 +123,7 @@ Thinpad开发板上提供的串口通过UART芯片进行访问，需要<TODO>位
 
 VGA为图像显示设备，需要显存提供读写支持。该设备的具体需求为通过逐行扫描的方式实现图像显示。
 
-Thinpad开发板提供了HDMI接口，使用时可与自己的HDMI显示屏进行连接。本次实验所使用的显示屏分辨率为$600 \times 800$像素，屏幕刷新率为<TODO>Hz。
+Thinpad开发板提供了HDMI接口，使用时可与自己的HDMI显示屏进行连接。本次实验所使用的显示屏分辨率为$800 \times 600$像素，屏幕刷新率为75Hz。
 在将图像像素编码为8位（其中R/G/B各3/3/2位）后，输出至该引脚，即可实现图像显示功能。
 
 寻址时，显存通过MMU统一进行地址映射。

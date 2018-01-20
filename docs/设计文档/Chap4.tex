@@ -5,7 +5,7 @@ CPU是计算机的核心所在，但是只有有了外设，才能称之为一�
 \section{ROM}
 
     \subsection{简介概述}
-    ROM即为Read Only Memory，只读内存区，用于存储BootLoader。BootLoader在系统启动初期将Flash中的uCore操作系统数据引导至RAM中。
+    ROM即为Read Only Memory，只读内存区，仅用于存储Boot Loader。Boot Loader是一段代码，CPU执行这段代码在系统启动初期将Flash中的uCore操作系统数据拷贝至RAM中。
 
     \subsection{接口定义}
         \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
@@ -17,7 +17,7 @@ CPU是计算机的核心所在，但是只有有了外设，才能称之为一�
         \longtableend
 
     \subsection{设计细节}
-    Thinpad开发板并未集成ROM，ROM采用Verilog语言实现。由于BootLoader代码较短，可以直接用case语句实现，在时钟的上升沿，若ROM被使能，给定一个地址，返回一条指令。由于ROM使用Verilog语言在FPGA中实现，故可以忽略读延迟，无需考虑时序关系。
+    Thinpad开发板并未集成ROM，ROM采用Verilog语言实现。由于Boot Loader代码较短，直接用case语句实现。在时钟的上升沿，若ROM被使能，给定一个地址，返回一条指令。由于ROM使用Verilog语言在FPGA中实现，故可以忽略读延迟，无需考虑时序关系。
 
     ROM采用字编址，字长32位。
 
@@ -63,7 +63,7 @@ CPU是计算机的核心所在，但是只有有了外设，才能称之为一�
             input & wire & 1 & oe\_n & thinpad\_top & 读使能信号\\
             input & wire & 1 & we\_n & thinpad\_top & 写使能地址\\
             input & wire & 4 & byte\_n & thinpad\_top & 字节模式信号\\
-            input & wire & 1 & rp\_n & thinpad\_top & reset信号\\
+            input & wire & 1 & rp\_n & thinpad\_top & 工作模式信号\\
             input & wire & 1 & vpen & thinpad\_top & 写保护\\
             input & wire & 23 & a & thinpad\_top & 读写地址\\
             \midrule
@@ -77,9 +77,9 @@ CPU是计算机的核心所在，但是只有有了外设，才能称之为一�
 
     在使用Flash时，应阅读Flash的外设文档，理解清楚读写的时序关系，计算各个阶段的延迟。
 
-    读Flash时，置片选信号为0，读使能信号为0，写使能信号为1，字节模式信号为1（表示一次读出16个bit），reset信号为1（表示工作在正常模式），设置字节选择信号和地址，便可以读出数据。
+    读Flash时，置片选信号为0，读使能信号为0，写使能信号为1，字节模式信号为1（表示一次读出16个bit），工作模式信号为1（表示工作在正常模式），设置字节选择信号和地址，便可以读出数据。
 
-    <TODO>读Flash前，要先进入写模式，同时设置数据线为0xff，将Flash转变为读模式。
+    读Flash前，要先向Flash写入0xFF，将Flash转变为读模式。
 
 \section{串口}
 
@@ -101,7 +101,7 @@ CPU是计算机的核心所在，但是只有有了外设，才能称之为一�
     \subsection{设计细节}
     发送数据时，将TxD\_start置为1，TxD\_data传入数据。
 
-    接收数据时，触发中断。
+    接收数据时，利用RxD\_data\_ready触发CPU中断，调用中断处理程序，中断读数据。
 
     <TODO>yyy
 

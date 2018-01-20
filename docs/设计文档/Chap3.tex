@@ -1,69 +1,76 @@
 \chapter{内存管理}
 
+对于MIPS 32来说，虚拟内存的概念是十分重要的。具体来说，虚拟内存指用户或者OS在编写软件的过程中使用的地址是固定大小的虚拟内存空间。这些虚拟的内存空间地址不一一对应到实际的地址空间，而是通过虚实转化的方式来在硬件层面得到实际操作对应的物理地址。这样设计的好处是明显的：一是程序或软件开发人员不用涉及物理地址的分配问题，将这一过程统一交给OS来处理；二是可以动态的管理每个虚拟内存地址对应的实际地址，使得实际地址能被有效的利用。
+
+因为CPU在运行的过程中也需要虚实地址的转换，所以在硬件层面我们也需要虚实地址的转换元件。为了在硬件层面实现虚实转换，常用的办法是加入快表TLB。其工作过程即对于地址虚实转化先查询快表，对于可以查询到的虚实对应关系直接进行转化，不需要软件OS的介入；对于查询不到的，通过TLB异常的形式告知OS，让OS查询内存中大的页表后，设置相应的TLB表项实现虚实转化。值得一提的是，TLB由于是硬件层面的cache结构，可以大大加速虚拟地址到物理地址的转化过程。
+
+除了虚拟地址和实际地址通过页表的转化过程，实际上在MIPS规范中，已经将虚拟地址按块划分，并非所有的虚拟地址都需要页表转化。具体来说，MIPS 32标准中，将32位的地址空间（共计4GB）分为四个部分：kuseg（低2GB），用户空间，需要虚实转化；kseg0（加512MB），将第一位置0即为实际地址；kseg1（加512MB），将前三位置0即为实际地址；kseg2（高1GB），内核空间，需要虚实转化。
+
+在设计过程中，uCore将不同的设备放置在了不同的地址空间。<TODO>
+
 \section{tlb\_reg}
 
     \subsection{简介概述}
-    <TODO>
-
+    快表模块，实现了TLB表，相当于一个数据选择器。除了TLB表查询外，还肩负非查TLB表的虚实转化和外设使能控制的功能，可以看出是一个内存管理单元MMU。
+    
     \subsection{接口定义}
         \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
-            input & wire & 1 & clk & & \\
-            input & wire & 1 & rst & & \\
-            input & wire & 32 & addr\_i & & \\
-            input & wire & 32 & inst\_i & & \\
-            input & wire & 32 & index\_i & & \\
-            input & wire & 32 & random\_i & & \\
-            input & wire & 32 & entrylo0\_i & & \\
-            input & wire & 32 & entrylo1\_i & & \\
-            input & wire & 32 & entryhi\_i & & \\
-            input & wire & 1 & mem\_cp0\_reg\_we & & \\
-            input & wire & 5 & mem\_cp0\_reg\_write\_addr & & \\
-            input & wire & 32 & mem\_cp0\_reg\_data & & \\
-            input & wire & 1 & wb\_cp0\_reg\_we & & \\
-            input & wire & 5 & wb\_cp0\_reg\_write\_addr & & \\
-            input & wire & 32 & wb\_cp0\_reg\_data & & \\
-            output & reg & 1 & tlb\_hit, & & \\
-            output & reg & 1 & sram\_ce & & \\
-            output & reg & 1 & flash\_ce & & \\
-            output & reg & 1 & rom\_ce & & \\
-            output & reg & 1 & serial\_ce & & \\
-            output & reg & 1 & vga\_ce & & \\
-            output & reg & 32 & addr\_o & & \\
+            input & wire & 1 & clk & CPU外部 & CPU工作时钟\\
+            input & wire & 1 & rst & CPU外部 & 异步清零信号\\
+            input & wire & 32 & addr\_i & pc\_reg或mem& 需要转化的虚地址\\
+            input & wire & 32 & inst\_i & mem/wb& wb阶段的指令\\
+            input & wire & 32 & index\_i & cp0& CP0\_index输入\\
+            input & wire & 32 & random\_i & cp0& CP0\_random输入\\
+            input & wire & 32 & entrylo0\_i & cp0& CP0\_entrylo0输入\\
+            input & wire & 32 & entrylo1\_i & cp0& CP0\_entrylo1输入\\
+            input & wire & 32 & entryhi\_i & cp0& CP0\_entryhi输入\\
+            output & reg & 1 & tlb\_hit, & pc\_reg或mem& 转化是否成功标记\\
+            output & reg & 1 & sram\_ce & CPU外部& sram使能信号\\
+            output & reg & 1 & flash\_ce & CPU外部& flash使能信号\\
+            output & reg & 1 & rom\_ce & CPU外部& rom使能信号\\
+            output & reg & 1 & serial\_ce & CPU外部& 串口使能信号\\
+            output & reg & 1 & vga\_ce & CPU外部& vga输出使能\\
+            output & reg & 32 & addr\_o & pc\_reg或mem& 转化出的物理地址\\
         \longtableend
 
     \subsection{设计细节}
-    <TODO>
+    本模块的主体是TLB快表，实现了一个有16个表项的MIPS 32标准快表，这也是为什么我们将之命名为tlb\_reg。但同时，本模块中还实现了对于不需要虚实转化地址的转化工作，即kseg0和kseg1段的地址，并且根据uCore对于虚拟地址的分配实现了对于外设使能端的控制。所以，总的来说，可以把这个模块看成是一个内存管理子单元，其与后面提到的openmips模块共同实现关于内存的管理。
 
+    对于TLB快表的实现，主要是关于查表和设表两个部分。查表是有关MIPS 32标准的实现，在这里就不再具体展开说明其设计。对于设表，通过uCore的内容，我们知道主要指的是TLBWI和TLBWR两个指令。TLBWI即根据index进行tlb表项的设置哦，TLBWR即根据random进行tlb表项的设置，所以我们需要从CP0模块引入相应的寄存器内容。
+
+    对于kseg0、kseg1和外设使能的实现，仅需要判断输入的虚拟地址是否落在这两个区间内，若落在这两个区间内是否落在相应的外设配置地址即可。
+
+    很明显，在if和mem阶段我们都涉及到了虚实转化的问题。理论上，一个可行的解决方式是，将这两个部分的虚实转化接入一个控制模块，然后通过这个控制模块对这两个虚实转化哪个使用tlb\_reg进行取舍。但是，在我们设计的CPU中，我们采用两个完全一致的tlb\_reg分别接入if和mem阶段来解决这个问题。这种解决方法的不同在于还需要修改ctrl模块去适应两个tlb\_reg可能发生的冲突（比如if、mem同时需要对同一个外设读取）。注意，这两个tlb\_reg是完全一致，同时，tlb\_miss标志是否使能是TLB缺失异常是否发生的充分必要条件。
+    
 \section{openmips}
 
     \subsection{简介概述}
-    <TODO>
-
+    综合模块，用于连接CPU内部的诸多模块，并且把外部有关的信号输入CPU的特定模块或把CPU特定模块的信号输出到外部。
+    
     \subsection{接口定义}
         \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
-            input & wire & 1 & clk & & \\
-            input & wire & 1 & rst & & \\
-            input & wire & 6 & int\_i & & \\
-            input & wire & 32 & if\_data\_i & & \\
-            input & wire & 32 & mem\_data\_i & & \\
-            output & wire & 32 & if\_addr\_o & & \\
-            output & wire & 1 & if\_sram\_ce\_o & & \\
-            output & wire & 1 & if\_flash\_ce\_o & & \\
-            output & wire & 1 & if\_rom\_ce\_o & & \\
-            output & wire & 1 & if\_serial\_ce\_o & & \\
-            output & wire & 1 & if\_vga\_ce\_o & & \\
-            output & wire & 1 & if\_ce\_o & & \\
-            output & wire & 32 & mem\_addr\_o & & \\
-            output & wire & 32 & mem\_data\_o & & \\
-            output & wire & 1 & mem\_we\_o & & \\
-            output & wire & 4 & mem\_sel\_o & & \\
-            output & wire & 1 & mem\_sram\_ce\_o & & \\
-            output & wire & 1 & mem\_flash\_ce\_o & & \\
-            output & wire & 1 & mem\_rom\_ce\_o & & \\
-            output & wire & 1 & mem\_serial\_ce\_o & & \\
-            output & wire & 1 & mem\_vga\_ce\_o & & \\
-            output & wire & 1 & mem\_ce\_o & & \\
-            output & wire & 1 & timer\_int\_o & & \\
+            input & wire & 1 & clk & CPU外部 & CPU工作时钟\\
+            input & wire & 1 & rst & CPU外部& 异步清零信号\\
+            input & wire & 6 & int\_i & CPU外部& 中断使能\\
+            input & wire & 32 & if\_data\_i & CPU外部& if阶段取到的指令\\
+            input & wire & 32 & mem\_data\_i & CPU外部& mem阶段取到的数据\\
+            output & wire & 32 & if\_addr\_o & 外设& if阶段所取指令的物理地址\\
+            output & wire & 1 & if\_sram\_ce\_o &sram & if阶段sram使能信号\\
+            output & wire & 1 & if\_flash\_ce\_o &flash &if阶段flash使能信号 \\
+            output & wire & 1 & if\_rom\_ce\_o &rom & if阶段rom使能信号\\
+            output & wire & 1 & if\_serial\_ce\_o &串口 & if阶段串口使能信号\\
+            output & wire & 1 & if\_vga\_ce\_o &vga & if阶段vga使能信号\\
+            output & wire & 32 & mem\_addr\_o &外设 & mem阶段访存的物理地址\\
+            output & wire & 32 & mem\_data\_o &外设 & mem阶段访存的输出数据\\
+            output & wire & 1 & mem\_we\_o &外设 & mem阶段访存的写使能\\
+            output & wire & 4 & mem\_sel\_o &外设 & mem阶段访存的片选信号\\
+            output & wire & 1 & mem\_sram\_ce\_o &sram & mem阶段sram使能信号\\
+            output & wire & 1 & mem\_flash\_ce\_o & flash& mem阶段flash使能信号\\
+            output & wire & 1 & mem\_rom\_ce\_o & rom& mem阶段rom使能信号\\
+            output & wire & 1 & mem\_serial\_ce\_o & 串口& mem阶段串口使能信号\\
+            output & wire & 1 & mem\_vga\_ce\_o & vga& mem阶段vga使能信号\\
+            output & wire & 1 & mem\_ce\_o & 外设& mem阶段总使能信号\\
+            output & wire & 1 & timer\_int\_o & 外设& 时钟中断信号\\
         \longtableend
     \subsection{设计细节}
-    <TODO>
+    本部分是对于CPU各个模块的综合，即实例化之前提过的各个模块类，并通过wire衔接各个不同的实例元件对应的接口。同时，本部分将各个模块需要连到CPU外部（包括输入和输出）的部分通过wire连接到这一总模块的接口上，实现与CPU外部的交互。换句话说，本模块实现的是一个完整的基于MIPS 32的面向uCore设计的CPU模块类。

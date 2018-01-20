@@ -1,66 +1,79 @@
 \chapter{控制模块}
 
+上文提到，指令流水CPU的设计中除了运算部分另外一个重要的部分是控制部分，本章节主要介绍我们设计的CPU中的控制模块相关的部分。所谓的控制部分就是CPU中用于控制各条指令执行的模块，其主要功能是暂停和清空。所谓暂停是指在CPU执行的过程中，可能由于各类冲突所需要的插空泡操作；所谓清空是指在CPU执行过程中，跳转的时候需要清空还未执行的还在流水线上的指令。
+
+另外，MIPS 32是基于异常的一类指令架构。异常即是CPU在处理指令的过程中可能发生的需要OS介入的情况，异常处理将CPU分为了用户态和内核态，正常情况下，CPU是运行在用户态的，而当异常发生的时候，CPU就需要进入内核态让OS介入进行异常的处理。为了让CPU介入异常的处理，除了使控制模块正确的跳转到异常处理程序的入口外还需要对异常的一些基本信息进行存储，这就涉及到了协处理器CP0，所以本章节主要介绍控制模块和协处理器CP0设计。
+
 \section{ctrl}
 
     \subsection{简介概述}
-    <TODO>
-
+    控制器模块，主要用于暂停和清空两类控制信号的生成和异常部分跳转地址的控制。
+    
     \subsection{接口定义}
         \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
-            input & wire & 1 & clk & & \\
-            input & wire & 1 & rst & & \\
-            input & wire & 1 & stallreq\_from\_id & & \\
-            input & wire & 1 & stallreq\_from\_ex & & \\
-            input & wire & 1 & stallreq\_from\_mem & & \\
-            input & wire & 1 & mem\_we\_i & & \\
-            input & wire & 32 & ebase\_i & & \\
-            input & wire & 32 & excepttype\_i & & \\
-            input & wire & 32 & cp0\_epc\_i & & \\
-            output & reg & 6 & stall & & \\
-            output & reg & 1 & mem\_we\_o & & \\
-            output & reg & 32 & new\_pc & & \\
-            output & reg & 1 & flush & & \\
+            input & wire & 1 & clk & CPU外部 & CPU工作时钟\\
+            input & wire & 1 & rst & CPU外部 & 异步清零信号\\
+            input & wire & 1 & stallreq\_from\_id & id & id阶段要求暂停\\
+            input & wire & 1 & stallreq\_from\_ex & ex & ex阶段要求暂停\\
+            input & wire & 1 & stallreq\_from\_mem & mem & mem阶段要求暂停\\
+            input & wire & 1 & mem\_we\_i & mem & mem阶段写使能信号\\
+            input & wire & 32 & ebase\_i & cp0\_reg & 异常处理向量\\
+            input & wire & 32 & excepttype\_i & mem & 异常标识\\
+            input & wire & 32 & cp0\_epc\_i & mem & 经过数据冲突处理的cp0\_epc信息\\
+            output & reg & 6 & stall & 各个流水线寄存器阶段 & 暂停控制信息\\
+            output & reg & 1 & mem\_we\_o & CPU外部 & 外设写使能 \\
+            output & reg & 32 & new\_pc & pc\_reg & 发送异常的下一条指令地址\\
+            output & reg & 1 & flush & 各个流水线寄存器阶段 & 清空流水线控制信息\\
         \longtableend
 
     \subsection{设计细节}
-    <TODO>
+    本模块是我们设计CPU的控制模块，值得一提的是，由于我们写的是流水线CPU，所以实际上控制信息已经散落在了流水线的各个阶段，相当于控制信息也进行了流水。所以该模块的主要功能虽然表面上是控制信号的生成，实际上可以认为是控制信息的总结、仲裁、生成和转发。
 
+    由于流水线CPU一个时钟周期里会有多条指令在不同的阶段并行执行，所以从各个阶段都有可能发来暂停的请求。具体来说，这些暂停请求可能来自id、ex、mem三个阶段。对于这三个阶段发来的暂停请求，基于MIPS 32标准，我们处理的暂停请求优先级是ex、id、mem。对于暂停请求的处理即生成相应的暂停控制向量输出到各级流水阶段衔接的流水寄存器中。另外，由于处理的特殊性，这里特别说明下mem阶段的暂停请求。mem阶段的暂停请求主要是为了解决结构冲突而执行的，即对于L型指令我们要保证他已经会写到寄存器中了，才能对后面的指令进行译码。但是，由于我们的计算机是异步的计算机，意思是计算机中CPU的时钟和外设的时钟不是同步时钟。所以我们就要保证，当我们的外设写入使能端使能的时候，数据应该已经准备好了，不然就会将错误的数据写入外设。所以我们将mem的暂停分为了两状态的状态机，第一个状态让包括mem阶段的流水暂停，而不给出写使能信号；第二个状态让mem开始流水，并给出写使能信号。这样，就相当于我们使用了一个CPU周期的时间让MEM阶段的写入数据收敛到一个稳定的状态，避免之前说的错误的发生。
+
+    除了各个阶段发来的暂停请求以外，该模块的另外一个重要的处理是对于异常发生时候的处理。根究mem发送来的异常信息，ctrl模块可以识别出发送了哪一种异常，进而告知并控制pc\_reg对于下一条指令的取指地址，即异常处理程序的入口地址。而当异常发生的时候，本模块还需要对各个流水线寄存器模块发送flush信号，即流水清空信号，清空目前的流水线。这么做的原因是，引发异常的指令之后的指令都不应该执行完毕，不能让这些指令进入WB阶段，所以要清空各个流水线寄存器，让流水线看起来根本没有工作。这也是MIPS精确异常的要求。
+    
 \section{cp0\_reg}
 
     \subsection{简介概述}
-    <TODO>
-
+    协处理器CP0模块，主要实现了有关uCore的协处理器CP0相关寄存器、有关寄存器的读写和异常发生时相关寄存器的设置。
+    
     \subsection{接口定义}
         \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
-            input & wire & 1 & clk & & \\
-            input & wire & 1 & rst & & \\
-            input & wire & 1 & we\_i & & \\
-            input & wire & 5 & waddr\_i & & \\
-            input & wire & 5 & raddr\_i & & \\
-            input & wire & 32 & data\_i & & \\
-            input & wire & 6 & int\_i & & \\
-            input & wire & 32 & bad\_address\_i & & \\
-            input & wire & 32 & excepttype\_i & & \\
-            input & wire & 32 & current\_inst\_addr\_i & & \\
-            input & wire & 1 & is\_in\_delay\_slot\_i & & \\
-            output & reg & 32 & data\_o & & \\
-            output & reg & 32 & count\_o & & \\
-            output & reg & 32 & compare\_o & & \\
-            output & reg & 32 & status\_o & & \\
-            output & reg & 32 & cause\_o & & \\
-            output & reg & 32 & epc\_o & & \\
-            output & reg & 32 & config\_o & & \\
-            output & reg & 32 & ebase\_o & & \\
-            output & reg & 32 & index\_o, & & \\
-            output & reg & 32 & random\_o, & & \\
-            output & reg & 32 & entrylo0\_o, & & \\
-            output & reg & 32 & entrylo1\_o, & & \\
-            output & reg & 32 & pagemask\_o, & & \\
-            output & reg & 32 & badvaddr\_o, & & \\
-            output & reg & 32 & entryhi\_o, & & \\
-            output & reg & 1 & timer\_int\_o, & & \\
+            input & wire & 1 & clk & CPU外部 & CPU工作时钟\\
+            input & wire & 1 & rst & CPU外部 & 异步清零信号\\
+            input & wire & 1 & we\_i & mem\_wb & CP0写使能 \\
+            input & wire & 5 & waddr\_i & mem\_wb & CP0写地址\\
+            input & wire & 5 & raddr\_i & ex & CP0读地址\\
+            input & wire & 32 & data\_i & mem\_wb & CP0写数据\\
+            input & wire & 6 & int\_i & CPU外部 & CPU外部中断信号\\
+            input & wire & 32 & bad\_address\_i & mem & 发生TLB缺失的虚地址\\
+            input & wire & 32 & excepttype\_i & mem & 异常标识\\
+            input & wire & 32 & current\_inst\_addr\_i & mem & 目前指令的虚地址\\
+            input & wire & 1 & is\_in\_delay\_slot\_i & mem & 标记当前指令是否在延迟槽中\\
+            output & reg & 32 & data\_o & ex & 输出指令所读的CP0寄存器\\
+            output & reg & 32 & count\_o & 无指定 & 输出CP0\_count寄存器\\
+            output & reg & 32 & compare\_o & 无指定& 输出CP0\_compare寄存器\\
+            output & reg & 32 & status\_o & 无指定& 输出CP0\_status寄存器\\
+            output & reg & 32 & cause\_o & 无指定& 输出CP0\_cause寄存器\\
+            output & reg & 32 & epc\_o & 无指定& 输出CP0\_epc寄存器\\
+            output & reg & 32 & config\_o & 无指定& 输出CP0\_config寄存器\\
+            output & reg & 32 & ebase\_o & 无指定& 输出CP0\_ebase寄存器\\
+            output & reg & 32 & index\_o, & 无指定& 输出CP0\_index寄存器\\
+            output & reg & 32 & random\_o, & 无指定& 输出CP0\_random寄存器\\
+            output & reg & 32 & entrylo0\_o, &无指定 & 输出CP0\_entrylo0寄存器\\
+            output & reg & 32 & entrylo1\_o, &无指定 & 输出CP0\_entrylo1寄存器\\
+            output & reg & 32 & pagemask\_o, &无指定 & 输出CP0\_pagemask寄存器\\
+            output & reg & 32 & badvaddr\_o, &无指定 & 输出CP0\_badvaddr寄存器\\
+            output & reg & 32 & entryhi\_o, &无指定 & 输出CP0\_entryhi寄存器\\
+            output & reg & 1 & timer\_int\_o, &CPU外部 & 时钟中断（可反接）\\
         \longtableend
 
     \subsection{设计细节}
-    <TODO>
+    本模块主要是对MIPS 32标准中的协处理器CP0进行实现，主要实现与uCore有关的CP0寄存器及在这些寄存器上的有关操作。协处理器，和它的字面意思一样，在MIPS中是为了协助CPU在硬件层面处理有关问题而设置的特殊寄存器。它与通用寄存器不同，一般情况下，是不能对协处理器CP0中的寄存器进行读写的。协处理器主要的作用是在硬件层面保存与CPU处理事务有关的信息，进而成为处理器硬件和操作系统软件交互的桥梁。
 
+    我们实现的协处理器CP0是面向uCore设计的，并没有实现MIPS 32文档中所有的CP0寄存器。具体来说，我们实现了下列CP0寄存器：data、count、compare、status、cause、epc、config、ebase、index、random、entrylo0、entrylo1、pagemask、badvaddr、entryhi，共记15个寄存器。其中，前8个是为了处理常规异常设置的寄存器，而后7个是为了处理TLB异常设置的寄存器。这些寄存器实现的格式都与MIPS 32文档完全一致。
+
+    对于CP0寄存器的读写操作，与通用寄存器regfile模块类似，也是通过传递使能信号和数据信息进行的。与通用寄存器模块不同的是，CP0寄存器的读和写有一定的MIPS规范，比如有一些寄存器只读、有一些寄存器可写，再比如有一些寄存器只有一些字段可写，这些均按照MIPS 32规范设计。另外，CP0在处理异常中也有很大的作用，他需要根据触发异常的指令再硬件层面存储一些有关异常的信息（发生了什么异常、哪里发生异常、TLB缺失的虚地址是等）。设计层面上，即把流水阶段我们得到的异常综合信息和相关的地址和数据信息连入CP0模块，进而进行锁存器的赋值即可。
+
+    值得一提的是，CP0模块除了常规的处理MTC0和MFC0的读写方式外，还稳定的通过电路向外输出可读存储器的信息，即上表中所指的无指定的输出单元。这里的无指定不代表这些输出单元没有被键入某个特定的模块，而是指它衔接到需要这些CP0寄存器信息的单元，没有特定的单元。换句话说，他们是按需分配的。

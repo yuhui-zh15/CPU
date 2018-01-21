@@ -25,7 +25,7 @@
 
     \subsection{简介概述}
     快表模块，实现了TLB表，相当于一个数据选择器。除了TLB表查询外，还肩负非查TLB表的虚实转化和外设使能控制的功能，可以看出是一个内存管理单元MMU。
-    
+
     \subsection{接口定义}
         \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & CPU工作时钟\\
@@ -37,6 +37,9 @@
             input & wire & 32 & entrylo0\_i & cp0& CP0\_entrylo0输入\\
             input & wire & 32 & entrylo1\_i & cp0& CP0\_entrylo1输入\\
             input & wire & 32 & entryhi\_i & cp0& CP0\_entryhi输入\\
+        \longtablecapend{输入信号}
+
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             output & reg & 1 & tlb\_hit, & pc\_reg或mem& 转化是否成功标记\\
             output & reg & 1 & sram\_ce & CPU外部& sram使能信号\\
             output & reg & 1 & flash\_ce & CPU外部& flash使能信号\\
@@ -49,17 +52,38 @@
     \subsection{设计细节}
     本模块的主体是TLB快表，实现了一个有16个表项的MIPS 32标准快表，这也是为什么我们将之命名为tlb\_reg。但同时，本模块中还实现了对于不需要虚实转化地址的转化工作，即kseg0和kseg1段的地址，并且根据uCore对于虚拟地址的分配实现了对于外设使能端的控制。所以，总的来说，可以把这个模块看成是一个内存管理子单元，其与后面提到的openmips模块共同实现关于内存的管理。
 
-    对于TLB快表的实现，主要是关于查表和设表两个部分。查表是有关MIPS 32标准的实现，在这里就不再具体展开说明其设计。对于设表，通过uCore的内容，我们知道主要指的是TLBWI和TLBWR两个指令。TLBWI即根据index进行tlb表项的设置哦，TLBWR即根据random进行tlb表项的设置，所以我们需要从CP0模块引入相应的寄存器内容。
+        \paragraph{TLB读写}
+        对于TLB快表的实现，主要包括关于查表和设表两个部分。
+        % 查表是有关MIPS 32标准的实现，在这里就不再具体展开说明其设计。对于设表，通过uCore的内容，我们知道主要指的是TLBWI和TLBWR两个指令。TLBWI即根据index进行tlb表项的设置哦，TLBWR即根据random进行tlb表项的设置，所以我们需要从CP0模块引入相应的寄存器内容。
+        \begin{enumerate}
+            \itembf{查表（读）}：查表是有关MIPS 32标准的实现，在这里就不再具体展开说明其设计。
+            \itembf{设表（写）}：对于设表，通过uCore的内容，我们知道主要指的是TLBWI和TLBWR两个指令：
+            \begin{enumerate}
+                \itembf{TLBWI}：TLBWI即根据index进行TLB表项的设置。
+                \itembf{TLBWR}：TLBWR即根据random进行TLB表项的设置，所以我们需要从CP0模块引入相应的寄存器内容。
+            \end{enumerate}
+        \end{enumerate}
 
-    对于kseg0、kseg1和外设使能的实现，仅需要判断输入的虚拟地址是否落在这两个区间内，若落在这两个区间内是否落在相应的外设配置地址即可。
+        \paragraph{地址映射}
+        对于kseg0、kseg1和外设使能的实现，仅需要判断输入的虚拟地址是否落在这两个区间内，若落在这两个区间内是否落在相应的外设配置地址即可。
 
-    很明显，在if和mem阶段我们都涉及到了虚实转化的问题。理论上，一个可行的解决方式是，将这两个部分的虚实转化接入一个控制模块，然后通过这个控制模块对这两个虚实转化哪个使用tlb\_reg进行取舍。但是，在我们设计的CPU中，我们采用两个完全一致的tlb\_reg分别接入if和mem阶段来解决这个问题。这种解决方法的不同在于还需要修改ctrl模块去适应两个tlb\_reg可能发生的冲突（比如if、mem同时需要对同一个外设读取）。注意，这两个tlb\_reg是完全一致，同时，tlb\_miss标志是否使能是TLB缺失异常是否发生的充分必要条件。
-    
+        很明显，在if和mem阶段我们都涉及到了虚实转化的问题。理论上，一个可行的解决方式如下：
+        % 将这两个部分的虚实转化接入一个控制模块，然后通过这个控制模块对这两个虚实转化哪个使用tlb\_reg进行取舍。
+        \begin{enumerate}
+            \item 将这两个部分的虚实转化接入一个控制模块。
+            \item 通过这个控制模块对这两个虚实转化哪个使用tlb\_reg进行取舍。
+        \end{enumerate}
+
+        但是，在我们设计的CPU中，我们采用两个完全一致的tlb\_reg分别接入if和mem阶段来解决这个问题。这种解决方法的不同在于还需要修改ctrl模块去适应两个tlb\_reg可能发生的冲突（比如if、mem同时需要对同一个外设读取）。注意，这两个tlb\_reg完全一致。
+
+        \paragraph{异常处理：TLB MISS}
+        tlb\_miss标志是否使能，是TLB缺失异常是否发生的充分必要条件。
+
 \section{openmips}
 
     \subsection{简介概述}
     综合模块，用于连接CPU内部的诸多模块，并且把外部有关的信号输入CPU的特定模块或把CPU特定模块的信号输出到外部。
-    
+
     \subsection{接口定义}
         \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             input & wire & 1 & clk & CPU外部 & CPU工作时钟\\
@@ -67,6 +91,9 @@
             input & wire & 6 & int\_i & CPU外部& 中断使能\\
             input & wire & 32 & if\_data\_i & CPU外部& if阶段取到的指令\\
             input & wire & 32 & mem\_data\_i & CPU外部& mem阶段取到的数据\\
+        \longtablecapend{输入信号}
+
+        \longtablesixL{信号类型}{信号规格}{信号位宽}{信号名称}{来源/去向}{详细描述}
             output & wire & 32 & if\_addr\_o & 外设& if阶段所取指令的物理地址\\
             output & wire & 1 & if\_sram\_ce\_o &sram & if阶段sram使能信号\\
             output & wire & 1 & if\_flash\_ce\_o &flash &if阶段flash使能信号 \\

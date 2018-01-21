@@ -1,0 +1,38 @@
+\chapter{文档说明}
+
+本文档是NonExist组软工计原联合项目的开发文档。
+
+当初次接到这个项目时，面对卷帙浩繁的文档，我们陷入了一种深深的迷茫，本文档的目的便是描述我们是如何一步一步理清需求，明确分工，最终造出一台32位计算机的。
+
+项目从学期第2周开始，持续到第16周结束，共计15周。
+
+查看GitLab的Milestone功能，我们可以看到每周的MileStone如下：
+    
+    \begin{enumerate}
+        \itembf{Week 5}: Build CPU baseline
+        \itembf{Week 6}: Add instructions
+        \itembf{Week 7}: Complete all instructions, build ucore
+        \itembf{Week 8}: Complete exception, learn external devices, read books
+        \itembf{Week 9}: TLB/MMU/External Devices Required
+        \itembf{Week 10}: Link MMU, external devices
+        \itembf{Week 11}: Run function test on chips and debug
+        \itembf{Week 12}: Run monitor on chip and debug
+        \itembf{Week 13}: Run monitor on chip and ucore if possible
+        \itembf{Week 14}: Run ucore on chip
+        \itembf{Week 15}: More external devices and unit test
+        \itembf{Week 16 later}: Document Required
+    \end{enumerate}
+
+通过观察Milestone，我们将整个项目周期划分为5个Sprint，每个Sprint三星期，其主线可以如下概括：
+
+    \begin{enumerate}
+        \itembf{Sprint 1}：Week 2 - Week 4 查阅相关文献
+        \itembf{Sprint 2}：Week 5 - Week 7 指令流水、数据通路
+        \itembf{Sprint 3}：Week 8 - Week 10 CP0、异常、MMU、外设连接
+        \itembf{Sprint 4}：Week 11 - Week 13 调试功能测例、监控程序
+        \itembf{Sprint 5}：Week 14 - Week 16 调试ucore、撰写文档
+    \end{enumerate}
+
+当然每个部分还做了一些额外的事情，比如配置开发环境，制作针对TLB的功能测例等等，在之后的部分会具体指出。
+
+希望本文档能给读者带来裨益。

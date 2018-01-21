@@ -7,9 +7,9 @@
 \begin{enumerate}
     \item {\bf ROM}：只读存储器，用于存储BootLoader
     \item {\bf RAM}：随机存取存储器，用作内存
-    \item {\bf FLASH}：闪存，用作硬盘
+    \item {\bf Flash}：闪存，用作硬盘
     \item {\bf 串口}：串行接口，用作通信（标准输入输出）
-    \item {\bf VGA}：光栅扫描显示器，用作图像显示
+    \item {\bf VGA}：视频图形阵列，用作图像显示
     \item {\bf 总结}：对各个外设的需求进行总结
 \end{enumerate}
 
@@ -47,16 +47,16 @@ Thinpad开发板上提供的RAM包括BaseRAM（基础内存）与ExtRAM（扩展
 
 \section{Flash}
 
-FLASH在系统中充当硬盘，用于存储ucore，仅需提供读支持。
+Flash在系统中充当硬盘，用于存储ucore，仅需提供读支持。
 
-Thinpad开发板上提供的FLASH在掉电后不会丢失数据，其大小为8MB，采用字编址，每个地址空间存8bit，每次可选择读16位或8位。
+Thinpad开发板上提供的Flash在掉电后不会丢失数据，其大小为8MB，采用字编址，每个地址空间存8bit，每次可选择读16位或8位。
 
-在寻址时，FLASH通过MMU统一进行地址映射。
+在寻址时，Flash通过MMU统一进行地址映射。
 
-在硬件端，我们需要将FLASH作为一个黑盒子集成至MMU。这同样要求阅读其文档：
+在硬件端，我们需要将Flash作为一个黑盒子集成至MMU。这同样要求阅读其文档：
 
 \tablethreeL{接口信号}{含义}{接口类型}
-    flash\_a[22:0] & address，地址总线，位宽23位，故FLASH总大小为$8 \times 2^{23} = 8MB$ & output \\
+    flash\_a[22:0] & address，地址总线，位宽23位，故Flash总大小为$8 \times 2^{23} = 8MB$ & output \\
     flash\_rp\_n & reset，高电平为正常操作，低电平节电模式 & output \\
     flash\_oe\_n & output enable，低电平为读入，置0表示使能 & output \\
     flash\_data[15:0] & data，数据总线，位宽16位，一次读16bit & inout \\
@@ -68,13 +68,13 @@ Thinpad开发板上提供的FLASH在掉电后不会丢失数据，其大小为8M
 
 文档中提供的读时序图如下，CPU在集成时需注意协调满足：
 
-\image[6in]{FLASH_r}{FLASH读时序}
+\image[6in]{Flash_r}{Flash读时序}
 
 \section{串口}
 
 串行接口在系统中负责通信，需提供读写支持。ucore读、写标准输入均通过此处。
 
-Thinpad开发板上提供的串口通过UART芯片进行访问，0xBFD003F8用作数据发送接收端口，及另0xBFD003FC位用于串口状态标记。
+Thinpad开发板上提供的串口通过UART芯片进行访问，0xBFD003F8用作数据发送接收端口，及0xBFD003FC用于串口状态标记。
 
 寻址时，串口通过MMU统一进行地址映射。
 
@@ -121,14 +121,12 @@ Thinpad开发板上提供的串口通过UART芯片进行访问，0xBFD003F8用�
 
 \section{VGA}
 
-VGA为图像显示设备，需要显存提供读写支持。该设备的具体需求为通过逐行扫描的方式实现图像显示。
+VGA为图像显示阵列，需要显存提供读写支持。图像输出的具体需求为通过逐行扫描的方式实现图像显示。
 
-Thinpad开发板提供了HDMI接口，使用时可与自己的HDMI显示屏进行连接。本次实验所使用的显示屏分辨率为$800 \times 600$像素，屏幕刷新率为75Hz。
+Thinpad开发板提供了HDMI接口，使用时可与自己的HDMI显示屏进行连接。本次实验所使用输出分辨率为$800 \times 600$像素，屏幕刷新率为75Hz。
 在将图像像素编码为8位（其中R/G/B各3/3/2位）后，输出至该引脚，即可实现图像显示功能。
 
-寻址时，显存通过MMU统一进行地址映射。
-
-在硬件端，我们需要将VGA集成至MMU。其中逐行扫描屏幕的代码（vga.v）已经由助教提供，我们只需再实现其中的显存模块。vga.v的接口如下所示：
+寻址时，显存通过MMU统一进行地址映射。在硬件端，我们需要将显存地址映射至MMU。其中逐行扫描屏幕的代码（vga.v）已经由助教提供，我们只需再实现其中的显存模块。vga.v的接口如下所示：
 
 \tablethreeL{接口信号}{含义}{接口类型}
     clk & 时钟 & input \\
@@ -146,7 +144,7 @@ Thinpad开发板提供了HDMI接口，使用时可与自己的HDMI显示屏进�
 \tablethreeL{外设}{功能需求}{读写支持}
     ROM & 只读存储器，能用于烧录存储BootLoader & R \\
     RAM & 随机访问存储器，相当于内存，能用于实现运行时数据存储  & R/W \\
-    FLASH & 闪存，相当于硬盘，能用于存储ucore & R \\
+    Flash & 闪存，相当于硬盘，能用于存储ucore & R \\
     串口 & 串行并行转换接口，能实现收发数据通信 & R/W \\
     VGA & 图像显示接口，能逐行扫描显示图像 & R/W \\
 \tableend

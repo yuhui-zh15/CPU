@@ -62,11 +62,11 @@ Boot阶段为操作系统的启动阶段。
 
 \subsection{Boot过程}
 
-\image[3in]{boot}{BootLoader将ucore从FLASH拷贝至RAM中}
+\image[3in]{boot}{BootLoader将ucore从Flash拷贝至RAM中}
 
-由于FLASH断电不消失的特性，ucore需要存放在FLASH中；而系统加载完毕后，ucore应该在内存（RAM）中。因此，需要一个Boot程序，负责在硬件启动时将ucore从FLASH导入至RAM。
+由于Flash断电不消失的特性，ucore需要存放在Flash中；而系统加载完毕后，ucore应该在内存（RAM）中。因此，需要一个Boot程序，负责在硬件启动时将ucore从Flash导入至RAM。
 
-CPU初始化时，置PC为Boot程序首地址，从ROM开始处（VA 0xBFC00000）运行Boot程序。每次从FLASH读出数据再写入RAM，直至拷贝完成。
+CPU初始化时，置PC为Boot程序首地址，从ROM开始处（VA 0xBFC00000）运行Boot程序。每次从Flash读出数据再写入RAM，直至拷贝完成。
 
 BootLoader拷贝完成后，将PC跳转至VA 0x80000000，进入操作系统入口。此时ucore进行初始化并输出调试信息。
 
@@ -77,7 +77,7 @@ BootLoader拷贝完成后，将PC跳转至VA 0x80000000，进入操作系统入�
 \begin{enumerate}
     \item {\bf ROM}：使用FPGA实现ROM，并设置硬件初始化时的PC值为ROM的虚拟地址（见``地址映射''一节）
     \item {\bf BootLoader}：将BootLoader编译后写入ROM
-    \item {\bf ucore}：将ucore编译后写入FLASH
+    \item {\bf ucore}：将ucore编译后写入Flash
 \end{enumerate}
 
 \section{指令系统}
@@ -88,7 +88,7 @@ ucore的所有文件
 
 \subsection{需求分析}
 
-ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu仿真可知，ucore运行共需要45条指令，包括如下几部分：
+ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu仿真可知，ucore运行共需要47条指令，包括如下几部分：
 
 \begin{enumerate}
     \item {\bf 算术逻辑指令}：共22条，包括加减乘、与或非、移位等指令
@@ -99,9 +99,9 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
     \item {\bf 特权指令}：共5条，包括对CP0的访问、异常返回及TLB异常时使用的指令
 \end{enumerate}
 
-通过这45条指令，ucore实现了作为操作系统的调度功能。
+通过这47条指令，ucore实现了作为操作系统的调度功能。
 
-该部分的需求为在硬件上实现这45条指令。详细分析见``指令系统需求分析''一章。
+该部分的需求为在硬件上实现这47条指令。详细分析见``指令系统需求分析''一章。
 
 \section{地址映射}
 
@@ -121,8 +121,8 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
 首先列出ucore定义地址映射的关键文件：
 
 \tablefourL{文件}{关键变量}{值}{简介}
-    boot/bootasm.S & FLASH\_START & 0xBE000000 & FLASH的起始虚拟地址 \\
-                   & FLASH\_SIZE &  0x01000000 & FLASH的地址大小 \\
+    boot/bootasm.S & Flash\_START & 0xBE000000 & Flash的起始虚拟地址 \\
+                   & Flash\_SIZE &  0x01000000 & Flash的地址大小 \\
     \midrule
     kern/mm/memlayout.h & KMEMSIZE & 1M & 内存总大小 \\
     kern/include/mips\_vm.h &  MIPS\_KUSEG & 0x00000000 & kuseg段起始地址 \\
@@ -157,21 +157,21 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
 
 \subsection{外设调度}
 
-在CPU核心之外，运转着ROM、RAM（相当于内存）、FLASH（相当于硬盘）、串口（相当于标准输出）、VGA（相当于显示屏）等多个外部设备。它们的用途、接口、访问时序各不相同。
+在CPU核心之外，运转着ROM、RAM（相当于内存）、Flash（相当于硬盘）、串口（用于数据输出）、VGA（用于图像输出）等多个外部设备。它们的用途、接口、访问时序各不相同。
 
 然而，对于操作系统与CPU而言，它们的访问接口是统一的：均使用L/S型指令实现收/发数据。这个过程中需要进行地址映射。
 
 \paragraph{RAM}
 除操统文件中的定义、``内存管理''小节的说明外，考虑到开发板上提供了2块大小为4M的RAM（Base RAM与Ext RAM），可将KMEMSIZE改为8M，从而提供更大的内存空间。
 
-\paragraph{FLASH、串口}
+\paragraph{Flash、串口}
 见操统文件中的定义。
 
 \paragraph{ROM}
 在Boot阶段，CPU复位时PC位于VA 0xBFC00000处，因而该虚拟地址应映射到ROM。此外，考虑BootLoader指令较少，为ROM分配1KB的地址空间即可。
 
 \paragraph{VGA}
-此外，项目计划实现拓展功能VGA，其屏幕大小为800x600，故而需要468.75KB的地址空间用于显存。姑且在kseg1段中分配一段开始于VA 0xBA000000、大小为512KB的地址空间留作显存。
+此外，项目计划实现拓展功能图像显示，VGA输出大小为800x600，故而需要468.75KB的地址空间用于显存。姑且在kseg1段中分配一段开始于VA 0xBA000000、大小为512KB的地址空间留作显存。
 
 \subsection{需求分析}
 
@@ -184,7 +184,7 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
     \midrule
     kseg0（内核态） & 0x80000000 - 0x807FFFFF & RAM（0x00000000 - 0x007FFFFF） & 开机时存放操作系统 \\
     \midrule
-    kseg1（内核态） & 0xBE000000 - 0xBEFFFFFF & FLASH & 关机时存放操作系统 \\
+    kseg1（内核态） & 0xBE000000 - 0xBEFFFFFF & Flash & 关机时存放操作系统 \\
                  & 0xBFC00000 - 0xBFC00FFF & ROM & 存放BootLoader \\
                  & 0xBFD003F8 - 0xBFD003FC & 串口 & 串口数据/串口状态 \\
                  & 0xBA000000 - 0xBA080000 & VGA & 显存，用于显示图像 \\

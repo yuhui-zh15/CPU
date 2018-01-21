@@ -1,0 +1,10 @@
+\chapter{系统总览}
+
+以下给出本次工程的系统总览（其中为简洁起见，省略了部分连接线路）：
+
+\image[6.3in]{outline}{系统总览}
+
+从图中可以看出，系统中包括openmips和thinpad\_top共2个较为重要的层级，以下为简要说明：
+
+    \paragraph{openmips} openmips集成了CPU的核心部分，包括五级流水线、MMU、寄存器、CP0等。
+    \paragraph{thinpad\_top} thinpad\_top为与开发板衔接的顶层模块，它在openmips之外还集成了对ROM、RAM、Flash、串口、VGA等多种外设的控制逻辑。

@@ -47,7 +47,7 @@
             output & reg & 1 & serial\_ce & CPU外部& 串口使能信号\\
             output & reg & 1 & vga\_ce & CPU外部& vga输出使能\\
             output & reg & 32 & addr\_o & pc\_reg或mem& 转化出的物理地址\\
-        \longtableend
+        \longtablecapend{输出信号}
 
     \subsection{设计细节}
     本模块的主体是TLB快表，实现了一个有16个表项的MIPS 32标准快表，这也是为什么我们将之命名为tlb\_reg。但同时，本模块中还实现了对于不需要虚实转化地址的转化工作，即kseg0和kseg1段的地址，并且根据uCore对于虚拟地址的分配实现了对于外设使能端的控制。所以，总的来说，可以把这个模块看成是一个内存管理子单元，其与后面提到的openmips模块共同实现关于内存的管理。
@@ -111,6 +111,6 @@
             output & wire & 1 & mem\_vga\_ce\_o & vga& mem阶段vga使能信号\\
             output & wire & 1 & mem\_ce\_o & 外设& mem阶段总使能信号\\
             output & wire & 1 & timer\_int\_o & 外设& 时钟中断信号\\
-        \longtableend
+        \longtablecapend{输出信号}
     \subsection{设计细节}
     本部分是对于CPU各个模块的综合，即实例化之前提过的各个模块类，并通过wire衔接各个不同的实例元件对应的接口。同时，本部分将各个模块需要连到CPU外部（包括输入和输出）的部分通过wire连接到这一总模块的接口上，实现与CPU外部的交互。换句话说，本模块实现的是一个完整的基于MIPS 32的面向uCore设计的CPU模块类。

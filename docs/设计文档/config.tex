@@ -15,6 +15,7 @@
 \usepackage{IFthen}
 \usepackage{longtable}
 \usepackage{titlesec}
+\usepackage{lstautogobble}
 \usepackage[top = 1in, bottom = 1in, left = 1in, right = 1in]{geometry}
 
 % section居中
@@ -25,8 +26,8 @@
 % \setsansfont{Monaco} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
 
 % for windows
-\setmonofont[Mapping={}]{Menlo}  %英文引号之类的正常显示，相当于设置英文字体
-\setsansfont{Menlo} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
+\setmonofont[Mapping={}]{Courier New}  %英文引号之类的正常显示，相当于设置英文字体
+\setsansfont{Courier New} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
 
 \newcommand{\image}[3][3in]{
     \begin{figure}[H]
@@ -167,22 +168,28 @@
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
 \definecolor{mymauve}{rgb}{0.58,0,0.82}
 \lstset{ %
-    backgroundcolor=\color{white},   % choose the background color
+    % backgroundcolor=\color{white},   % choose the background color
     basicstyle=\footnotesize\ttfamily,        % size of fonts used for the code
-    columns=fullflexible,
+    % columns=fullflexible,
     breaklines=true,                 % automatic line breaking only at whitespace
-    captionpos=b,                    % sets the caption-position to bottom
+    % captionpos=b,                    % sets the caption-position to bottom
     tabsize=4,
-    backgroundcolor=\color[RGB]{245,245,244},            % 设定背景颜色
-    commentstyle=\color{mygreen},    % comment style
-    escapeinside={\%*}{*)},          % IF you want to add LaTeX within your code
-    keywordstyle=\color{blue},       % keyword style
-    stringstyle=\color{mymauve}\ttfamily,     % string literal style
+    % backgroundcolor=\color[RGB]{245,245,244},            % 设定背景颜色
+    commentstyle=\color{mygray},    % comment style
+    % escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+    % keywordstyle=\color{blue},       % keyword style
+    % stringstyle=\color{mymauve}\ttfamily,     % string literal style
     showstringspaces=false,                % 不显示字符串中的空格
-    frame=none,
-    rulesepcolor=\color{red!20!green!20!blue!20},
-    % identIFierstyle=\color{red},
-    language=python,
+    % frame=none,
+    % rulesepcolor=\color{red!20!green!20!blue!20},
+    % identifierstyle=\color{red},
+    rulecolor=\color{black},
+    frame=bt,
+    language=verilog,
+    keepspaces=true,
+    autogobble,
+    captionpos=b,
+    emphstyle=\bfseries\color{blue},
 }
 
 % 设置hyperlink的颜色

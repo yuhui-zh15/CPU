@@ -121,8 +121,8 @@ ucore编译完成后，便会被转化成一条条MIPS指令。通过进行qemu�
 首先列出ucore定义地址映射的关键文件：
 
 \tablefourL{文件}{关键变量}{值}{简介}
-    boot/bootasm.S & Flash\_START & 0xBE000000 & Flash的起始虚拟地址 \\
-                   & Flash\_SIZE &  0x01000000 & Flash的地址大小 \\
+    boot/bootasm.S & FLASH\_START & 0xBE000000 & Flash的起始虚拟地址 \\
+                   & FLASH\_SIZE &  0x01000000 & Flash的地址大小 \\
     \midrule
     kern/mm/memlayout.h & KMEMSIZE & 1M & 内存总大小 \\
     kern/include/mips\_vm.h &  MIPS\_KUSEG & 0x00000000 & kuseg段起始地址 \\

@@ -8,15 +8,31 @@ NonExist
 
 # Members
 
-张钰晖
+张钰晖 2015011372 计55 yuhui-zh15@mails.tsinghua.edu.cn
 
-杨一滨
+杨一滨 2015011353 计55 yyb15@mails.tsinghua.edu.cn
 
-周正平
+周正平 2015011314 计54 zhouzp15@mails.tsinghua.edu.cn
 
 # Requirement
 
 增加了简单双端block memory的IP core，需要在IP catalog选项里新增一个名称为gram，读写数据width=8bit，读写深度=480000的IP core便可以编译。
+
+# Organization
+
+根目录下包含设计CPU的verilog文件
+
+bitstream目录下包含编译生成的bit文件
+
+docs目录下包含文档文件
+
+functiontest目录下包含功能测例文件
+
+ucore目录下包含ucore操作系统文件
+
+testasm目录下包含单一指令测试文件
+
+tools目录下包含自己实现的Python-MIPS编译器、图片256色转换器、ROM生成器文件
 
 # Function Test
 
@@ -153,4 +169,3 @@ NonExist
 | 78   | JR\_DS     | 测试延迟槽 | P    | P       |
 | 79   | JALR\_DS   | 测试延迟槽 | P    | P       |
 
-> 功能测例自己会破坏自己，使用一个ram，仿真结果46，板子47，实际应该4b？！

@@ -1,0 +1,193 @@
+% !Mode:: "TeX:UTF-8"
+\documentclass{report}
+\usepackage[hyperref, UTF8]{ctex}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{listings}
+\usepackage{pgfplotstable}
+\usepackage{graphicx,float,wrapfig}
+\usepackage{pgfplots}
+\usepackage{fontspec}
+\usepackage{hyperref}
+\usepackage{booktabs} % 表格上的不同横线
+\usepackage{ifthen}
+\usepackage{titlesec}
+\usepackage[square,sort,comma,numbers]{natbib}
+\usepackage{url}
+\usepackage[top = 1in, bottom = 1in, left = 1in, right = 1in]{geometry}
+
+\titleformat*{\section}{\sanhao \bf \centering}
+
+\setmonofont[Mapping={}]{Courier New}  %英文引号之类的正常显示，相当于设置英文字体
+\setsansfont{Courier New} %设置英文字体 Monaco, Consolas,  Fantasque Sans Mono
+
+\newcommand{\image}[3][3in]{
+    \begin{figure}[H]
+        \centering\includegraphics[width=#1]{images/#2}
+        \caption{#3}
+    \end{figure}
+}
+
+\newcommand{\miniimage}[3][2.5in] {
+    \begin{minipage}[H]{0.4\linewidth}
+        \centering\includegraphics[width=#1]{images/#2}
+        \caption{#3}
+    \end{minipage}
+}
+
+\newcommand{\itembf}[1]{\item \textbf{#1}}
+
+\newcommand{\tabletwo}[2] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ c c }
+    \toprule
+    \textbf{#1} & \textbf{#2} \\
+    \midrule
+}
+
+\newcommand{\tabletwoL}[2] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ l l }
+    \toprule
+    \textbf{#1} & \textbf{#2} \\
+    \midrule
+}
+
+\newcommand{\tablethree}[3] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ c c c }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} \\
+    \midrule
+}
+
+\newcommand{\tablethreeL}[3] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ l l l }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} \\
+    \midrule
+}
+
+\newcommand{\tablefour}[4] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ c c c c }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} \\
+    \midrule
+}
+
+\newcommand{\tablefourL}[4] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ l l l l }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} \\
+    \midrule
+}
+
+\newcommand{\regtable}[5] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ l l p{8cm} l l }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} \\
+    \midrule
+}
+
+\newcommand{\tablefive}[5] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ c c c c c }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} \\
+    \midrule
+}
+
+\newcommand{\tablefiveL}[5] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ l l l l l }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} \\
+    \midrule
+}
+
+\newcommand{\tablesix}[6] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ c c c c c c }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} & \textbf{#6} \\
+    \midrule
+}
+
+\newcommand{\tablesixL}[6] {
+    \begin{table}[H] \centering
+    \begin{tabular}{ l l l l l l }
+    \toprule
+    \textbf{#1} & \textbf{#2} & \textbf{#3} & \textbf{#4} & \textbf{#5} & \textbf{#6} \\
+    \midrule
+}
+
+\newcommand{\tableend} {
+    \bottomrule
+    \end{tabular}
+    \end{table}
+}
+
+\newcommand{\tablecapend}[1] {
+    \bottomrule
+    \end{tabular}
+    \caption{#1}
+    \end{table}
+}
+
+\newcommand{\chuhao}{\fontsize{42pt}{\baselineskip}\selectfont}
+\newcommand{\xiaochuhao}{\fontsize{36pt}{\baselineskip}\selectfont}
+\newcommand{\yihao}{\fontsize{28pt}{\baselineskip}\selectfont}
+\newcommand{\erhao}{\fontsize{21pt}{\baselineskip}\selectfont}
+\newcommand{\xiaoerhao}{\fontsize{18pt}{\baselineskip}\selectfont}
+\newcommand{\sanhao}{\fontsize{15.75pt}{\baselineskip}\selectfont}
+\newcommand{\sihao}{\fontsize{14pt}{\baselineskip}\selectfont}
+\newcommand{\xiaosihao}{\fontsize{12pt}{\baselineskip}\selectfont}
+\newcommand{\wuhao}{\fontsize{10.5pt}{\baselineskip}\selectfont}
+\newcommand{\xiaowuhao}{\fontsize{9pt}{\baselineskip}\selectfont}
+\newcommand{\liuhao}{\fontsize{7.875pt}{\baselineskip}\selectfont}
+\newcommand{\shibahao}{\fontsize{18pt}{\baselineskip}\selectfont}
+\newcommand{\shisihao}{\fontsize{14pt}{\baselineskip}\selectfont}
+\newcommand{\qihao}{\fontsize{5.25pt}{\baselineskip}\selectfont}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\lstset{ %
+    % backgroundcolor=\color{white},   % choose the background color
+    basicstyle=\footnotesize\ttfamily,        % size of fonts used for the code
+    % columns=fullflexible,
+    % breaklines=true,                 % automatic line breaking only at whitespace
+    % captionpos=b,                    % sets the caption-position to bottom
+    % tabsize=4,
+    % backgroundcolor=\color[RGB]{245,245,244},            % 设定背景颜色
+    commentstyle=\color{mygray},    % comment style
+    % escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+    % keywordstyle=\color{blue},       % keyword style
+    % stringstyle=\color{mymauve}\ttfamily,     % string literal style
+    showstringspaces=false,                % 不显示字符串中的空格
+    % frame=none,
+    % rulesepcolor=\color{red!20!green!20!blue!20},
+    % identifierstyle=\color{red},
+    rulecolor=\color{black},
+    frame=single,
+    language=python,
+}
+
+% 设置hyperlink的颜色
+\newcommand\myshade{85}
+\colorlet{mylinkcolor}{violet}
+\colorlet{mycitecolor}{YellowOrange}
+\colorlet{myurlcolor}{Aquamarine}
+
+\hypersetup{
+  linkcolor  = mylinkcolor!\myshade!black,
+  citecolor  = mycitecolor!\myshade!black,
+  urlcolor   = myurlcolor!\myshade!black,
+  colorlinks = true,
+}

@@ -1,0 +1,143 @@
+\chapter{开发环境}
+
+这一部分对本项目涉及的开发环境进行说明。
+
+本章分为如下几个部分：
+
+\begin{enumerate}
+    \item {\bf 硬件端开发环境}：对实验开发板及其配套EDA工具进行说明
+    \item {\bf 软件端开发环境}：对ucore操作系统所需的编译流程、仿真方法、运行平台进行说明
+\end{enumerate}
+
+% 1. EDA工具
+%
+% 硬件端 平台  Thinpad开发板
+% 软件端 平台  Windows
+%       工具  开发工具：Vivado
+%             串口工具：串口调试精灵
+%             调试工具：二进制显示软件
+%
+% 2. MIPS运行环境
+%
+% 平台 Ubuntu
+% 工具     编译工具：mips-sde-elf
+%         仿真工具：qemu-thumips
+
+\section{硬件端开发环境}
+
+硬件端开发环境，主要包括实验开发板及配套的EDA开发工具。以下进行总结：
+
+\begin{enumerate}
+    \item {\bf Thinpad开发板（Late 2017版）}
+
+    \tabletwoL{元件}{型号}
+        FPGA & Xilinx Artix-7 xc7a100tfgg676-2L \\
+        RAM & IS61WV102416ALL 32位 2块 各4MB \\
+        Flash & JS28F640J3D75 8MB \\
+        HDMI & TFP410 \\
+    \tableend
+
+    \item {\bf EDA开发工具}
+
+    \tabletwoL{软件}{运行平台}
+        Vivado 2017.3 & Windows 10 64bit \\
+        串口调试精灵 & Windows 10 64bit \\
+        二进制显示软件 & Windows 10 64bit \\
+    \tableend
+
+    \item {\bf 云端硬件调试平台ThinpadCloud}
+
+    通过该在线平台，可以远程对开发板进行操控，而无需随身携带，极大地方便了调试。其网址如下：
+
+    \tabletwoL{平台}{网址}
+        ThinpadCloud & http://os.cs.tsinghua.edu.cn/thinpad/ \\
+    \tableend
+
+\end{enumerate}
+
+\section{软件端开发环境}
+
+软件端开发环境，主要指ucore操作系统所需的编译、仿真、运行环境。以下进行总结：
+
+\begin{enumerate}
+    \item {\bf 编译}
+
+    \tablefourL{工具}{版本号}{平台}{主要功能}
+        mips-sde-elf-gcc & 4.6.3 & Ubuntu 16.04 x64 & 编译ucore \\
+    \tableend
+
+    编译应按照如下流程进行：
+
+    \begin{enumerate}
+        \item {\bf 下载ucore-thumips源代码}
+
+        这里我们需下载ucore-thumips，是ucore操作系统的MIPS移植版本。
+        从其GitHub仓库\footnote{https://github.com/chyh1990/ucore-thumips}下载即可，不再赘述。
+
+        \item {\bf 安装mips-sde-elf-gcc}
+
+        \begin{enumerate}
+            \item 从Sourcery CodeBench官网\footnote{https://sourcery.mentor.com/GNUToolchain/release2189}下载文件mips-\{版本号\}-mips-sde-elf.bin
+            \item 执行\texttt{./mips-\{版本号\}-mips-sde-elf.bin}以执行默认安装向导，这一步骤之后应完成环境变量的配置。可输入\texttt{mips-sde-elf-gcc --version}进行验证。
+            \item 如环境变量配置不成功，应手动在$\sim$/.bashrc中加入\path{export PATH="{path/to/mipsgcc}/bin:$PATH"}并重启终端。
+        \end{enumerate}
+
+        \item {\bf 修改Makefile}
+
+        \tablethreeL{需修改的变量}{修改后的值}{说明}
+            GCCPREFIX & GCCPREFIX:=mips-sde-elf- & 用于指定编译工具 \\
+            \midrule
+            ON\_FPGA & y/n & y表示为FPGA编译，用于硬件上实际运行\\
+                    & & n表示为qemu模拟器编译，用于仿真调试 \\
+            \midrule
+            USER\_APPLIST & sh, ls, cat, ... & 指定ucore可支持的应用程序列表 \\
+                    & & 当ON\_FPGA=y时，默认仅支持sh命令， \\
+                    & & 后期调试通过后可增加其他命令 \\
+        \tableend
+
+        \item {\bf make}
+
+        输入\texttt{make}命令以编译。
+
+    \end{enumerate}
+
+    \item {\bf 仿真}
+
+    \tablethreeL{工具}{平台}{主要功能}
+        qemu-thumips & Ubuntu 16.04 x64 & 1. 通过修改thumips\_insn.txt，确定指令子集能否支持ucore \\
+                    & &                    2. 对比观察ucore在开发板和在模拟器上的运行输出，判断是否运行正确 \\
+    \tableend
+
+    仿真应按如下流程进行：
+
+    \begin{enumerate}
+        \item {\bf 下载qemu-thumips源代码}
+
+        这里我们需下载qemu-thumips，是qemu模拟器的MIPS移植版本。
+        从其GitHub仓库\footnote{https://github.com/chyh1990/QEMU-thumips}下载即可，不再赘述。
+
+        \item {\bf 配置}
+
+        输入\texttt{./configure –target-list=mipsel-softmmu}命令即可。
+
+        \item {\bf make}
+
+        输入\texttt{make}命令以编译。
+
+        需注意，这一步依具体平台可能出现链接错误。笔者出现的链接错误位于qemu-timer.o，最终通过修改Makefile与Makefile.target解决：
+
+        \begin{lstlisting}
+        # Makefile, line 37
+        LIBS+=-lz -lrt -lm $(LIBS_TOOLS)
+
+        # Makefile.target, line 37
+        LIBS+=-lz -lrt -lm
+        \end{lstlisting}
+
+    \end{enumerate}
+
+    \item {\bf 运行}
+
+    ucore经过编译后，应将生成的obj/ucore-kernel-initrd（注意根目录下flash.img是一个软链接文件，链接指向ucore-kernel-initrd）文件写入Flash中。详见``ucore需求分析''的``Boot阶段''一节。
+
+\end{enumerate}

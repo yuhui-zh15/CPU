@@ -1,0 +1,121 @@
+\chapter{32位监控程序}
+
+\section{简介概述}
+
+32位监控程序\footnote{文档地址：https://wyl8899.gitbooks.io/road-to-neptunus/content/；\\项目地址：https://git.net9.org/wyl8899/Neptunus}相当于一个微型操作系统，
+其内核使用MIPS 32汇编语言编写（位于monitor/kern/目录），客户端终端应用程序使用Python语言编写（term/term.py文件）。
+
+监控程序主要用于小范围的系统测试，将指令集中的23条指令综合使用，以确保其作为一个整体的正确性。
+
+相比功能测例，监控程序增加了对BootLoader、中断以及串口的需求，因此对外设的测试覆盖面大大扩展。此外，它还支持TLB的测试，但需要增加2条TLB指令（TLBP、TLBR）。
+我们因此没有采用监控程序进行TLB的测试。
+
+监控程序的主要流程如下：
+
+\begin{enumerate}
+    \item {\bf Boot阶段}：硬件初始化时置PC值为VA 0xBFC00000，读取ROM中存储的BootLoader，将Flash中存储的监控程序拷贝至RAM。拷贝结束后跳转至启动入口VA 0x80000000。
+    \item {\bf 系统初始化}：系统初始化阶段暂停中断处理，而后对CP0的Status、Cause、Ebase寄存器进行初始化，最后进入正常中断模式。
+    \item {\bf 启动完毕}：启动shell主线程，向串口打印启动信息。
+
+    用户在终端可以执行以下命令来验证监控程序正确运行（其中的参数均为32位，使用小端序）：
+    \begin{itemize}
+        \item {\bf R}：\texttt{R}
+
+        按照\$1至\$30的顺序返回用户空间寄存器值。
+
+        \item {\bf D}：\texttt{D <addr> <num>}
+
+        按照小端序返回指定地址连续num字节。
+
+        \item {\bf A}：\texttt{A <addr> <num> <content>}
+
+        在指定地址写入content。约定content有num字节，并且num为4的倍数。
+
+        \item {\bf G}：\texttt{G <addr>}
+
+        执行指定地址的用户程序。ra传递正常退出地址。
+
+        \item {\bf T}：\texttt{T <num>}
+
+        查看index=num的TLB项，依次回传ENTRYHI, ENTRYLO0, ENTRYLO1共12字节。
+
+    \end{itemize}
+\end{enumerate}
+
+\section{测试范畴}
+
+\subsection{测试覆盖面}
+
+\image[5in]{monitor}{32位监控程序测试范畴（绿-可以测试；灰-不能测试）}
+
+32位监控程序主要测试了CPU的以下部件是否实现正确：
+
+\begin{enumerate}
+    \item {\bf 五级流水线}：包括IF、ID、EX、MEM、WB共5个模块。
+    \item {\bf 寄存器}：包括寄存器堆（32个通用寄存器）、HI/LO寄存器共2个模块。
+    \item {\bf CP0}：包括CP0共1个模块。
+    \item {\bf Control}：包括Control（流水线控制器）共1个模块。
+    \item {\bf ROM}：包括ROM（存储BootLoader）共1个外部设备。
+    \item {\bf RAM}：包括RAM（用作内存）共1个外部设备。
+    \item {\bf Flash}：包括Flash（存储监控程序）共1个外部设备。
+    \item {\bf 串口}：包括串口（用于与用户终端交互）共1个外部设备。
+\end{enumerate}
+
+32位监控程序不能全面测试的CPU部件包括：
+
+\begin{enumerate}
+    \item {\bf MMU}：我们没有打开监控程序的TLB选项，故不能全面测试MMU。
+\end{enumerate}
+
+\subsection{测试要点}
+
+除去功能测例已经较为完整地测试过了的指令集合之外，32位监控程序的测试要点集中于访存（包括对外部设备的时序调度）与异常处理方面：
+
+\begin{enumerate}
+    \item {\bf ROM与BootLoader}：能正确地读取ROM，并运行BootLoader完成引导过程。
+    \item {\bf RAM}：能正确实现内存的读写操作。
+    \item {\bf Flash}：能正确地读取Flash中存储的监控程序，以完成BootLoader阶段的拷贝任务。
+    \item {\bf 串口}：能正常地读写串口，以实现用户终端的标准输入、输出。
+    \item {\bf 异常处理}：能正确处理硬件中断（包括时钟中断、串口中断）、Syscall异常、计算溢出异常。
+\end{enumerate}
+
+\section{测试方式}
+
+32位监控程序的测试分为如下步骤：
+
+\begin{enumerate}
+    \item {\bf 系统初始化}
+
+    \begin{enumerate}
+        \item 将BootLoader编译后写入ROM对应的Verilog文件中。
+        \item 将监控程序编译后烧写入Flash的地址0x0处。
+        \item 将CPU的.bit设计文件烧写入开发板FPGA中。
+        \item 点击开发板上Reset开关启动系统。
+    \end{enumerate}
+
+    \item {\bf 启动客户端（监控程序终端）}
+
+    \begin{enumerate}
+        \item 将开发板的USB接口连接至PC端，以建立串口通信。
+        \item 在PC端（Ubuntu 16.04 x64系统）监控程序的term/目录下运行\texttt{python term.py <pipe\_path>}即可启动用户终端。
+        \item 可以输入R、D、A、G、T共5种指令以验证监控程序已正确运行。
+    \end{enumerate}
+
+\end{enumerate}
+
+\section{测试结果}
+
+% <TODO>：截图 无截图
+
+经测试，监控程序可以正常启动，但是运行结果与预期不符。经检测，这是因为其软件实现存在bug。
+
+\section{问题与解决}
+
+例如下面这些：
+
+\begin{enumerate}
+    \item {\bf Flash地址总线的一个bug}：\url{http://47.94.142.165:8088/gitlab/PRJ11_NonExist/CPU/commit/920973a3a1a28f027a85e275d703c3eec8cce6df}
+    \item {\bf Control模块中的异常处理入口设置}：\url{http://47.94.142.165:8088/gitlab/PRJ11_NonExist/CPU/commit/35971df28621af7772590fdef9ffc4a80d20ba18}
+    \item {\bf 增加ExtRAM}：\url{http://47.94.142.165:8088/gitlab/PRJ11_NonExist/CPU/commit/260859a2e6f35cb455533210daa7dc349d88a1a5}
+    \item {\bf 串口接收端的一个bug}：\url{http://47.94.142.165:8088/gitlab/PRJ11_NonExist/CPU/commit/200a69e2bebbc24fb5d47f18f098c29b096652b9}
+\end{enumerate}

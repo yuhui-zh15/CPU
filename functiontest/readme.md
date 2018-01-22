@@ -128,7 +128,7 @@ n1\_add\_test 功能测试子程序如下：
 	10    lui a0, 0x100
 	11    li v0, 0x0
 	12  ###test inst
-	13    TEST_ADD(0x0480ff04, 0x40933204, 0x45143108)
+	13    	(0x0480ff04, 0x40933204, 0x45143108)
 	14    TEST_ADD(0x2a19dd40, 0xa87971e0, 0xd2934f20)
 	…
 	211   TEST_ADD(0x25e5fad8, 0x00000000, 0x25e5fad8)

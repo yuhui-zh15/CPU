@@ -1,0 +1,725 @@
+\chapter{功能测例}
+
+\section{简介概述}
+
+功能测例由汇编语言实现，主要用于测试CPU指令实现是否正确。
+
+功能测例涵盖了91项测试，其中根据我们CPU最终完成情况，75项是可测测例。
+
+在此基础上，我们又增添了针对TLB操作指令TLBWI和TLBWR两条指令的测例，故总计77项测例。
+
+% <TODO>读一读功能测例的程序，贴一下代码，分析一下原理，说一说测试程序为什么很好。（极大地减轻了我们写功能测例的时间，对比之前文档可以看出来学长都是自己搞的）
+
+功能测例由MIPS 32汇编语言编写。以下以第1个测试点ADD的流程为例，说明其程序结构。
+
+\image[3.5in]{test_frame}{功能测例程序框架}
+
+\begin{enumerate}
+    \item {\bf 主程序}：整个测试程序连续执行若干\emph{测试点}，每个测试点结束后停顿1s。
+
+    例如，以下为主程序start.S中调用测试点ADD的代码片段：
+
+    \begin{lstlisting}
+    inst_test:
+        jal n1_add_test   #add
+        nop
+        jal wait_1s
+        nop
+    \end{lstlisting}
+
+    \item {\bf 测试点}：每个测试点对应于一条指令。
+
+    例如，n1\_add\_test 测试点的代码片段如下：
+
+    \begin{lstlisting}[emph={TEST\_ADD}, caption={inst/n1\_add.S}]
+    9   LEAF(n1_add_test)
+	10      lui a0, 0x100
+	11      li v0, 0x0
+	12  ###test inst
+	13    	TEST_ADD(0x0480ff04, 0x40933204, 0x45143108)    # num1, num2 both random
+	14      TEST_ADD(0x2a19dd40, 0xa87971e0, 0xd2934f20)
+    ...
+	211     TEST_ADD(0x25e5fad8, 0x00000000, 0x25e5fad8)    # num1 == 0 or num2 == 0
+	212     TEST_ADD(0x00000000, 0xdcaf5e62, 0xdcaf5e62)
+    ...
+	262     TEST_ADD(0x00000000, 0x00000000, 0x00000000)    # num1 == 0 and num2 == 0
+	263 ###detect exception
+	264     bne v0, zero, inst_error
+	265     nop
+	266 ###score ++
+	267     addiu s3, s3, 1
+	268 ###output a0|s3
+	269 inst_error:
+	270     or t0, a0, s3
+	271     sw t0, 0(s1)
+	272     jr ra
+	273     nop
+	274 END(n1_add_test)
+    \end{lstlisting}
+
+    \paragraph{初始化}
+    其中，第 10 行 a0 寄存器存储了测试功能点编号值，这里为 0x1；第 11 行 v0 寄存器存储的是例外检
+    测，初始值为 0，如果程序出现例外会置为 0xFFFF0000。
+
+    \paragraph{指令执行}
+    第 12 行到第 262 行为测试指令，分别测试了加数 1 和 2 都是随机数、加数 1 或 2 是 0、加数 1 和 2 都是 0 的情况。
+    其中，宏TEST\_ADD 调用宏ADD执行指令，并判断目的寄存器 s0 的值是否与正确结果 s2 寄存器的值一致；
+    宏ADD 将加数 1 装载于寄存器 t0，加数 2 装载于寄存器 t1，加法结果位于寄存器 s0：
+
+    \begin{figure}[H]
+        \centering
+        \begin{minipage}{0.4\textwidth}
+            \begin{lstlisting}[emph={ADD}, language=c]
+            #define TEST_ADD(vs, vt, vd) \
+                ADD(vs, vt); \
+                li s2, vd; \
+                bne s0, s2, inst_error; \
+                nop
+            \end{lstlisting}
+        \end{minipage}
+        \hspace{0.5cm}
+        \begin{minipage}{0.4\textwidth}
+            \begin{lstlisting}[language=c]
+            // ADD
+            #define ADD(v0, v1) \
+                li t0, v0; \
+                li t1, v1; \
+                add s0, t0, t1
+            \end{lstlisting}
+        \end{minipage}
+    \end{figure}
+
+    \paragraph{错误检测}
+    第 263-265 行通过寄存器v0判断测试过程中是否出现例外，
+    正确情况下没有例外；如出现例外则跳转到inst\_error。
+
+    \paragraph{测试通过时计数器+1}
+    第 266-267 行，s3 寄存器存测试分值，测试通过一个功能点加 1 分；第 268-273 行
+    为测试结束，将测试编号和测试分值输出显示并返回主程序。
+
+\end{enumerate}
+
+可以看出，功能测例对指令集有着较高的覆盖率、较全面鲁棒的测试数据、较清晰的代码结构，并且可以自动验证执行的正确性，帮助开发者大量减少了自行编写测例的时间。
+
+\section{测试范畴}
+
+\subsection{测试覆盖面}
+
+\image[5in]{functest}{功能测例测试范畴（绿-可以测试；灰-不能测试）}
+
+功能测例主要测试了CPU以下部件是否实现正确：
+
+\begin{enumerate}
+    \item {\bf 五级流水线}：包括IF、ID、EX、MEM、WB共5个模块。
+    \item {\bf 寄存器}：包括寄存器堆（32个通用寄存器）、HI/LO寄存器共2个模块。
+    \item {\bf Control}：包括Control（流水线控制器）共1个模块。
+    \item {\bf RAM}：包括RAM（用作内存）共1个外部设备。
+\end{enumerate}
+
+% TODO：功能测例不是有测异常的代码吗？
+功能测例不能全面测试的CPU部件包括：
+
+\begin{enumerate}
+    \item {\bf CP0}：功能测例不能测试TLB MISS、中断等异常，故不能全面测试CP0。
+    \item {\bf MMU}：功能测例不需要TLB进行地址映射，故不能全面测试MMU。
+    \item {\bf ROM}：功能测例不需要BootLoader进行引导，故不能测试ROM。
+    \item {\bf Flash}：功能测例烧录在BaseRAM中，不需要存入硬盘，故不能测试Flash。
+    \item {\bf 串口}：功能测例不需要标准输入/输出，故不能测试串口。
+\end{enumerate}
+
+\subsection{测试要点}
+
+功能测例的测试要点包括如下几个部分：
+
+\begin{enumerate}
+    \item {\bf 算术运算指令}：共12条，测试加、减、乘等指令。
+    \item {\bf 逻辑运算指令}：共14条，测试与、或、移位等指令。
+    \item {\bf 分支跳转指令}：共10条，测试B/J型指令。
+    \item {\bf HI/LO寄存器指令}：共4条，测试对HI/LO寄存器的读写。
+    \item {\bf CP0相关指令}：共4条，包括SYSCALL、ERET、读/写CP0等指令。这一部分也测试部分异常处理行为。
+    \item {\bf 访存指令}：共8条，包括L/S型指令。
+    \item {\bf 异常指令}：共13条，其中的指令会触发整型溢出异常、地址未对齐异常、发生于延迟槽的异常等。
+    \item {\bf 延迟槽指令}：共10条，其中的被测指令位于延迟槽中。
+\end{enumerate}
+
+此外，笔者新增了2条针对TLB的功能测例：
+
+\begin{enumerate}
+    \item {\bf TLBWI}：测试指令TLBWI。测试文件如下：
+
+    \begin{lstlisting}[caption={n92\_tlbwi.S}, emph={TEST\_TLBWI}]
+    LEAF(n92_tlbwi_test)
+        .set noreorder
+        lui  a0, 0x100
+        li  v0, 0x0
+    ###test inst
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x0, 0x61754443, 0x000007a0)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x1, 0x5c4fb45a, 0x00000aac)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x2, 0x14908300, 0x00000ae8)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x3, 0x516da739, 0x000000cc)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x4, 0x85675a34, 0x00000510)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x5, 0x0e4dac98, 0x00000040)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x6, 0xd9c6eddb, 0x00000180)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x7, 0x5753dd01, 0x00000ca0)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x8, 0xe543b9f3, 0x0000031c)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0x9, 0x4726aca2, 0x00000cf8)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0xa, 0xb022040a, 0x00000800)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0xb, 0x5ca0fd00, 0x00000834)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0xc, 0x063ba000, 0x00000c64)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0xd, 0xc2268cfe, 0x000001e8)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0xe, 0x1611444c, 0x00000484)
+        TEST_TLBWI(0x0, 0x4002, 0x4042, 0xf, 0x33cc6f2a, 0x000001dc)
+    ###detect exception
+        bne v0, zero, inst_error
+        nop
+    ###score ++
+        addiu s3, s3, 1
+    ###output a0|s3
+    inst_error:
+        or t0, a0, s3
+        sw t0, 0(s1)
+        jr ra
+        nop
+    END(n92_tlbwi_test)
+    \end{lstlisting}
+
+    宏TEST\_TLBWI会依次将CP0的Index寄存器赋值为0x0, 0x1, ..., 0xF，并依次调用TLBWI指令写TLB表项。最终，通过先向基址处写入数据再读出，判断其是否与原数据相等，作为测试通过的依据：
+
+    \begin{lstlisting}[caption={inst\_test.h}]
+    /* 92
+     * TEST_TLBWI(ENTRYHI, ENTRYLO0, ENTRYLO1, INDEX, data, base_addr)
+     */
+    #define TEST_TLBWI(entryhi, entrylo0, entrylo1, index, data, base_addr) \
+    	li s2, 0; \
+    	mtc0 s2, c0_entrylo0; \
+    	mtc0 s2, c0_entrylo1; \
+    	mtc0 s2, c0_entryhi; \
+    	li s2, 0; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 1; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 2; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 3; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 4; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 5; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 6; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 7; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 8; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 9; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 10; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 11; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 12; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 13; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 14; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 15; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, entryhi; \
+    	mtc0 s2, c0_entryhi; \
+    	li s2, entrylo0; \
+    	mtc0 s2, c0_entrylo0; \
+    	li s2, entrylo1; \
+    	mtc0 s2, c0_entrylo1; \
+    	li s2, index; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li t1, data; \
+    	li t0, base_addr; \
+    	sw t1, 0x0(t0); \
+    	lw s0, 0x0(t0); \
+        li s2, data; \
+        bne s0, s2, inst_error; \
+        nop
+    \end{lstlisting}
+
+    \item {\bf TLBWR}：测试指令TLBWR。测试文件如下：
+
+    \begin{lstlisting}[caption={n93\_tlbwr.S}, emph={TEST\_TLBWR}]
+    LEAF(n93_tlbwr_test)
+        .set noreorder
+        lui  a0, 0x100
+        li  v0, 0x0
+    ###test inst
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x61754443, 0x000007a0)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x5c4fb45a, 0x00000aac)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x14908300, 0x00000ae8)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x516da739, 0x000000cc)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x85675a34, 0x00000510)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x0e4dac98, 0x00000040)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0xd9c6eddb, 0x00000180)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x5753dd01, 0x00000ca0)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0xe543b9f3, 0x0000031c)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x4726aca2, 0x00000cf8)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0xb022040a, 0x00000800)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x5ca0fd00, 0x00000834)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x063ba000, 0x00000c64)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0xc2268cfe, 0x000001e8)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x1611444c, 0x00000484)
+        TEST_TLBWR(0x0, 0x4002, 0x4042, 0x33cc6f2a, 0x000001dc)
+    ###detect exception
+        bne v0, zero, inst_error
+        nop
+    ###score ++
+        addiu s3, s3, 1
+    ###output a0|s3
+    inst_error:
+        or t0, a0, s3
+        sw t0, 0(s1)
+        jr ra
+        nop
+    END(n93_tlbwr_test)
+    \end{lstlisting}
+
+    宏TEST\_TLBWR会首先调用TLBWI指令共15次以清空所有TLB表项；然后调用TLBWR指令写入其中一个表项。最终，通过先向基址处写入数据再读出，判断其是否与原数据相等，作为测试通过的依据：
+
+    \begin{lstlisting}
+    /* 93
+     * TEST_TLBWR(ENTRYHI, ENTRYLO0, ENTRYLO1, data, base_addr)
+     */
+    #define TEST_TLBWR(entryhi, entrylo0, entrylo1, data, base_addr) \
+    	li s2, 0; \
+    	mtc0 s2, c0_entrylo0; \
+    	mtc0 s2, c0_entrylo1; \
+    	mtc0 s2, c0_entryhi; \
+    	li s2, 0; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 1; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 2; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 3; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 4; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 5; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 6; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 7; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 8; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 9; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 10; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 11; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 12; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 13; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 14; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, 15; \
+    	mtc0 s2, c0_index; \
+    	tlbwi; \
+    	li s2, entryhi; \
+    	mtc0 s2, c0_entryhi; \
+    	li s2, entrylo0; \
+    	mtc0 s2, c0_entrylo0; \
+    	li s2, entrylo1; \
+    	mtc0 s2, c0_entrylo1; \
+    	tlbwr; \
+    	li t1, data; \
+    	li t0, base_addr; \
+    	sw t1, 0x0(t0); \
+    	lw s0, 0x0(t0); \
+        li s2, data; \
+        bne s0, s2, inst_error; \
+        nop
+    \end{lstlisting}
+
+\end{enumerate}
+
+\section{测试方式}
+
+\subsection{仿真阶段}
+
+仿真阶段的主要目的在于首先借助EDA工具（Vivado）方便的仿真调试功能，找出显而易见、较为简单的bug，以减轻接下来在硬件上测试调试的负担。
+
+这一阶段仅测试CPU位于FPGA内部的核心逻辑是否正确，需使用自己模拟的RAM模块和Flash模块。
+
+\paragraph{测试顶层文件} 本阶段测试所用的顶层文件（最小SOPC）如下。其中相比上一阶段，增加了对Flash的控制接口，并且包括BaseRAM和ExtRAM共2块RAM的接口，更好地模拟了开发板的真实情况：
+
+\begin{lstlisting}[language=verilog, caption={仿真测试顶层文件thinpad\_min\_sopc.v}]
+`include "defines.v"
+`timescale 1ns/1ps
+
+module thinpad_min_sopc();
+
+    wire [31:0] ram_data;
+    wire [19:0] ram_addr;
+    wire [3:0] ram_be_n;
+    wire ram_ce_n;
+    wire ram_we_n;
+    wire [31:0] ext_ram_data;
+    wire [19:0] ext_ram_addr;
+    wire [3:0] ext_ram_be_n;
+    wire ext_ram_ce_n;
+    wire ext_ram_we_n;
+    wire [5:0] touch_btn;
+    wire [22:0] flash_addr;
+    wire [15:0] flash_data;
+
+    reg clk;
+    reg clk_25;
+    reg CLOCK_11059200;
+    reg rst;
+
+    initial begin
+        clk = 1'b0;
+        forever #10 clk = ~clk;
+    end
+    initial begin
+        clk_25 = 1'b0;
+        forever #20 clk_25 = ~clk_25;
+    end
+    initial begin
+        CLOCK_11059200 = 1'b0;
+        forever #45.211227 CLOCK_11059200 = ~CLOCK_11059200;
+    end
+
+    initial begin
+        rst = 1'b1;
+        #195 rst = 1'b0;
+        #500000000 $stop;
+    end
+
+    assign touch_btn = {rst, 5'b00000};
+
+    thinpad_top thinpad_top0(
+        .clk_in(clk),
+        .clk_uart_in(CLOCK_11059200),
+        .touch_btn(touch_btn),
+        .base_ram_data(ram_data),
+        .base_ram_addr(ram_addr),
+        .base_ram_be_n(ram_be_n),
+        .base_ram_we_n(ram_we_n),
+        .base_ram_ce_n(ram_ce_n),
+        .ext_ram_data(ext_ram_data),
+        .ext_ram_addr(ext_ram_addr),
+        .ext_ram_be_n(ext_ram_be_n),
+        .ext_ram_we_n(ext_ram_we_n),
+        .ext_ram_ce_n(ext_ram_ce_n),
+        .flash_data(flash_data),
+        .flash_a(flash_addr)
+
+    );
+
+    flash flash0(
+        .clk(clk),
+        .a(flash_addr[22:1]),
+        .data(flash_data)
+    );
+
+    ram ram0(
+        .clk(clk),
+        .we(ram_we_n),
+        .addr(ram_addr),
+        .be(ram_be_n),
+        .data(ram_data),
+        .ce(ram_ce_n)
+    );
+
+    ram ram1(
+        .clk(clk),
+        .we(ext_ram_we_n),
+        .addr(ext_ram_addr),
+        .be(ext_ram_be_n),
+        .data(ext_ram_data),
+        .ce(ext_ram_ce_n)
+    );
+
+endmodule // openmips_min_sopc
+\end{lstlisting}
+
+
+\paragraph{模拟RAM}
+模拟的RAM模块需首先将功能测例编译后的二进制文件转换成Verilog可接受的ASC-II文本文件，而后在initial语句中导入该文件，将CPU指令计数器置为0x80000000，开始仿真运行：
+
+\begin{lstlisting}[language=verilog, caption={模拟RAM ram.v}]
+module ram(
+    input wire clk,
+    input wire ce,
+    input wire we,
+    input wire oe,
+    input wire[19:0] addr,
+    input wire[3:0] be,
+    inout wire[31:0] data
+);
+    reg[31:0] data_ram[0:1048575];
+
+    initial $readmemh ("ram.data", data_ram);
+
+    assign oe = 1'b0;
+
+    always @(posedge clk) begin
+        if (ce == 1'b1) begin
+
+        end else if (we == 1'b0) begin
+            if (be[3] == 1'b0) begin
+                data_ram[addr][7:0] <= data[31:24];
+            end
+            if (be[2] == 1'b0) begin
+                data_ram[addr][15:8] <= data[23:16];
+            end
+            if (be[1] == 1'b0) begin
+                data_ram[addr][23:16] <= data[15:8];
+            end
+            if (be[0] == 1'b0) begin
+                data_ram[addr][31:24] <= data[7:0];
+            end
+        end
+    end
+
+    assign data = we? { data_ram[addr][7:0], data_ram[addr][15:8], data_ram[addr][23:16], data_ram[addr][31:24] }: 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;
+
+endmodule // data_ram
+\end{lstlisting}
+
+
+\paragraph{模拟Flash}
+模拟的Flash与模拟RAM类似，同样在其initial块中导入数据：
+
+\begin{lstlisting}
+module flash(
+    input wire clk,
+    input wire ce,
+    input wire we,
+    input wire oe,
+    input wire rp,
+    input wire byte,
+    input wire[21:0] a,
+    inout wire[15:0] data
+);
+    reg[15:0] data_flash[0:4194303];
+
+    initial $readmemh ("flash.data", data_flash);
+
+    assign rp = 1'b1;
+    assign byte = 1'b1;
+    assign we = 1'b1;
+    assign oe = 1'b0;
+    assign ce = 1'b0;
+
+    assign data = { data_flash[a][7:0], data_flash[a][15:8] };
+
+endmodule // data_flash
+\end{lstlisting}
+
+
+\begin{lstlisting}[language=verilog, caption={ram.v的initial块}]
+     initial $readmemh ("ram.data", data_ram);
+\end{lstlisting}
+
+通过阅读功能测例的代码我们可知，19号寄存器的数值存放了功能测例的通过条数。因此，只需在仿真中观察该寄存器的值是否随着每个测试点的结束自增1即可。
+
+\subsection{硬件阶段}
+
+硬件阶段的主要目的在于在真实开发板上运行功能测例，加入对RAM部分的测试，并找出CPU可能存在的时序漏洞。
+
+在这一阶段，需将功能测例定义的七段数码管地址通过MMU映射至开发板的七段数码管，将编译后的功能测例烧入BaseRAM中，则七段数码管显示的即为测试点的通过个数。
+
+\begin{lstlisting}[language=c, caption={start.S中定义的LED与七段数码管地址}]
+    #define LED_ADDR  0xbfd0f000    // LED virtual address
+    #define NUM_ADDR  0xbfd0f010    // 7-segments digital display virtual address
+\end{lstlisting}
+
+\section{测试结果}
+
+77条功能测例全部通过，见以下表格（其中硬件测试时钟频率为25MHz，``P''-通过，``N''-无需实现）。
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+1    & ADD   & 执行 ADD 指令是否产生正确的运算结果（未测试整型溢出例外的情况）  & P    & P       \\
+2    & ADDI  & 执行 ADDI 指令是否产生正确的运算结果（未测试整型溢出例外的情况） & P    & P       \\
+3    & ADDU  & 执行 ADDU 指令是否产生正确的运算结果               & P    & P       \\
+4    & ADDIU & 执行 ADDIU 指令是否产生正确的运算结果              & P    & P       \\
+5    & SUB   & 执行 SUB 指令是否产生正确的运算结果（未测试整型溢出例外的情况）  & P    & P       \\
+6    & SUBU  & 执行 SUBU 指令是否产生正确的运算结果               & P    & P       \\
+7    & SLT   & 执行 SLT 指令是否产生正确的运算结果                & P    & P       \\
+8    & SLTI  & 执行 SLTI 指令是否产生正确的运算结果               & P    & P       \\
+9    & SLTU  & 执行 SLTU 指令是否产生正确的运算结果               & P    & P       \\
+10   & SLTIU & 执行 SLTIU 指令是否产生正确的运算结果              & P    & P       \\
+11   & DIV   & 执行 DIV 指令是否产生正确的运算结果                & N    & N       \\
+12   & DIVU  & 执行 DIVU 指令是否产生正确的运算结果               & N    & N       \\
+13   & MULT  & 执行 MULT 指令是否产生正确的运算结果               & P    & P       \\
+14   & MULTU & 执行 MULTU 指令是否产生正确的运算结果              & P    & P       \\
+\testtableend{算术运算指令（共12(0xC)条）}
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+15   & AND  & 执行 AND 指令是否产生正确的运算结果  & P    & P       \\
+16   & ANDI & 执行 ANDI 指令是否产生正确的运算结果 & P    & P       \\
+17   & LUI  & 执行 LUI 指令是否产生正确的运算结果  & P    & P       \\
+18   & NOR  & 执行 NOR 指令是否产生正确的运算结果  & P    & P       \\
+19   & OR   & 执行 OR 指令是否产生正确的运算结果   & P    & P       \\
+20   & ORI  & 执行 ORI 指令是否产生正确的运算结果  & P    & P       \\
+21   & XOR  & 执行 XOR 指令是否产生正确的运算结果  & P    & P       \\
+22   & XORI & 执行 XORI 指令是否产生正确的运算结果 & P    & P       \\
+23   & SLLV & 执行 SLLV 指令是否产生正确的移位结果 & P    & P       \\
+24   & SLL  & 执行 SLL 指令是否产生正确的移位结果  & P    & P       \\
+25   & SRAV & 执行 SRAV 指令是否产生正确的移位结果 & P    & P       \\
+26   & SRA  & 执行 SRA 指令是否产生正确的移位结果  & P    & P       \\
+27   & SRLV & 执行 SRLV 指令是否产生正确的移位结果 & P    & P       \\
+28   & SRL  & 执行 SRL 指令是否产生正确的移位结果  & P    & P       \\
+\testtableend{逻辑运算指令（共14(0xE)条）}
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+29   & BEQ    & 执行 BEQ 指令是否产生正确的判断和跳转结果（延迟槽指令为nop，未测试延迟槽） & P    & P       \\
+30   & BNE    & 执行 BNE 指令是否产生正确的判断和跳转结果（延迟槽指令为nop，未测试延迟槽） & P    & P       \\
+31   & BGEZ   & 执行 BGEZ 指令是否产生正确的判断和跳转结果（延迟槽指令为 nop，未测试延迟槽） & P    & P       \\
+32   & BGTZ   & 执行 BGTZ 指令是否产生正确的判断和跳转结果（延迟槽指令为 nop，未测试延迟槽） & P    & P       \\
+33   & BLEZ   & 执行 BLEZ 指令是否产生正确的判断和跳转结果（延迟槽指令为 nop，未测试延迟槽） & P    & P       \\
+34   & BLTZ   & 执行 BLTZ 指令是否产生正确的判断和跳转结果（延迟槽指令为 nop，未测试延迟槽） & P    & P       \\
+35   & BGEZAL & 执行 BGEZAL 指令是否产生正确的判断、跳转和链接结果（延迟槽指令为 nop，未测试延迟槽） & N    & N       \\
+36   & BLTZAL & 执行 BLTZAL 指令是否产生正确的判断、跳转和链接结果（延迟槽指令为 nop，未测试延迟槽） & N    & N       \\
+37   & J      & 执行 J 指令是否产生正确的跳转结果（延迟槽指令为 nop，未测试延迟槽）    & P    & P       \\
+38   & JAL    & 执行 JAL 指令是否产生正确的跳转和链接结果（延迟槽指令为nop，未测试延迟槽） & P    & P       \\
+39   & JR     & 执行 JR 指令是否产生正确的跳转结果（延迟槽指令为 nop，未测试延迟槽）   & P    & P       \\
+40   & JALR   & 执行 JALR 指令是否产生正确的跳转和链接结果（延迟槽指令为 nop，未测试延迟槽） & P    & P       \\
+\testtableend{分支跳转指令（共10(0xA)条）}
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+41   & MFHI & 执行 MTHI 指令是否正确地将寄存器值写入 HI 寄存器，执行MFHI 指令是否正确地读出 HI 寄存器的值到寄存器 & P    & P       \\
+42   & MFLO & 执行 MTLO 指令是否正确地将寄存器值写入 LO 寄存器，执行MFLO 指令是否正确地读出 LO 寄存器的值到寄存器 & P    & P       \\
+43   & MTHI & 执行 MTHI 指令是否正确地将寄存器值写入 HI 寄存器，执行MFHI 指令是否正确地读出 HI 寄存器的值到寄存器 & P    & P       \\
+44   & MTLO & 执行 MTLO 指令是否正确地将寄存器值写入 HI 寄存器，执行MFLO 指令是否正确地读出 HI 寄存器的值到寄存器 & P    & P       \\
+\testtableend{HILO寄存器指令（共4(0x4)条）}
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+45   & BREAK   & 执行 BREAK 指令是否正确地产生断点例外                   & N    & N       \\
+46   & SYSCALL & 执行 SYSCALL 指令是否正确地产生系统调用例外               & P    & P       \\
+55   & ERET    & 执行 ERET 指令是否正确地从中断、例外处理程序返回              & P    & P       \\
+56   & MFC0    & 执行 MTC0 指令是否正确地将寄存器值写入目的 CP0 寄存器，执行 MFC0 指令是否正确地读出源 CP0 寄存器的值到寄存器 & P    & P       \\
+57   & MTC0    & 执行 MTC0 指令是否正确地将寄存器值写入目的 CP0 寄存器，执行 MFC0 指令是否正确地读出源 CP0 寄存器的值到寄存器 & P    & P       \\
+\testtableend{CP0指令（共4(0x4)条）}
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+47   & LB   & 结合 SW 指令，执行 LB 指令是否产生正确的访存结果  & P    & P       \\
+48   & LBU  & 结合 SW 指令，执行 LBU 指令是否产生正确的访存结果 & P    & P       \\
+49   & LH   & 结合 SW 指令，执行 LH 指令是否产生正确的访存结果  & P    & P       \\
+50   & LHU  & 结合 SW 指令，执行 LHU 指令是否产生正确的访存结果 & P    & P       \\
+51   & LW   & 结合 SW 指令，执行 LW 指令是否产生正确的访存结果  & P    & P       \\
+52   & SB   & 结合 LW 指令，执行 SB 指令是否产生正确的访存结果  & P    & P       \\
+53   & SH   & 结合 LW 指令，执行 SH 指令是否产生正确的访存结果  & P    & P       \\
+54   & SW   & 结合 LW 指令，执行 SW 指令是否产生正确的访存结果  & P    & P       \\
+\testtableend{访存指令（共8(0x8)条）}
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+58   & ADD\_EX                   & 测试 ADD 指令整型溢出例外    & P    & P       \\
+59   & ADDI\_EX                  & 测试 ADDI 指令整型溢出例外   & P    & P       \\
+60   & SUB\_EX                   & 测试 SUB 指令整型溢出例外    & P    & P       \\
+61   & LH\_EX                    & 测试 LH 指令访存地址非对齐例外  & N    & N       \\
+62   & LHU\_EX                   & 测试 LHU 指令访存地址非对齐例外 & N    & N       \\
+63   & LW\_EX                    & 测试 LW 指令访存地址非对齐例外  & N    & N       \\
+64   & SH\_EX                    & 测试 SH 指令访存地址非对齐例外  & N    & N       \\
+65   & SW\_EX                    & 测试 SW 指令访存地址非对齐例外  & N    & N       \\
+66   & ERET\_EX                  & 测试取指地址非对齐例外        & N    & N       \\
+67   & RESERVED\_- & 测试保留指令例外           & N    & N       \\
+& INSTRUCTION\_EX & & & \\
+80   & BEQ\_EX\_DS               & 测试延迟槽例外            & P    & P       \\
+81   & BNE\_EX\_DS               & 测试延迟槽例外            & P    & P       \\
+82   & BGEZ\_EX\_DS              & 测试延迟槽例外            & P    & P       \\
+83   & BGTZ\_EX\_DS              & 测试延迟槽例外            & P    & P       \\
+84   & BLEZ\_EX\_DS              & 测试延迟槽例外            & P    & P       \\
+85   & BLTZ\_EX\_DS              & 测试延迟槽例外            & P    & P       \\
+86   & BGEZAL\_EX\_DS            & 测试延迟槽例外            & N    & N       \\
+87   & BLTZAL\_EX\_DS            & 测试延迟槽例外            & N    & N       \\
+88   & J\_EX\_DS                 & 测试延迟槽例外            & P    & P       \\
+89   & JAL\_EX\_DS               & 测试延迟槽例外            & P    & P       \\
+90   & JR\_EX\_DS                & 测试延迟槽例外            & P    & P       \\
+91   & JALR\_EX\_DS              & 测试延迟槽例外            & P    & P       \\
+\testtableend{异常指令（共13(0xD)条）}
+
+\testtable{序号}{测试程序}{功能测试点}{仿真测试}{硬件测试}
+68   & BEQ\_DS    & 测试延迟槽 & P    & P       \\
+69   & BNE\_DS    & 测试延迟槽 & P    & P       \\
+70   & BGEZ\_DS   & 测试延迟槽 & P    & P       \\
+71   & BGTZ\_DS   & 测试延迟槽 & P    & P       \\
+72   & BLEZ\_DS   & 测试延迟槽 & P    & P       \\
+73   & BLTZ\_DS   & 测试延迟槽 & P    & P       \\
+74   & BGEZAL\_DS & 测试延迟槽 & N    & N       \\
+75   & BLTZAL\_DS & 测试延迟槽 & N    & N       \\
+76   & J\_DS      & 测试延迟槽 & P    & P       \\
+77   & JAL\_DS    & 测试延迟槽 & P    & P       \\
+78   & JR\_DS     & 测试延迟槽 & P    & P       \\
+79   & JALR\_DS   & 测试延迟槽 & P    & P       \\
+\testtableend{延迟槽指令（共10(0xA)条）}
+
+\section{问题与解决}
+
+% 功能测例自己会破坏自己，不能一次测太多。
+在测试中我们发现，功能测例会通过load指令写入自身的代码区，导致自身逻辑遭到破坏。
+
+例如，下面的第一条测试LB指令的代码，会将数据写入VA (0x800244e8 + 0x00002174) = 0x8002665C处：
+
+\begin{lstlisting}[caption={n47\_lb.S中会破坏自身程序的访存指令}]
+...
+# *(0x800244e8 + 0x00002174) = 0xe83814f0
+TEST_LB(0xe83814f0, 0x800244e8, 0x00002174, 0x00002174, 0xfffffff0)
+TEST_LB(0xbb62f9ba, 0x80021408, 0x00003c40, 0x00003c40, 0xffffffba)
+TEST_LB(0x9eb52b80, 0x8002d46c, 0x000002ae, 0x000002ac, 0xffffffb5)
+...
+\end{lstlisting}
+
+然而，由于功能测例的初始地址在VA 0x80000000处，当测试范围为整个功能测例的所有代码时，会导致该地址处实际属于功能测例自身的代码段：
+
+\begin{lstlisting}[emph={8002665c}, caption={功能测例在objdump后的代码片段}]
+...
+80026654:	10000005 	b	8002666c <n40_jalr_test+0x954c>
+80026658:	00000000 	nop
+8002665c:	00000021 	move	zero,zero
+80026660:	00000021 	move	zero,zero
+80026664:	3c12d65a 	lui	s2,0xd65a
+...
+\end{lstlisting}
+
+从而，要想通过全部功能测例，有以下2种解决方案：
+
+\begin{enumerate}
+    \item {\bf 使用2块RAM}：同时使用BaseRAM和ExtRAM，分别用于存储指令和数据。仿真测试显示这样可以通过所有功能测例而不会触发上述bug。
+    \item {\bf 分段测试}：将功能测例逐段进行测试（其余部分注释掉），这样功能测例代码量减少，不会蔓延到被写入的内存区域。最终笔者得以用这样的方式通过全部功能测例。
+\end{enumerate}

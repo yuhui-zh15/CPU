@@ -1,0 +1,175 @@
+\chapter{初期指令测试}
+
+\section{简介概述}
+
+在开发初期，流水线仅具雏形，外部设备仅包括使用Verilog模拟的ROM与RAM，分别用于存储指令与数据。
+
+这一阶段的测试因而主要通过Test Bench技术实现，通过自行编写的编译工具将MIPS 32汇编指令转为机器代码，并在ROM模块的initial块内读入。仿真测试时，CPU从ROM模块开始执行测试指令。
+
+初期测试的框架如下：
+
+\image[5in]{testbench}{初期测试框架}
+
+后期在此基础上增加了RAM模块，用于测试访存指令的正确性。
+
+
+\section{测试范畴}
+
+\subsection{测试覆盖面}
+
+\image[5in]{simpletest}{初期指令测试范畴（绿-可以测试；灰-不能测试）}
+
+初期指令测试主要测试了CPU以下部件是否实现正确：
+
+\begin{enumerate}
+    \item {\bf 五级流水线}：包括IF、ID、EX、MEM、WB共5个模块。
+    \item {\bf 寄存器}：包括寄存器堆（32个通用寄存器）、HI/LO寄存器共2个模块。
+    \item {\bf Control}：包括Control（流水线控制器）共1个模块。
+\end{enumerate}
+
+初期指令测试不能全面测试的CPU部件包括：
+
+\begin{enumerate}
+    \item {\bf CP0}：初期指令测试完全不考虑异常处理，故不能测试CP0。
+    \item {\bf MMU}：初期指令测试完全不考虑地址映射，更不包括TLB，故不能测试MMU。
+    \item {\bf ROM}：初期指令测试仅使用模拟的ROM，无BootLoader过程，故不能测试ROM。
+    \item {\bf RAM}：初期指令测试仅使用模拟的RAM，故不能测试RAM。
+    \item {\bf Flash}：初期指令测试完全不考虑Flash，故不能测试Flash。
+    \item {\bf 串口}：初期指令测试完全通过仿真验证，不需要串口通信，故不能测试串口。
+\end{enumerate}
+
+\subsection{测试要点}
+
+初期指令测试的测试要点包括如下几个部分：
+
+\begin{enumerate}
+    \item {\bf 算术运算指令}：共9条指令，包括ADDIU、ADDU、SUBU、MULT、SLT、SLTI、SLTIU、SLTU、LUI。
+    \item {\bf 逻辑运算指令}：共13条指令，包括AND、ANDI、OR、ORI、NOR、XOR、XORI、SLL、SLLV、SRL、SRLV、SRA、SRAV。
+    \item {\bf 分支跳转指令}：共10条指令，包括BEQ、BNE、BGEZ、BGTZ、BLEZ、BLTZ、J、JR、JAL、JALR。
+    \item {\bf HI/LO寄存器指令}：共4条指令，包括MFHI、MFLO、MTHI、MTLO。
+    \item {\bf 访存指令}：共8条指令，包括LB、LBU、LW、SB、SW。
+\end{enumerate}
+
+\section{测试方法}
+
+\subsection{TestBench文件}
+本阶段测试基于如下TestBench文件：
+
+\begin{lstlisting}[language=verilog, caption={TestBench文件}]
+`include "defines.v"
+`timescale 1ns/1ps
+
+module openmips_min_sopc_tb();
+
+    reg CLOCK_50;
+    reg rst;
+
+    initial begin
+        CLOCK_50 = 1'b0;
+        forever #10 CLOCK_50 = ~CLOCK_50;
+    end
+
+    initial begin
+        rst = `RstEnable;
+        #195 rst = `RstDisable;
+        #5000000 $stop;
+    end
+
+    openmips_min_sopc openmips_min_sopc0(
+        .clk(CLOCK_50),
+        .rst(rst)
+    );
+
+endmodule // openmips_min_sopc_tb()
+\end{lstlisting}
+
+\subsection{最小SOPC}
+其中的openmips\_min\_sopc0模块为五级流水线的顶层模块（最小SOPC，System-on-a-Programmable-Chip），其中集成了对ROM与RAM的控制逻辑。TestBench为其提供时钟与复位信号：
+
+\begin{lstlisting}[language=verilog, caption={OpenMIPS 最小SOPC}]
+`include "defines.v"
+
+module openmips_min_sopc(
+    input wire clk,
+    input wire rst
+);
+
+    wire[`InstAddrBus] inst_addr;
+    wire[`InstBus] inst;
+    wire rom_ce;
+    wire mem_we_i;
+    wire[`RegBus] mem_addr_i;
+    wire[`RegBus] mem_data_i;
+    wire[`RegBus] mem_data_o;
+    wire[3:0] mem_sel_i;
+    wire mem_ce_i;
+
+    // Exception
+    wire[5:0] int;
+    wire timer_int;
+
+    assign int = {5'b00000, timer_int};
+
+    openmips openmips0(
+        .clk(clk),
+        .rst(rst),
+        .if_addr_o(inst_addr),
+        .if_data_i(inst),
+        .if_ce_o(rom_ce),
+        .mem_we_o(mem_we_i),
+        .mem_addr_o(mem_addr_i),
+        .mem_sel_o(mem_sel_i),
+        .mem_data_o(mem_data_i),
+        .mem_data_i(mem_data_o),
+        .mem_ce_o(mem_ce_i),
+        .int_i      (int),
+        .timer_int_o(timer_int)
+    );
+
+    inst_rom inst_rom0(
+        .addr(inst_addr),
+        .inst(inst),
+        .ce(rom_ce)
+    );
+
+    data_ram data_ram0(
+        .clk(clk),
+        .we(mem_we_i),
+        .addr(mem_addr_i),
+        .sel(mem_sel_i),
+        .data_i(mem_data_i),
+        .data_o(mem_data_o),
+        .ce(mem_ce_i)
+    );
+
+endmodule // openmips_min_sopc
+\end{lstlisting}
+
+\subsection{MIPS测试文件}
+
+% <TODO>: 整理所有测例 无需整理
+
+本部分的指令测例大部分修改自《自己动手写CPU》一书中提供的功能测例。
+
+例如，第一条指令ORI的测试文件如下（各条指令的期望结果如后方注释，用于仿真时与波形图比对）
+\begin{lstlisting}[caption={ORI指令测试文件}]
+.org 0x0
+.global _start
+.set noat
+_start:
+    ori $1,$0,0x1100        # $1 = $0 | 0x1100 = 0x1100
+    ori $1,$1,0x0020        # $1 = $1 | 0x0020 = 0x1120
+    ori $1,$1,0x4400        # $1 = $1 | 0x4400 = 0x5520
+    ori $1,$1,0x0044        # $1 = $1 | 0x0044 = 0x5564
+\end{lstlisting}
+
+\subsection{MIPS编译工具}
+由于开发初期尚未涉及操作系统的编译，而mips-gcc工具链配置较为繁琐，故笔者自行实现了MIPS编译工具，用于将MIPS 32汇编代码转化为Verilog的readmemh函数可接受的ASC-II文件。
+
+编译工具采用Python语言编写，支持了本阶段多数指令（包括分支跳转指令）的转化工作，方便了本阶段的仿真调试工作。
+
+\section{测试结果}
+
+经过测试，本阶段涉及的指令测试点均能通过。
+
+需注意，本阶段使用的测例均较为简单，每条测例使用的数据也不多。这一不足由下一阶段的功能测例得到了弥补。
